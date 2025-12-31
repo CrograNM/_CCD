@@ -25,5 +25,19 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	
+	
+protected: // 상속받은 블루프린트나 자식 클래스는 접근 가능
+	/** 1인칭 카메라 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
+	class UCameraComponent* FirstPersonCamera;
+	class USpringArmComponent;
+
+	/** 물건을 집기 위한 핸들 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Physics")
+	class UPhysicsHandleComponent* PhysicsHandle;
+
+private: // 이 클래스 내부에서만 접근 가능
+	float InteractionDistance = 200.f;
 
 };
