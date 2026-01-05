@@ -2,6 +2,8 @@
 
 
 #include "CCDCharacter.h"
+#include "InteractInterface.h"
+#include "Camera/CameraComponent.h"
 
 // Sets default values
 ACCDCharacter::ACCDCharacter()
@@ -66,5 +68,33 @@ void ACCDCharacter::ToggleView()
 		FirstPersonCamera->SetActive(false);
 		FollowCamera->SetActive(true);
 		GetMesh()->SetOwnerNoSee(false);
+	}
+}
+
+void ACCDCharacter::PerformInteract()
+{
+	// 1. 변수가 유효한지(nullptr 체크) 먼저 확인합니다.
+	if (FirstPersonCamera == nullptr) return;
+
+	// 2. 변수명을 직접 사용하여 위치와 방향을 가져옵니다.
+	FVector TraceStart = FirstPersonCamera->GetComponentLocation();
+	FVector TraceEnd = TraceStart + (FirstPersonCamera->GetForwardVector() * InteractRange);
+
+	FHitResult HitResult;
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+
+	// 라인트레이스 실행
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_Visibility, QueryParams))
+	{
+		if (AActor* HitActor = HitResult.GetActor())
+		{
+			// 인터페이스 캐스팅 (I를 하나만 쓰는 이름으로 수정했다고 가정)
+			IInteractInterface* Interface = Cast<IInteractInterface>(HitActor);
+			if (Interface)
+			{
+				Interface->Interact(this);
+			}
+		}
 	}
 }
