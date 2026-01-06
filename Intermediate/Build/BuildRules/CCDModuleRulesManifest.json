@@ -1,6 +1,7 @@
 {
 	"SourceFiles": [
 		"D:\\__RAII\\_CCD\\Source\\CCD\\CCD.Build.cs",
+		"D:\\__RAII\\_CCD\\Plugins\\MultiplayerSessions\\Source\\MultiplayerSessions\\MultiplayerSessions.Build.cs",
 		"D:\\__RAII\\_CCD\\Source\\CCD.Target.cs",
 		"D:\\__RAII\\_CCD\\Source\\CCDEditor.Target.cs"
 	],
