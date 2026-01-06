@@ -89,10 +89,12 @@ void ACCDCharacter::PerformInteract()
 	{
 		if (AActor* HitActor = HitResult.GetActor())
 		{
+			UE_LOG(LogTemp, Warning, TEXT("Interacted with: %s"), *HitActor->GetName());
 			// 인터페이스 캐스팅 (I를 하나만 쓰는 이름으로 수정했다고 가정)
 			IInteractInterface* Interface = Cast<IInteractInterface>(HitActor);
 			if (Interface)
 			{
+				UE_LOG(LogTemp, Warning, TEXT("Interface found on: %s"), *HitActor->GetName());
 				Interface->Interact(this);
 			}
 		}
