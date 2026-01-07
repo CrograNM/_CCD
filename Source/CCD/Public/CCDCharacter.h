@@ -51,6 +51,14 @@ protected:
 	// 3인칭 - 실제 플레이어가 보게 될 카메라
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	class UCameraComponent* FollowCamera;
+	
+	// 대걸레 메쉬
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment")
+	TObjectPtr<UStaticMeshComponent> MopMesh;
+
+	// 탐지 장치 메쉬
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment")
+	TObjectPtr<UStaticMeshComponent> ScannerMesh;
 
 	// - 물리 핸들
 	// 물건을 집기 위한 핸들

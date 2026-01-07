@@ -28,6 +28,23 @@ ACCDCharacter::ACCDCharacter()
 	FirstPersonCamera->SetupAttachment(GetMesh(), TEXT("HeadSocket")); // 캐릭터 스켈레톤의 'head' 소켓에 부착
 	FirstPersonCamera->bUsePawnControlRotation = true; // 마우스 회전에 따라 카메라 회전
 	FirstPersonCamera->SetAutoActivate(false); // 시작할 때는 꺼둠
+	
+	// 장비 메쉬 생성 및 부착
+	// 1. 대걸레 생성 및 부착
+	MopMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MopMesh"));
+	MopMesh->SetIsReplicated(true); // 컴포넌트 복제 활성화
+	MopMesh->SetCollisionResponseToAllChannels(ECR_Ignore); // 충돌 방지
+    
+	// 캐릭터의 Mesh(Skeletal Mesh)에 있는 'MopSocket'에 부착
+	MopMesh->SetupAttachment(GetMesh(), TEXT("MopSocket"));
+
+	// 2. 탐지장치 생성 및 부착
+	ScannerMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ScannerMesh"));
+	ScannerMesh->SetIsReplicated(true); // 컴포넌트 복제 활성화
+	ScannerMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
+    
+	// 캐릭터의 Mesh에 있는 'ScannerSocket'에 부착
+	ScannerMesh->SetupAttachment(GetMesh(), TEXT("ScannerSocket"));
 }
 
 // Called when the game starts or when spawned
