@@ -11,7 +11,13 @@
 
 #include "CCDCharacter.generated.h"
 
-
+UENUM(BlueprintType)
+enum class ECCD_EquipmentState : uint8
+{
+	EES_Hands   UMETA(DisplayName = "Hands"),   // 맨손 (Physics Handle)
+	EES_Scanner UMETA(DisplayName = "Scanner"), // 탐지장치
+	EES_Mop     UMETA(DisplayName = "Mop")     // 대걸레
+};
 
 UCLASS()
 class CCD_API ACCDCharacter : public ACharacter
@@ -73,6 +79,8 @@ protected:
 	// 상호작용 사거리
 	UPROPERTY(EditAnywhere, Category = "Design")
 	float InteractRange = 300.f;
+	
+	
 	
 public:
 	// BlueprintCallable: 블루프린트에서 이 함수를 호출할 수 있게 합니다.
