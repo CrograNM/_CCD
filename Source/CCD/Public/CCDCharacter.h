@@ -80,6 +80,21 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Design")
 	float InteractRange = 300.f;
 	
+	// - 장비 상태 관리
+	// 1. 현재 장비 상태 변수 (RepNotify 설정)
+	UPROPERTY(ReplicatedUsing = OnRep_EquipmentState, VisibleAnywhere, Category = "Equipment")
+	ECCD_EquipmentState EquipmentState = ECCD_EquipmentState::EES_Hands;
+
+	// 2. 상태 변화 시 실행될 함수 (클라이언트용)
+	UFUNCTION()
+	void OnRep_EquipmentState(ECCD_EquipmentState PreviousState);
+
+	// 3. 서버에서 상태를 변경하기 위한 RPC
+	UFUNCTION(Server, Reliable)
+	void Server_SetEquipmentState(ECCD_EquipmentState NewState);
+
+	// 상태별 동작 제어 함수
+	void HandleEquipmentEffects(ECCD_EquipmentState NewState);
 	
 	
 public:
@@ -90,5 +105,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Camera")
 	void ToggleView();
 	
-
+	// 입력 바인딩용 함수 (예: 숫자키 1, 2, 3)
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void SwitchToHands() { Server_SetEquipmentState(ECCD_EquipmentState::EES_Hands); }
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void SwitchToScanner() { Server_SetEquipmentState(ECCD_EquipmentState::EES_Scanner); }
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void SwitchToMop() { Server_SetEquipmentState(ECCD_EquipmentState::EES_Mop); }
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void TestCurrentState();
 };

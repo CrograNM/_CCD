@@ -4,6 +4,7 @@
 #include "CCDCharacter.h"
 #include "InteractInterface.h"
 #include "Camera/CameraComponent.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 ACCDCharacter::ACCDCharacter()
@@ -68,6 +69,52 @@ void ACCDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 }
 
+// 복제할 변수 등록
+void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ACCDCharacter, EquipmentState); // 변수 복제 등록
+}
+
+// 서버 RPC 구현
+void ACCDCharacter::Server_SetEquipmentState_Implementation(ECCD_EquipmentState NewState)
+{
+	if (EquipmentState == NewState) return;
+    
+	ECCD_EquipmentState PreviousState = EquipmentState;
+	EquipmentState = NewState;
+    
+	// 서버에서도 시각적 업데이트를 직접 호출
+	HandleEquipmentEffects(NewState);
+}
+
+// 클라이언트 통지 구현
+void ACCDCharacter::OnRep_EquipmentState(ECCD_EquipmentState PreviousState)
+{
+	HandleEquipmentEffects(EquipmentState);
+}
+
+// 실제 시각적/기능적 스위칭 로직
+void ACCDCharacter::HandleEquipmentEffects(ECCD_EquipmentState NewState)
+{
+	// 1. 모든 장비 기능 비활성화
+	// 2. 현재 장비를 원위치 (소켓)
+	// 3. 새로운 장비를 장착 위치로 이동 (소켓)
+	// 4. 새로운 장비 기능 활성화
+	
+	switch (NewState)
+	{
+	case ECCD_EquipmentState::EES_Hands:
+		break;
+
+	case ECCD_EquipmentState::EES_Scanner:
+		break;
+
+	case ECCD_EquipmentState::EES_Mop:
+		break;
+	}
+}
+
 void ACCDCharacter::ToggleView()
 {
 	bIsFirstPerson = !bIsFirstPerson;
@@ -86,6 +133,26 @@ void ACCDCharacter::ToggleView()
 		FollowCamera->SetActive(true);
 		GetMesh()->SetOwnerNoSee(false);
 	}
+}
+
+void ACCDCharacter::TestCurrentState()
+{
+	// 1. 현재 장비 상태를 문자열로 변환
+	FString StateString;
+	switch (EquipmentState)
+	{
+	case ECCD_EquipmentState::EES_Hands:   StateString = TEXT("Hands (Physics Handle)"); break;
+	case ECCD_EquipmentState::EES_Scanner: StateString = TEXT("Scanner"); break;
+	case ECCD_EquipmentState::EES_Mop:     StateString = TEXT("Mop"); break;
+	}
+	// 2. 권한 및 로컬 역할 확인 
+	FString AuthoritySide = HasAuthority() ? TEXT("Server") : TEXT("Client");
+    
+	// 3. 최종 메시지 구성
+	FString FinalMessage = FString::Printf(TEXT("[%s] Current State: %s"), *AuthoritySide, *StateString);
+
+	// 출력 로그(Output Log)에 출력
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *FinalMessage);
 }
 
 void ACCDCharacter::PerformInteract()
@@ -117,3 +184,5 @@ void ACCDCharacter::PerformInteract()
 		}
 	}
 }
+
+
