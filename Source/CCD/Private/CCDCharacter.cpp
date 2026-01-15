@@ -37,7 +37,7 @@ ACCDCharacter::ACCDCharacter()
 	MopMesh->SetCollisionResponseToAllChannels(ECR_Ignore); // 충돌 방지
     
 	// 캐릭터의 Mesh(Skeletal Mesh)에 있는 'MopSocket'에 부착
-	MopMesh->SetupAttachment(GetMesh(), TEXT("MopSocket"));
+	MopMesh->SetupAttachment(GetMesh(), TEXT("MopSocket_Back"));
 
 	// 2. 탐지장치 생성 및 부착
 	ScannerMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ScannerMesh"));
@@ -45,7 +45,7 @@ ACCDCharacter::ACCDCharacter()
 	ScannerMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
     
 	// 캐릭터의 Mesh에 있는 'ScannerSocket'에 부착
-	ScannerMesh->SetupAttachment(GetMesh(), TEXT("ScannerSocket"));
+	ScannerMesh->SetupAttachment(GetMesh(), TEXT("ScannerSocket_Hip"));
 }
 
 // Called when the game starts or when spawned
