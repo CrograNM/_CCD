@@ -82,7 +82,7 @@ protected:
 	
 	// - 장비 상태 관리
 	// 1. 현재 장비 상태 변수 (RepNotify 설정)
-	UPROPERTY(ReplicatedUsing = OnRep_EquipmentState, VisibleAnywhere, Category = "Equipment")
+	UPROPERTY(ReplicatedUsing = OnRep_EquipmentState, BlueprintReadOnly, Category = "Equipment")
 	ECCD_EquipmentState EquipmentState = ECCD_EquipmentState::EES_Hands;
 
 	// 2. 상태 변화 시 실행될 함수 (클라이언트용)
