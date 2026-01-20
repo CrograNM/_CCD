@@ -92,6 +92,7 @@ void ACCDCharacter::Server_SetEquipmentState_Implementation(ECCD_EquipmentState 
 void ACCDCharacter::OnRep_EquipmentState(ECCD_EquipmentState PreviousState)
 {
 	HandleEquipmentEffects(EquipmentState);
+	
 }
 
 // 실제 시각적/기능적 스위칭 로직

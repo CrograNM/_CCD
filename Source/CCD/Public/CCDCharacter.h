@@ -101,6 +101,10 @@ public:
 	// BlueprintCallable: 블루프린트에서 이 함수를 호출할 수 있게 합니다.
 	// Category: 블루프린트 우클릭 메뉴에서 어떤 카테고리에 보일지 정합니다.
 	
+	// Getter
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	FORCEINLINE ECCD_EquipmentState GetEquipmentState() const { return EquipmentState; }
+	
 	// 시점 전환 함수
 	UFUNCTION(BlueprintCallable, Category = "Camera")
 	void ToggleView();
