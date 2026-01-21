@@ -84,7 +84,7 @@ protected:
 	// 1. 현재 장비 상태 변수 (RepNotify 설정)
 	UPROPERTY(ReplicatedUsing = OnRep_EquipmentState, BlueprintReadOnly, Category = "Equipment")
 	ECCD_EquipmentState EquipmentState = ECCD_EquipmentState::EES_Hands;
-
+	
 	// 2. 상태 변화 시 실행될 함수 (클라이언트용)
 	UFUNCTION()
 	void OnRep_EquipmentState(ECCD_EquipmentState PreviousState);
@@ -96,6 +96,33 @@ protected:
 	// 상태별 동작 제어 함수
 	void HandleEquipmentEffects(ECCD_EquipmentState NewState);
 	
+	// - 애니메이션 몽타주
+	// 사용할 장착/해제 몽타주 (에디터에서 할당)
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	TObjectPtr<UAnimMontage> EquipMontage;
+	
+	// 현재 재생 중인 방향을 체크하기 위한 변수 (노티파이 처리용)
+	bool bIsUnequipping = false;
+	
+	// 몽타주 재생을 모든 클라이언트에게 전달하는 멀티캐스트 RPC
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayEquipMontage(FName SectionName, float PlayRate);
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_StopMontage();
+	
+	void ProceedToEquip(ECCD_EquipmentState NewState);
+	
+	// 다음으로 바꿀 상태를 저장하는 변수
+	ECCD_EquipmentState PendingEquipmentState = ECCD_EquipmentState::EES_Hands;
+
+	// 몽타주 종료 시 호출될 콜백 함수
+	UFUNCTION()
+	void OnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+	// 서버 전용: 몽타주 종료 델리게이트를 설정하는 함수
+	void BindMontageEndedDelegate();
+	
 	
 public:
 	// BlueprintCallable: 블루프린트에서 이 함수를 호출할 수 있게 합니다.
@@ -104,7 +131,7 @@ public:
 	// Getter
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	FORCEINLINE ECCD_EquipmentState GetEquipmentState() const { return EquipmentState; }
-	
+
 	// 시점 전환 함수
 	UFUNCTION(BlueprintCallable, Category = "Camera")
 	void ToggleView();
@@ -121,4 +148,8 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	void TestCurrentState();
+	
+	// 애니메이션 블루프린트에서 호출할 노티파이 함수
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void HandleEquipNotify();
 };
