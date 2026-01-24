@@ -80,15 +80,30 @@ void ACCDCharacter::PerformInteract()
 		}
 	}
 }
-void ACCDCharacter::TestCurrentState()
+void ACCDCharacter::Server_PlayActionOfState_Implementation()
 {
+	if (bIsActionInProgress) return;
+	
+	// 실제 재생 여부 더블 체크
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && AnimInstance->Montage_IsPlaying(EquipMontage)) return;
+	
 	// 1. 현재 장비 상태를 문자열로 변환
 	FString StateString;
 	switch (EquipmentState)
 	{
-	case ECCD_EquipmentState::EES_Hands:   StateString = TEXT("Hands (Physics Handle)"); break;
-	case ECCD_EquipmentState::EES_Scanner: StateString = TEXT("Scanner"); break;
-	case ECCD_EquipmentState::EES_Mop:     StateString = TEXT("Mop"); break;
+	case ECCD_EquipmentState::EES_Hands:   
+		StateString = TEXT("Hands (Physics Handle)"); 
+		break;
+	case ECCD_EquipmentState::EES_Mop:     
+		StateString = TEXT("Mop"); 
+		bIsActionInProgress = true;	// 액션 진행중 플래그 설정
+		Multicast_PlayEquipMontage(TEXT("SwingMop"), 1.5f);	// 대걸레 휘두르기 애니메이션 재생
+		BindMontageEndedDelegate();	// 몽타주 종료 델리게이트 바인딩
+		break;
+	case ECCD_EquipmentState::EES_Scanner: 
+		StateString = TEXT("Scanner"); 
+		break;
 	}
 	// 2. 권한 및 로컬 역할 확인 
 	FString AuthoritySide = HasAuthority() ? TEXT("Server") : TEXT("Client");
@@ -221,7 +236,15 @@ void ACCDCharacter::Multicast_StopMontage_Implementation()
 }
 void ACCDCharacter::OnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	if (HasAuthority() && bIsUnequipping) ProceedToEquip(PendingEquipmentState);
+	if (!HasAuthority()) return;
+	
+	bIsActionInProgress = false; // 액션 상태 해제
+	
+	// 만약 장비 교체 중이었다면 기존 로직 수행
+	if (bIsUnequipping)
+	{
+		ProceedToEquip(PendingEquipmentState);
+	}
 }
 void ACCDCharacter::BindMontageEndedDelegate()
 {

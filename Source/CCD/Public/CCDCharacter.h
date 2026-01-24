@@ -69,10 +69,13 @@ protected:
 	
 	/** --- 애니메이션 몽타주 제어 --- */
 	UPROPERTY(EditAnywhere, Category = "Animation")
-	TObjectPtr<UAnimMontage> EquipMontage;
+	TObjectPtr<UAnimMontage> EquipMontage;	// 장비 교체 몽타주
 
 	bool bIsUnequipping = false;
 	
+	UPROPERTY(BlueprintReadOnly, Category = "State")
+	bool bIsActionInProgress = false;
+
 public:
 	/** --- Getter --- */
 	FORCEINLINE ECCD_EquipmentState GetEquipmentState() const { return EquipmentState; }
@@ -96,8 +99,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	void HandleEquipNotify();
 
-	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	void TestCurrentState();
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Animation")
+	void Server_PlayActionOfState();
 	
 protected:
 	/** --- 네트워크 & 상태 동기화 --- */
