@@ -2,6 +2,7 @@
 #include "CCDCharacter.h"
 #include "InteractInterface.h"
 #include "Camera/CameraComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -23,7 +24,13 @@ ACCDCharacter::ACCDCharacter()
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCamera->SetupAttachment(GetMesh(), TEXT("HeadSocket"));
 	FirstPersonCamera->bUsePawnControlRotation = true;
-	FirstPersonCamera->SetAutoActivate(false);
+	
+	// 카메라 초기 상태 설정	( 3인칭 모드 시작 )
+	FollowCamera->SetActive(!bIsFirstPerson);		// 카메라 활성화 상태 변경
+	FirstPersonCamera->SetActive(bIsFirstPerson);	
+	GetMesh()->SetOwnerNoSee(bIsFirstPerson);		// 메시 가시성 처리
+	bUseControllerRotationYaw = false;
+	GetCharacterMovement()->bOrientRotationToMovement = true;
 	
 	// --- 장비 메시 설정 ---
 	MopMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MopMesh"));
@@ -57,9 +64,21 @@ void ACCDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 void ACCDCharacter::ToggleView()
 {
 	bIsFirstPerson = !bIsFirstPerson;
-	FollowCamera->SetActive(!bIsFirstPerson);
-	FirstPersonCamera->SetActive(bIsFirstPerson);
-	GetMesh()->SetOwnerNoSee(bIsFirstPerson);
+	FollowCamera->SetActive(!bIsFirstPerson);		// 카메라 활성화 상태 변경
+	FirstPersonCamera->SetActive(bIsFirstPerson);	
+	GetMesh()->SetOwnerNoSee(bIsFirstPerson);		// 메시 가시성 처리
+
+	// 이동 및 회전 로직 변경
+	if (bIsFirstPerson)
+	{
+		bUseControllerRotationYaw = true;
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+	}
+	else
+	{
+		bUseControllerRotationYaw = false;
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+	}
 }
 void ACCDCharacter::PerformInteract()
 {
