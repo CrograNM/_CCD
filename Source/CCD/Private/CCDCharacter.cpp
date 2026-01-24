@@ -124,7 +124,7 @@ void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 }
 void ACCDCharacter::Server_SetEquipmentState_Implementation(ECCD_EquipmentState NewState)
 {
-	if (EquipmentState == NewState || bIsUnequipping) return;
+	if (EquipmentState == NewState || bIsUnequipping || bIsActionInProgress) return;
 
 	PendingEquipmentState = NewState;
 
@@ -132,6 +132,7 @@ void ACCDCharacter::Server_SetEquipmentState_Implementation(ECCD_EquipmentState 
 	{
 		bIsUnequipping = true;
 		FName Section = (EquipmentState == ECCD_EquipmentState::EES_Mop) ? TEXT("DrawMop") : TEXT("DrawScanner");
+		bIsActionInProgress = true;	
 		Multicast_PlayEquipMontage(Section, -1.2f);
 		BindMontageEndedDelegate();
 	}
@@ -152,7 +153,9 @@ void ACCDCharacter::ProceedToEquip(ECCD_EquipmentState NewState)
 	}
 
 	FName Section = (NewState == ECCD_EquipmentState::EES_Mop) ? TEXT("DrawMop") : TEXT("DrawScanner");
+	bIsActionInProgress = true;	
 	Multicast_PlayEquipMontage(Section, 1.0f);
+	BindMontageEndedDelegate();
 	HandleEquipmentEffects(NewState);
 }
 void ACCDCharacter::OnRep_EquipmentState(ECCD_EquipmentState PreviousState)
