@@ -6,6 +6,10 @@
 #include "GameFramework/Actor.h"
 #include "WasteActor.generated.h"
 
+class UStaticMeshComponent;
+class UProgressComponent;
+class UBurnableComponent;
+
 UCLASS()
 class CCD_API AWasteActor : public AActor
 {
@@ -33,5 +37,5 @@ protected:
 	
 	// 소각 가능 컴포넌트 -> 상호작용(잡기) 및 화상 데미지 처리
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class UBurnableComponent* BurnableComp;	
+	UBurnableComponent* BurnableComp;	
 };
