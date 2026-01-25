@@ -23,8 +23,15 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
+	
 protected:
+	// 매니저를 매번 찾지 않도록 저장
+	class AProgressManager* ProgressManager;
+	
+public:	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Progress")
-	int ProgressValue = 0;
+	int ProgressValue = 10.0f;
+	
+	// 액터가 소각되거나 대걸레질이 완료되었을 때 호출
+	void Notify_ProgressOver();
 };
