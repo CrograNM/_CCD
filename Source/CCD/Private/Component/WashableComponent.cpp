@@ -32,3 +32,12 @@ void UWashableComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	// ...
 }
 
+void UWashableComponent::Interact_Implementation(AActor* Interactor)
+{
+	IInteractInterface::Interact_Implementation(Interactor);
+}
+
+void UWashableComponent::Wash()
+{
+}
+

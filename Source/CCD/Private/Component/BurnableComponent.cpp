@@ -32,3 +32,12 @@ void UBurnableComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	// ...
 }
 
+void UBurnableComponent::Interact_Implementation(AActor* Interactor)
+{
+	IInteractInterface::Interact_Implementation(Interactor);
+}
+
+void UBurnableComponent::Burn()
+{
+}
+

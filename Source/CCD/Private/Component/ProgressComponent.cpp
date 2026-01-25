@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Component/InteractableComponent.h"
+#include "Component/ProgressComponent.h"
 
 // Sets default values for this component's properties
-UInteractableComponent::UInteractableComponent()
+UProgressComponent::UProgressComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -15,7 +15,7 @@ UInteractableComponent::UInteractableComponent()
 
 
 // Called when the game starts
-void UInteractableComponent::BeginPlay()
+void UProgressComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -25,15 +25,10 @@ void UInteractableComponent::BeginPlay()
 
 
 // Called every frame
-void UInteractableComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UProgressComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
-}
-
-void UInteractableComponent::Interact_Implementation(AActor* Interactor)
-{
-	IInteractInterface::Interact_Implementation(Interactor);
 }
 
