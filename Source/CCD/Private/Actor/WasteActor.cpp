@@ -1,0 +1,36 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "Actor/WasteActor.h"
+
+#include "Component/BurnableComponent.h"
+#include "Component/ProgressComponent.h"
+
+// Sets default values
+AWasteActor::AWasteActor()
+{
+ 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
+	RootComponent = MeshComp;
+	MeshComp->SetSimulatePhysics(true);
+
+	// 컴포넌트 생성 및 포함
+	BurnableComp = CreateDefaultSubobject<UBurnableComponent>(TEXT("BurnableComp"));
+	ProgressComp = CreateDefaultSubobject<UProgressComponent>(TEXT("ProgressComp"));
+}
+
+// Called when the game starts or when spawned
+void AWasteActor::BeginPlay()
+{
+	Super::BeginPlay();
+	
+}
+
+// Called every frame
+void AWasteActor::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+}
+

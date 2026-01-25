@@ -2,6 +2,7 @@
 
 
 #include "Component/BurnableComponent.h"
+#include "Component/ProgressComponent.h"
 
 // Sets default values for this component's properties
 UBurnableComponent::UBurnableComponent()
@@ -19,10 +20,10 @@ void UBurnableComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
+	// 액터의 ProgressComponent 찾기
+	ProgressComp = GetOwner()->FindComponentByClass<UProgressComponent>();
 	
 }
-
 
 // Called every frame
 void UBurnableComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -34,10 +35,30 @@ void UBurnableComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 void UBurnableComponent::Interact_Implementation(AActor* Interactor)
 {
-	IInteractInterface::Interact_Implementation(Interactor);
+	//
+	// 캐릭터의 Physics Handle 함수를 호출하는 로직을 작성
+	//
+	
+	UE_LOG(LogTemp, Warning, TEXT("컴포넌트: %s Interacted!"), *GetOwner()->GetName());
 }
 
-void UBurnableComponent::Burn()
+void UBurnableComponent::TakeBurnDamage(float DamageAmount)
 {
+	BurnHealth -= DamageAmount;
+	UE_LOG(LogTemp, Warning, TEXT("컴포넌트: %s Damaged, Current HP: %f"), *GetOwner()->GetName(), BurnHealth);
+
+	if (BurnHealth <= 0.f)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("컴포넌트: %s Burned!"), *GetOwner()->GetName());
+		
+		// 점수 컴포넌트가 유효하면 점수 증가
+		if (ProgressComp)
+		{
+			ProgressComp->Notify_ProgressOver();
+		}
+		
+		// 소각된 액터 제거
+		GetOwner()->Destroy();
+	}
 }
 
