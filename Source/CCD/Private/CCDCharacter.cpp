@@ -72,7 +72,7 @@ void ACCDCharacter::Tick(float DeltaTime)
 	}
 	
 	// 2. 물리 핸들 업데이트는 반드시 '서버'에서 수행
-	if (HasAuthority() && PhysicsHandle && PhysicsHandle->GetGrabbedComponent())
+	if (HasAuthority() && PhysicsHandle && GrabbedComponent)
 	{
 		// 서버의 FirstPersonCamera 회전값에 클라이언트가 보낸 Pitch를 적용
 		// (Yaw는 bUseControllerRotationYaw 덕분에 액터 회전과 동기화됨)
@@ -89,6 +89,7 @@ void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ACCDCharacter, EquipmentState);
 	DOREPLIFETIME(ACCDCharacter, Rep_FirstPersonCameraRotation); // 회전값 복제 -> FirstPersonCamera에 적용시킴
+	DOREPLIFETIME(ACCDCharacter, GrabbedComponent);
 }
 
 /** --- 입력 및 상호작용 --- */
@@ -133,7 +134,7 @@ void ACCDCharacter::ApplyViewMode(bool bFirstPerson)
 void ACCDCharacter::PerformInteract()
 {
 	// 이미 물체를 잡고 있다면 놓기
-	if (PhysicsHandle && PhysicsHandle->GetGrabbedComponent())
+	if (GrabbedComponent)
 	{
 		Server_ReleaseObject();
 		return;
@@ -176,6 +177,9 @@ void ACCDCharacter::Server_GrabObject_Implementation(UPrimitiveComponent* Compon
 {
 	if (!PhysicsHandle || !ComponentToGrab) return;
 
+	// 서버에서 변수 할당 (이 값이 클라이언트에게 복제됨)
+	GrabbedComponent = ComponentToGrab;
+	
 	// 물리 핸들로 잡기 실행
 	PhysicsHandle->GrabComponentAtLocationWithRotation(
 		ComponentToGrab,
@@ -190,6 +194,9 @@ void ACCDCharacter::Server_ReleaseObject_Implementation()
 	{
 		PhysicsHandle->ReleaseComponent();
 	}
+	
+	// 서버에서 변수 해제 (클라이언트도 nullptr로 바뀜)
+	GrabbedComponent = nullptr;
 }
 void ACCDCharacter::Server_PlayActionOfState_Implementation()
 {

@@ -130,7 +130,7 @@ protected:
 	float InteractRange = 300.f;
 	
 	// 현재 잡고 있는 컴포넌트 (쓰레기 메쉬)
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	class UPrimitiveComponent* GrabbedComponent;
 
 	// 잡기/놓기 로직
