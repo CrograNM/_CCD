@@ -1,6 +1,5 @@
 
 #include "CCDCharacter.h"
-#include "InteractInterface.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -93,10 +92,10 @@ void ACCDCharacter::PerformInteract()
 
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_Visibility, Params))
 	{
-		if (IInteractInterface* Interface = Cast<IInteractInterface>(HitResult.GetActor()))
+		/*if (IInteractInterface* Interface = Cast<IInteractInterface>(HitResult.GetActor()))
 		{
 			Interface->Interact(this);
-		}
+		}*/
 	}
 }
 void ACCDCharacter::Server_PlayActionOfState_Implementation()
