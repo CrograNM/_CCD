@@ -4,11 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Interface/InteractInterface.h"
 #include "WashableComponent.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class CCD_API UWashableComponent : public UActorComponent
+class CCD_API UWashableComponent : public UActorComponent, public IInteractInterface
 {
 	GENERATED_BODY()
 
@@ -24,5 +25,8 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-		
+	// Implement Interact interface 오버라이드
+	virtual void Interact_Implementation(AActor* Interactor) override;
+	
+	void Wash();
 };

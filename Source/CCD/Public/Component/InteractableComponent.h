@@ -27,6 +27,4 @@ public:
 
 	// Implement Interact interface 오버라이드
 	virtual void Interact_Implementation(AActor* Interactor) override;
-	
-		
 };
