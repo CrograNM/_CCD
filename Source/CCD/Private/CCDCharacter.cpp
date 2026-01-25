@@ -3,6 +3,7 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Interface/InteractInterface.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "Net/UnrealNetwork.h"
 
@@ -92,12 +93,20 @@ void ACCDCharacter::PerformInteract()
 
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_Visibility, Params))
 	{
-		/*if (IInteractInterface* Interface = Cast<IInteractInterface>(HitResult.GetActor()))
+		if (HitResult.GetActor())
 		{
-			Interface->Interact(this);
-		}*/
+			AActor* HitActor = HitResult.GetActor();
+			UActorComponent* InteractableComp = HitActor->FindComponentByInterface(UInteractInterface::StaticClass());
+
+			if (InteractableComp)
+			{
+				// 컴포넌트의 인터페이스 함수 실행
+				IInteractInterface::Execute_Interact(InteractableComp, this);
+			}
+		}
 	}
 }
+
 void ACCDCharacter::Server_PlayActionOfState_Implementation()
 {
 	if (bIsActionInProgress) return;
