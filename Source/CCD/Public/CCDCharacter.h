@@ -76,7 +76,11 @@ public:
 	/** --- 블루프린트 호출 가능 함수 --- */
 	UFUNCTION(BlueprintCallable, Category = "Camera")
 	void ToggleView();
-
+	
+	UFUNCTION(Server, Reliable)
+	void Server_ToggleView(bool bNewIsFirstPerson);		// ToggleView
+	void ApplyViewMode(bool bFirstPerson);				// ToggleView
+	
 	UFUNCTION(BlueprintCallable, Category = "Interaction")
 	void PerformInteract();
 
@@ -135,4 +139,13 @@ protected:
 
 	UFUNCTION(Server, Reliable)
 	void Server_ReleaseObject();
+	
+	/** --- (카메라) 회전값 복제 --- */
+	// 서버에서 클라이언트로 복제될 변수
+	UPROPERTY(Replicated)
+	FRotator Rep_FirstPersonCameraRotation;
+
+	// 서버에 회전값을 전달하는 RPC (FRotator를 넘깁니다)
+	UFUNCTION(Server, Unreliable)
+	void Server_SetFirstPersonCameraRotation(FRotator NewRotation);
 };

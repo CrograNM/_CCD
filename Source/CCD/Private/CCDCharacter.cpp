@@ -54,12 +54,41 @@ void ACCDCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	// 물체를 잡고 있다면 카메라 정면으로 위치 업데이트
-	if (PhysicsHandle && PhysicsHandle->GetGrabbedComponent())
+	// 1. 로컬 플레이어는 자기 카메라 회전값을 서버로 계속 보냄
+	if (IsLocallyControlled())
 	{
-		FVector TargetLocation = FirstPersonCamera->GetComponentLocation() + (FirstPersonCamera->GetForwardVector() * 200.0f); // 200은 물체와의 거리
+		if (FirstPersonCamera)
+		{
+			Server_SetFirstPersonCameraRotation(FirstPersonCamera->GetRelativeRotation());
+		}
+	}
+	else
+	{
+		// 다른 플레이어가 보고 있는 나라면(Proxy): 서버로부터 받은 값을 카메라에 적용합니다.
+		if (FirstPersonCamera)
+		{
+			FirstPersonCamera->SetRelativeRotation(Rep_FirstPersonCameraRotation);
+		}
+	}
+	
+	// 2. 물리 핸들 업데이트는 반드시 '서버'에서 수행
+	if (HasAuthority() && PhysicsHandle && PhysicsHandle->GetGrabbedComponent())
+	{
+		// 서버의 FirstPersonCamera 회전값에 클라이언트가 보낸 Pitch를 적용
+		// (Yaw는 bUseControllerRotationYaw 덕분에 액터 회전과 동기화됨)
+		FVector LookDir = FirstPersonCamera->GetForwardVector();
+        
+		FVector TargetLocation = FirstPersonCamera->GetComponentLocation() + (LookDir * 200.0f);
 		PhysicsHandle->SetTargetLocation(TargetLocation);
 	}
+	
+}
+void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	// 변수 복제 등록
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ACCDCharacter, EquipmentState);
+	DOREPLIFETIME(ACCDCharacter, Rep_FirstPersonCameraRotation); // 회전값 복제 -> FirstPersonCamera에 적용시킴
 }
 
 /** --- 입력 및 상호작용 --- */
@@ -68,17 +97,30 @@ void ACCDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 }
+
 void ACCDCharacter::ToggleView()
 {
+	// 1. 로컬에서 즉시 변경
 	bIsFirstPerson = !bIsFirstPerson;
-	FollowCamera->SetActive(!bIsFirstPerson);		// 카메라 활성화 상태 변경
-	FirstPersonCamera->SetActive(bIsFirstPerson);	
-	GetMesh()->SetOwnerNoSee(bIsFirstPerson);		// 메시 가시성 처리
+	ApplyViewMode(bIsFirstPerson);
+	
+	// 2. 서버에도 알림
+	Server_ToggleView(bIsFirstPerson);
+}
+void ACCDCharacter::Server_ToggleView_Implementation(bool bNewIsFirstPerson)
+{
+	bIsFirstPerson = bNewIsFirstPerson;
+	ApplyViewMode(bIsFirstPerson);
+}
+void ACCDCharacter::ApplyViewMode(bool bFirstPerson)
+{
+	FollowCamera->SetActive(!bFirstPerson);
+	FirstPersonCamera->SetActive(bFirstPerson);
+	GetMesh()->SetOwnerNoSee(bFirstPerson);
 
-	// 이동 및 회전 로직 변경
-	if (bIsFirstPerson)
+	if (bFirstPerson)
 	{
-		bUseControllerRotationYaw = true;
+		bUseControllerRotationYaw = true; // 이제 서버에서도 true가 된다.
 		GetCharacterMovement()->bOrientRotationToMovement = false;
 	}
 	else
@@ -87,6 +129,7 @@ void ACCDCharacter::ToggleView()
 		GetCharacterMovement()->bOrientRotationToMovement = true;
 	}
 }
+
 void ACCDCharacter::PerformInteract()
 {
 	// 이미 물체를 잡고 있다면 놓기
@@ -97,8 +140,6 @@ void ACCDCharacter::PerformInteract()
 	}
 	// 맨손 상태가 아니면 상호작용 불가
 	if (EquipmentState != ECCD_EquipmentState::EES_Hands) return;
-	
-	if (!FirstPersonCamera) return;
 
 	FVector TraceStart = FirstPersonCamera->GetComponentLocation();
 	FVector TraceEnd = TraceStart + (FirstPersonCamera->GetForwardVector() * InteractRange);
@@ -186,12 +227,6 @@ void ACCDCharacter::Server_PlayActionOfState_Implementation()
 }
 
 /** --- 장비 관리 시스템 (네트워크) --- */
-void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	// 변수 복제 등록
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(ACCDCharacter, EquipmentState);
-}
 void ACCDCharacter::Server_SetEquipmentState_Implementation(ECCD_EquipmentState NewState)
 {
 	if (EquipmentState == NewState || bIsUnequipping || bIsActionInProgress) return;
@@ -328,5 +363,10 @@ void ACCDCharacter::BindMontageEndedDelegate()
 		MontageEndedDelegate.BindUObject(this, &ACCDCharacter::OnEquipMontageEnded);
 		AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, EquipMontage);
 	}
+}
+
+void ACCDCharacter::Server_SetFirstPersonCameraRotation_Implementation(FRotator NewRotation)
+{
+	Rep_FirstPersonCameraRotation = NewRotation;
 }
 
