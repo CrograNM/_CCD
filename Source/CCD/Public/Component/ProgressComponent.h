@@ -13,25 +13,22 @@ class CCD_API UProgressComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:	
-	// Sets default values for this component's properties
 	UProgressComponent();
-
-protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 protected:
+	virtual void BeginPlay() override;
+
 	// 매니저를 매번 찾지 않도록 저장
 	class AProgressManager* ProgressManager;
 	
 public:	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Progress")
+	UPROPERTY(ReplicatedUsing = OnRep_ProgressValue, EditAnywhere, BlueprintReadWrite, Category = "Progress")
 	int ProgressValue = 10.0f;
+	UFUNCTION()
+	void OnRep_ProgressValue();
 	
 	// 액터가 소각되거나 대걸레질이 완료되었을 때 호출
-	void Notify_ProgressOver();
+	void Notify_ProgressOver() const;
 };

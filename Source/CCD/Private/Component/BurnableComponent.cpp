@@ -1,21 +1,17 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Component/BurnableComponent.h"
 #include "Component/ProgressComponent.h"
+#include "Net/UnrealNetwork.h"
 
-// Sets default values for this component's properties
 UBurnableComponent::UBurnableComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	// ...
+	// 네트워크 복제 설정
+	SetIsReplicatedByDefault(true);
 }
 
-
-// Called when the game starts
 void UBurnableComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -25,12 +21,16 @@ void UBurnableComponent::BeginPlay()
 	
 }
 
-// Called every frame
 void UBurnableComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+}
 
-	// ...
+void UBurnableComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
+	DOREPLIFETIME(UBurnableComponent, BurnHealth);
 }
 
 void UBurnableComponent::Interact_Implementation(AActor* Interactor)
@@ -44,6 +44,9 @@ void UBurnableComponent::Interact_Implementation(AActor* Interactor)
 
 void UBurnableComponent::TakeBurnDamage(float DamageAmount)
 {
+	// 권한 확인: 서버에서만 실행되도록 보장
+	if (!GetOwner()->HasAuthority()) return;
+	
 	BurnHealth -= DamageAmount;
 	UE_LOG(LogTemp, Warning, TEXT("컴포넌트: %s Damaged, Current HP: %f"), *GetOwner()->GetName(), BurnHealth);
 
@@ -62,3 +65,11 @@ void UBurnableComponent::TakeBurnDamage(float DamageAmount)
 	}
 }
 
+void UBurnableComponent::OnRep_BurnHealth()
+{
+	// 서버가 BurnHealth를 바꾸면 클라이언트의 이 함수가 실행됩니다.
+	/*if (BurnHealth < 50.0f)
+	{
+		UE_LOG(LogTemp, Log, TEXT("클라이언트: 물체가 절반 이상 탔습니다!"));
+	}*/
+}

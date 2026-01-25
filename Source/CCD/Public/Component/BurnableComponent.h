@@ -16,18 +16,17 @@ class CCD_API UBurnableComponent : public UActorComponent, public IInteractInter
 public:	
 	// Sets default values for this component's properties
 	UBurnableComponent();
-
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-protected:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(ReplicatedUsing = OnRep_BurnHealth, EditAnywhere, Category = "Status")
 	float BurnHealth = 100.f;
+	UFUNCTION()
+	void OnRep_BurnHealth();
 	
 	// 같은 액터에 있는 점수 컴포넌트 참조
 	class UProgressComponent* ProgressComp;

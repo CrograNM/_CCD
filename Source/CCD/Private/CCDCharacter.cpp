@@ -53,6 +53,13 @@ void ACCDCharacter::BeginPlay()
 void ACCDCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	// 물체를 잡고 있다면 카메라 정면으로 위치 업데이트
+	if (PhysicsHandle && PhysicsHandle->GetGrabbedComponent())
+	{
+		FVector TargetLocation = FirstPersonCamera->GetComponentLocation() + (FirstPersonCamera->GetForwardVector() * 200.0f); // 200은 물체와의 거리
+		PhysicsHandle->SetTargetLocation(TargetLocation);
+	}
 }
 
 /** --- 입력 및 상호작용 --- */
@@ -82,6 +89,15 @@ void ACCDCharacter::ToggleView()
 }
 void ACCDCharacter::PerformInteract()
 {
+	// 이미 물체를 잡고 있다면 놓기
+	if (PhysicsHandle && PhysicsHandle->GetGrabbedComponent())
+	{
+		Server_ReleaseObject();
+		return;
+	}
+	// 맨손 상태가 아니면 상호작용 불가
+	if (EquipmentState != ECCD_EquipmentState::EES_Hands) return;
+	
 	if (!FirstPersonCamera) return;
 
 	FVector TraceStart = FirstPersonCamera->GetComponentLocation();
@@ -96,17 +112,44 @@ void ACCDCharacter::PerformInteract()
 		if (HitResult.GetActor())
 		{
 			AActor* HitActor = HitResult.GetActor();
+			if (!HitActor) return;
+			
+			// 인터페이스 확인
 			UActorComponent* InteractableComp = HitActor->FindComponentByInterface(UInteractInterface::StaticClass());
-
 			if (InteractableComp)
 			{
-				// 컴포넌트의 인터페이스 함수 실행
+				// physics simulate 중인 메쉬인지 확인
+				UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(HitActor->GetRootComponent());
+				if (RootPrim && RootPrim->IsSimulatingPhysics())
+				{
+					Server_GrabObject(RootPrim, NAME_None, HitResult.ImpactPoint);
+				}
+            
+				// 기존 인터페이스 함수도 실행 (Burnable 등의 로직 처리용)
 				IInteractInterface::Execute_Interact(InteractableComp, this);
 			}
 		}
 	}
 }
+void ACCDCharacter::Server_GrabObject_Implementation(UPrimitiveComponent* ComponentToGrab, FName BoneName, FVector GrabLocation)
+{
+	if (!PhysicsHandle || !ComponentToGrab) return;
 
+	// 물리 핸들로 잡기 실행
+	PhysicsHandle->GrabComponentAtLocationWithRotation(
+		ComponentToGrab,
+		BoneName,
+		GrabLocation,
+		ComponentToGrab->GetComponentRotation()
+	);
+}
+void ACCDCharacter::Server_ReleaseObject_Implementation()
+{
+	if (PhysicsHandle)
+	{
+		PhysicsHandle->ReleaseComponent();
+	}
+}
 void ACCDCharacter::Server_PlayActionOfState_Implementation()
 {
 	if (bIsActionInProgress) return;

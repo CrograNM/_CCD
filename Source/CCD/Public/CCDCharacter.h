@@ -59,13 +59,6 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Equipment")
 	ECCD_EquipmentState PendingEquipmentState = ECCD_EquipmentState::EES_Hands;
-
-	/** --- 물리 및 상호작용 --- */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Physics", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UPhysicsHandleComponent> PhysicsHandle;
-
-	UPROPERTY(EditAnywhere, Category = "Design")
-	float InteractRange = 300.f;
 	
 	/** --- 애니메이션 몽타주 제어 --- */
 	UPROPERTY(EditAnywhere, Category = "Animation")
@@ -124,4 +117,22 @@ protected:
 	void OnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
 	void BindMontageEndedDelegate();
+	
+	/** --- 물리 및 상호작용 --- */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Physics", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UPhysicsHandleComponent> PhysicsHandle;
+
+	UPROPERTY(EditAnywhere, Category = "Design")
+	float InteractRange = 300.f;
+	
+	// 현재 잡고 있는 컴포넌트 (쓰레기 메쉬)
+	UPROPERTY()
+	class UPrimitiveComponent* GrabbedComponent;
+
+	// 잡기/놓기 로직
+	UFUNCTION(Server, Reliable)
+	void Server_GrabObject(UPrimitiveComponent* ComponentToGrab, FName BoneName, FVector GrabLocation);
+
+	UFUNCTION(Server, Reliable)
+	void Server_ReleaseObject();
 };
