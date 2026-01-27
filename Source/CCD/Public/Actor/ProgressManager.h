@@ -37,5 +37,8 @@ public:
 	// 현재 Progress 기록 (청소 완료 시 호출)
 	void AddCurrentProgress(float Value) { CurrentProgress += Value; UpdateUI(); }
 	
+	// 현재 진행도 갱신 (GameMode에 결과 전달)
+	void UpdateProgress();
+	
 	void UpdateUI();
 };

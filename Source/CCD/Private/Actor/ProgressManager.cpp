@@ -1,7 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ProgressManager.h"
+#include "Actor/ProgressManager.h"
+
+#include "CCDGameMode.h"
+#include "Kismet/GameplayStatics.h"
 
 
 // Sets default values
@@ -22,6 +25,19 @@ void AProgressManager::BeginPlay()
 void AProgressManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+void AProgressManager::UpdateProgress()
+{
+	// 목표치 달성 확인
+	if (CurrentProgress >= MaxProgress)
+	{
+		ACCDGameMode* GM = Cast<ACCDGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+		if (GM)
+		{
+			GM->OnCleaningFinished();
+		}
+	}
 }
 
 void AProgressManager::UpdateUI()

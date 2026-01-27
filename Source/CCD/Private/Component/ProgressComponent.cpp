@@ -2,7 +2,7 @@
 
 
 #include "Component/ProgressComponent.h"
-#include "ProgressManager.h"
+#include "Actor/ProgressManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
