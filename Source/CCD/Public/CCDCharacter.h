@@ -44,7 +44,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> FirstPersonCamera;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "Camera")
 	bool bIsFirstPerson = false;
 	
 	/** --- 장비 및 메시 --- */
@@ -141,11 +141,17 @@ protected:
 	void Server_ReleaseObject();
 	
 	/** --- (카메라) 회전값 복제 --- */
-	// 서버에서 클라이언트로 복제될 변수
+	// 카메라 회전값 복제 변수
 	UPROPERTY(Replicated)
 	FRotator Rep_FirstPersonCameraRotation;
 
-	// 서버에 회전값을 전달하는 RPC (FRotator를 넘깁니다)
 	UFUNCTION(Server, Unreliable)
 	void Server_SetFirstPersonCameraRotation(FRotator NewRotation);
+	
+	// 리모트 컨트롤 회전값 복제 변수 -> 고개를 까닥이는 모션용
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
+	FRotator RemoteControlRotation;
+
+	UFUNCTION(Server, Unreliable)
+	void Server_SetControlRotation(FRotator NewRotation);
 };

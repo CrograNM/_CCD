@@ -60,6 +60,7 @@ void ACCDCharacter::Tick(float DeltaTime)
 		if (FirstPersonCamera)
 		{
 			Server_SetFirstPersonCameraRotation(FirstPersonCamera->GetRelativeRotation());
+			Server_SetControlRotation(GetControlRotation());
 		}
 	}
 	else
@@ -87,8 +88,10 @@ void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 {
 	// 변수 복제 등록
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ACCDCharacter, bIsFirstPerson);
 	DOREPLIFETIME(ACCDCharacter, EquipmentState);
 	DOREPLIFETIME(ACCDCharacter, Rep_FirstPersonCameraRotation); // 회전값 복제 -> FirstPersonCamera에 적용시킴
+	DOREPLIFETIME(ACCDCharacter, RemoteControlRotation);
 	DOREPLIFETIME(ACCDCharacter, GrabbedComponent);
 }
 
@@ -376,4 +379,10 @@ void ACCDCharacter::Server_SetFirstPersonCameraRotation_Implementation(FRotator 
 {
 	Rep_FirstPersonCameraRotation = NewRotation;
 }
+
+void ACCDCharacter::Server_SetControlRotation_Implementation(FRotator NewRotation)
+{
+	RemoteControlRotation = NewRotation;
+}
+
 
