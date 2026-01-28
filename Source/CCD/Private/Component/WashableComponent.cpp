@@ -2,6 +2,8 @@
 
 
 #include "Component/WashableComponent.h"
+
+#include "Actor/Decal_StainActor_Base.h"
 #include "Component/ProgressComponent.h"
 #include "Net/UnrealNetwork.h"
 
@@ -48,8 +50,10 @@ void UWashableComponent::TakeWashDamage(float DamageAmount)
 	// 권한 확인: 서버에서만 실행되도록 보장
 	if (!GetOwner()->HasAuthority()) return;
 	
-	WashHealth -= DamageAmount;
-	UE_LOG(LogTemp, Warning, TEXT("컴포넌트: %s Damaged, Current HP: %f"), *GetOwner()->GetName(), WashHealth);
+	WashHealth = FMath::Clamp(WashHealth - DamageAmount, 0.f, 100.f);
+    
+	// 서버 측 비주얼 업데이트
+	OnRep_WashHealth();
 
 	if (WashHealth <= 0.f)
 	{
@@ -68,6 +72,10 @@ void UWashableComponent::TakeWashDamage(float DamageAmount)
 
 void UWashableComponent::OnRep_WashHealth()
 {
-	// WashHealth가 변경될 때 클라이언트에서 실행할 로직 작성 (데칼의 투명도 변경 등)
+	// 소유자 액터로 캐스팅하여 마스크 값 업데이트 요청
+	if (ADecal_StainActor_Base* StainActor = Cast<ADecal_StainActor_Base>(GetOwner()))
+	{
+		StainActor->UpdateDecalOpacity(getWashHealthRatio());
+	}
 }
 

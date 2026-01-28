@@ -8,6 +8,7 @@
 
 class UProgressComponent;
 class UWashableComponent;
+class UMaterialInstanceDynamic;
 
 UCLASS()
 class CCD_API ADecal_StainActor_Base : public ADecalActor
@@ -31,5 +32,12 @@ protected:
 	// 세척 가능 컴포넌트 -> 상호작용(세척) 처리
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UWashableComponent* WashableComp;
-
+	
+	// 생성된 다이내믹 머티리얼 인스턴스 저장
+	UPROPERTY()
+	TObjectPtr<UMaterialInstanceDynamic> DecalDMI;
+	
+public:
+	// 머티리얼 파라미터를 업데이트하는 함수
+	void UpdateDecalOpacity(float NewRatio) const;
 };

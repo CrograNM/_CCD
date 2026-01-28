@@ -34,6 +34,18 @@ void ADecal_StainActor_Base::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	// 부모 클래스인 ADecalActor가 가진 Decal 컴포넌트를 가져옴
+	UDecalComponent* DecalComp = GetDecal();
+	if (DecalComp)
+	{
+		// 0번 슬롯의 머티리얼로 DMI 생성
+		UMaterialInterface* BaseMat = DecalComp->GetDecalMaterial();
+		if (BaseMat)
+		{
+			DecalDMI = DecalComp->CreateDynamicMaterialInstance();
+		}
+	}
+	UpdateDecalOpacity(WashableComp->getWashHealthRatio());
 }
 
 // Called every frame
@@ -47,3 +59,11 @@ void ADecal_StainActor_Base::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 }
 
+void ADecal_StainActor_Base::UpdateDecalOpacity(float NewRatio) const
+{
+	if (DecalDMI)
+	{
+		// 머티리얼의 Scalar Parameter 업데이트
+		DecalDMI->SetScalarParameterValue(TEXT("WashHealthRatio"), NewRatio);
+	}
+}
