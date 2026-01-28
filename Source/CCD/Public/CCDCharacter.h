@@ -97,7 +97,7 @@ public:
 	void HandleEquipNotify();
 
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Animation")
-	void Server_PlayActionOfState();
+	void Server_PlayActionOfMop();
 	
 protected:
 	/** --- 네트워크 & 상태 동기화 --- */
@@ -154,4 +154,8 @@ protected:
 
 	UFUNCTION(Server, Unreliable)
 	void Server_SetControlRotation(FRotator NewRotation);
+	
+	// 대걸레 : 라인트레이스로 세척 실행
+	UFUNCTION(BlueprintCallable, Category = "Interaction")
+	void PerformCleaningTrace();
 };

@@ -42,7 +42,9 @@ void UWashableComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 
 void UWashableComponent::Interact_Implementation(AActor* Interactor)
 {
-	UE_LOG(LogTemp, Warning, TEXT("컴포넌트: %s Interacted!"), *GetOwner()->GetName());
+	UE_LOG( LogTemp, Warning, TEXT("Washable Component Interacted!") );
+	float DefaultDamage = 25.f;
+	TakeWashDamage(DefaultDamage);
 }
 
 void UWashableComponent::TakeWashDamage(float DamageAmount)

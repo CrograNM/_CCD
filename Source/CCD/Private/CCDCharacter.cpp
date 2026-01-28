@@ -1,9 +1,10 @@
 
 #include "CCDCharacter.h"
 #include "Camera/CameraComponent.h"
+#include "Component/BurnableComponent.h"
+#include "Component/WashableComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "Interface/InteractInterface.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "Net/UnrealNetwork.h"
 
@@ -152,27 +153,23 @@ void ACCDCharacter::PerformInteract()
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
 
+	// 라인트레이스로 컴포넌트 확인
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_Visibility, Params))
 	{
-		if (HitResult.GetActor())
+		AActor* HitActor = HitResult.GetActor();
+		if (!HitActor) return;
+		
+		// 히트된 액터에서 BurnableComponent를 찾습니다.
+		if (UBurnableComponent* BurnComp = HitActor->FindComponentByClass<UBurnableComponent>())
 		{
-			AActor* HitActor = HitResult.GetActor();
-			if (!HitActor) return;
-			
-			// 인터페이스 확인
-			UActorComponent* InteractableComp = HitActor->FindComponentByInterface(UInteractInterface::StaticClass());
-			if (InteractableComp)
+			// physics simulate 중인 메쉬인지 확인
+			UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(HitActor->GetRootComponent());
+			if (RootPrim && RootPrim->IsSimulatingPhysics())
 			{
-				// physics simulate 중인 메쉬인지 확인
-				UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(HitActor->GetRootComponent());
-				if (RootPrim && RootPrim->IsSimulatingPhysics())
-				{
-					Server_GrabObject(RootPrim, NAME_None, HitResult.ImpactPoint);
-				}
-            
-				// 기존 인터페이스 함수도 실행 (Burnable 등의 로직 처리용)
-				IInteractInterface::Execute_Interact(InteractableComp, this);
+				Server_GrabObject(RootPrim, NAME_None, HitResult.ImpactPoint);
 			}
+            
+			IInteractInterface::Execute_Interact(BurnComp, this);
 		}
 	}
 }
@@ -201,7 +198,7 @@ void ACCDCharacter::Server_ReleaseObject_Implementation()
 	// 서버에서 변수 해제 (클라이언트도 nullptr로 바뀜)
 	GrabbedComponent = nullptr;
 }
-void ACCDCharacter::Server_PlayActionOfState_Implementation()
+void ACCDCharacter::Server_PlayActionOfMop_Implementation()
 {
 	if (bIsActionInProgress) return;
 	
@@ -209,31 +206,14 @@ void ACCDCharacter::Server_PlayActionOfState_Implementation()
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && AnimInstance->Montage_IsPlaying(EquipMontage)) return;
 	
-	// 1. 현재 장비 상태를 문자열로 변환
-	FString StateString;
-	switch (EquipmentState)
+	if (EquipmentState == ECCD_EquipmentState::EES_Mop)
 	{
-	case ECCD_EquipmentState::EES_Hands:   
-		StateString = TEXT("Hands (Physics Handle)"); 
-		break;
-	case ECCD_EquipmentState::EES_Mop:     
-		StateString = TEXT("Mop"); 
+		PerformCleaningTrace();
+		
 		bIsActionInProgress = true;	// 액션 진행중 플래그 설정
 		Multicast_PlayEquipMontage(TEXT("SwingMop"), 1.5f);	// 대걸레 휘두르기 애니메이션 재생
 		BindMontageEndedDelegate();	// 몽타주 종료 델리게이트 바인딩
-		break;
-	case ECCD_EquipmentState::EES_Scanner: 
-		StateString = TEXT("Scanner"); 
-		break;
 	}
-	// 2. 권한 및 로컬 역할 확인 
-	FString AuthoritySide = HasAuthority() ? TEXT("Server") : TEXT("Client");
-    
-	// 3. 최종 메시지 구성
-	FString FinalMessage = FString::Printf(TEXT("[%s] Current State: %s"), *AuthoritySide, *StateString);
-
-	// 출력 로그(Output Log)에 출력
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *FinalMessage);
 }
 
 /** --- 장비 관리 시스템 (네트워크) --- */
@@ -373,6 +353,37 @@ void ACCDCharacter::BindMontageEndedDelegate()
 		MontageEndedDelegate.BindUObject(this, &ACCDCharacter::OnEquipMontageEnded);
 		AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, EquipMontage);
 	}
+}
+
+void ACCDCharacter::PerformCleaningTrace() 
+{
+	UE_LOG( LogTemp, Warning, TEXT("PerformCleaningTrace called") );
+	
+	if (!HasAuthority()) return; // 세척 판정은 서버에서만 수행
+	if (EquipmentState != ECCD_EquipmentState::EES_Mop) return;
+
+	FVector Start = FirstPersonCamera->GetComponentLocation();
+	FVector End = Start + (FirstPersonCamera->GetForwardVector() * InteractRange);
+
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+	{
+		AActor* HitActor = HitResult.GetActor();
+		if (!HitActor) return;
+		
+		// 히트된 액터에서 WashableComponent를 찾습니다.
+		if (UWashableComponent* WashComp = HitResult.GetActor()->FindComponentByClass<UWashableComponent>())
+		{
+			UE_LOG( LogTemp, Warning, TEXT("Washable Component Interacting...") );
+			IInteractInterface::Execute_Interact(WashComp, this);
+		}
+	}
+	
+		
+	
 }
 
 void ACCDCharacter::Server_SetFirstPersonCameraRotation_Implementation(FRotator NewRotation)
