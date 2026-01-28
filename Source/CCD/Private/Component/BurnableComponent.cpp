@@ -45,7 +45,8 @@ void UBurnableComponent::TakeBurnDamage(float DamageAmount)
 	
 	BurnHealth -= DamageAmount;
 	UE_LOG(LogTemp, Warning, TEXT("컴포넌트: %s Damaged, Current HP: %f"), *GetOwner()->GetName(), BurnHealth);
-
+	OnRep_BurnHealth(); // 폭파 효과 등 클라이언트에서 처리할 작업
+	
 	if (BurnHealth <= 0.f)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("컴포넌트: %s Burned!"), *GetOwner()->GetName());
