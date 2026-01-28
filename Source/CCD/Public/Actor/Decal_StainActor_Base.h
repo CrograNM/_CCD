@@ -12,14 +12,21 @@ class CCD_API ADecal_StainActor_Base : public ADecalActor
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
 	ADecal_StainActor_Base();
+	virtual void Tick(float DeltaTime) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	// Decal Component는 부모 클래스에 이미 포함되어 있음
+	
+	// --- 컴포넌트 ---
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UProgressComponent* ProgressComp;
+	
+	// 세척 가능 컴포넌트 -> 상호작용(세척) 처리
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UWashableComponent* WashableComp;
+
 };

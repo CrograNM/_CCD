@@ -36,7 +36,7 @@ void AWasteActor_Base::BeginPlay()
 {
 	Super::BeginPlay();
 	
-
+	
 }
 
 // Called every frame
