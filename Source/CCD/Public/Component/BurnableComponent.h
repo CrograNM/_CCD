@@ -35,5 +35,6 @@ public:
 	// 캐릭터가 상호작용(E키) 눌렀을 때 호출됨
 	virtual void Interact_Implementation(AActor* Interactor) override;	
 	
+	UFUNCTION(BlueprintCallable, Category = "Burnable")
 	void TakeBurnDamage(float DamageAmount);
 };

@@ -30,6 +30,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Progress")
 	float MaxProgress = 0.0f;
 	
+	// 진행도 비율 반환
+	UFUNCTION(BlueprintCallable, Category = "Progress")
+	float GetProgressRatio() const { return (MaxProgress > 0.0f) ? (CurrentProgress / MaxProgress) : 0.0f; }
+	
 public:
 	// Max Progress를 동적으로 추가 (쓰레기 생성 시 호출)
 	void AddMaxProgress(float Value) { MaxProgress += Value; UpdateUI(); }
