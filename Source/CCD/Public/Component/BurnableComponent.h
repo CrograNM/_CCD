@@ -20,7 +20,6 @@ public:
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 protected:
-	// Called when the game starts
 	virtual void BeginPlay() override;
 
 	UPROPERTY(ReplicatedUsing = OnRep_BurnHealth, EditAnywhere, Category = "Status")

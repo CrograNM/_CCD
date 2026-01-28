@@ -35,10 +35,6 @@ void UBurnableComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 
 void UBurnableComponent::Interact_Implementation(AActor* Interactor)
 {
-	//
-	// 캐릭터의 Physics Handle 함수를 호출하는 로직을 작성
-	//
-	
 	UE_LOG(LogTemp, Warning, TEXT("컴포넌트: %s Interacted!"), *GetOwner()->GetName());
 }
 

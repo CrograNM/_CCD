@@ -14,19 +14,25 @@ class CCD_API UWashableComponent : public UActorComponent, public IInteractInter
 	GENERATED_BODY()
 
 public:	
-	// Sets default values for this component's properties
 	UWashableComponent();
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
-	// Called when the game starts
 	virtual void BeginPlay() override;
+	
+	UPROPERTY(ReplicatedUsing = OnRep_WashHealth, EditAnywhere, Category = "Status")
+	float WashHealth = 100.f;
+	UFUNCTION()
+	void OnRep_WashHealth();
+	
+	// 같은 액터에 있는 점수 컴포넌트 참조
+	class UProgressComponent* ProgressComp;
 
 public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
 	// Implement Interact interface 오버라이드
 	virtual void Interact_Implementation(AActor* Interactor) override;
 	
-	void Wash();
+	UFUNCTION(BlueprintCallable, Category = "Washable")
+	void TakeWashDamage(float DamageAmount);
 };
