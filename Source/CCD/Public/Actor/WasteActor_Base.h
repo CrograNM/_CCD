@@ -4,19 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "WasteActor.generated.h"
+#include "WasteActor_Base.generated.h"
 
 class UStaticMeshComponent;
 class UProgressComponent;
 class UBurnableComponent;
 
 UCLASS()
-class CCD_API AWasteActor : public AActor
+class CCD_API AWasteActor_Base : public AActor
 {
 	GENERATED_BODY()
 
 public:
-	AWasteActor();
+	AWasteActor_Base();
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
