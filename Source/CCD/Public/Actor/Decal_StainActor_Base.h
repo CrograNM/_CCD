@@ -6,6 +6,9 @@
 #include "Engine/DecalActor.h"
 #include "Decal_StainActor_Base.generated.h"
 
+class UProgressComponent;
+class UWashableComponent;
+
 UCLASS()
 class CCD_API ADecal_StainActor_Base : public ADecalActor
 {
