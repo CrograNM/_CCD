@@ -1,4 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -25,7 +24,7 @@ protected:
 	
 public:	
 	UPROPERTY(ReplicatedUsing = OnRep_ProgressValue, EditAnywhere, BlueprintReadWrite, Category = "Progress")
-	int ProgressValue = 10.0f;
+	float ProgressValue = 10.0f;
 	UFUNCTION()
 	void OnRep_ProgressValue();
 	

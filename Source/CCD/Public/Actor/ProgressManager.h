@@ -17,7 +17,6 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;	
 	
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Progress, VisibleAnywhere, Category = "Progress")

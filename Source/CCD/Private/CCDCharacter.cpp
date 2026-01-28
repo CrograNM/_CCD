@@ -377,7 +377,6 @@ void ACCDCharacter::PerformCleaningTrace()
 		// 히트된 액터에서 WashableComponent를 찾습니다.
 		if (UWashableComponent* WashComp = HitResult.GetActor()->FindComponentByClass<UWashableComponent>())
 		{
-			UE_LOG( LogTemp, Warning, TEXT("Washable Component Interacting...") );
 			IInteractInterface::Execute_Interact(WashComp, this);
 		}
 	}

@@ -1,4 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -7,15 +6,14 @@
 #include "Components/ProgressBar.h"
 #include "ProgressWidget.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class CCD_API UProgressWidget : public UUserWidget
 {
 	GENERATED_BODY()
 	
 public:
+	virtual void NativeConstruct() override;
+	
 	// 블루프린트의 ProgressBar 이름을 'ProgressBar_Cleaning'으로 지으면 자동으로 연결됨.
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UProgressBar> ProgressBar_Cleaning;
