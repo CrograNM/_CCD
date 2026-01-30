@@ -55,36 +55,41 @@ void ACCDCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	// 1. 로컬 플레이어는 자기 카메라 회전값을 서버로 계속 보냄
+	// --- FirstPersonCamera 회전 동기화 ---
 	if (IsLocallyControlled())
 	{
-		if (FirstPersonCamera)
+		// 현재 로컬 카메라 회전값 가져오기
+		FRotator CurrentRot = FirstPersonCamera->GetRelativeRotation();
+
+		// 임계값 비교: 마지막 전송값과 차이가 날 때만 서버에 전송
+		if (!CurrentRot.Equals(LastSentRotation, RotationThreshold))
 		{
-			Server_SetFirstPersonCameraRotation(FirstPersonCamera->GetRelativeRotation());
+			Server_SetFirstPersonCameraRotation(CurrentRot);
 			Server_SetControlRotation(GetControlRotation());
+			LastSentRotation = CurrentRot;
 		}
 	}
 	else
 	{
-		// 다른 플레이어가 보고 있는 나라면(Proxy): 서버로부터 받은 값을 카메라에 적용합니다.
-		if (FirstPersonCamera)
-		{
-			FirstPersonCamera->SetRelativeRotation(Rep_FirstPersonCameraRotation);
-		}
+		FRotator NewRot = FMath::RInterpTo(FirstPersonCamera->GetRelativeRotation(), Rep_FirstPersonCameraRotation, DeltaTime, 15.0f);
+		FirstPersonCamera->SetRelativeRotation(NewRot);
 	}
 	
-	// 2. 물리 핸들 업데이트는 반드시 '서버'에서 수행
+	// --- 잡고 있는 물체 위치 업데이트 ---
+	UpdatePhysicsHandleTarget();
+}
+
+void ACCDCharacter::UpdatePhysicsHandleTarget()
+{
 	if (HasAuthority() && PhysicsHandle && GrabbedComponent)
 	{
-		// 서버의 FirstPersonCamera 회전값에 클라이언트가 보낸 Pitch를 적용
-		// (Yaw는 bUseControllerRotationYaw 덕분에 액터 회전과 동기화됨)
 		FVector LookDir = FirstPersonCamera->GetForwardVector();
-        
 		FVector TargetLocation = FirstPersonCamera->GetComponentLocation() + (LookDir * 200.0f);
 		PhysicsHandle->SetTargetLocation(TargetLocation);
 	}
-	
 }
+
+
 void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	// 변수 복제 등록
@@ -191,6 +196,9 @@ void ACCDCharacter::Server_GrabObject_Implementation(UPrimitiveComponent* Compon
 	// 서버에서 변수 할당 (이 값이 클라이언트에게 복제됨)
 	GrabbedComponent = ComponentToGrab;
 	
+	GrabbedComponent->SetSimulatePhysics(false);
+	GrabbedComponent->IgnoreActorWhenMoving(this, true);
+	
 	// 물리 핸들로 잡기 실행
 	PhysicsHandle->GrabComponentAtLocationWithRotation(
 		ComponentToGrab,
@@ -201,8 +209,11 @@ void ACCDCharacter::Server_GrabObject_Implementation(UPrimitiveComponent* Compon
 }
 void ACCDCharacter::Server_ReleaseObject_Implementation()
 {
-	if (PhysicsHandle)
+	if (PhysicsHandle && GrabbedComponent)
 	{
+		GrabbedComponent->SetSimulatePhysics(true);
+		GrabbedComponent->IgnoreActorWhenMoving(this, false);
+		
 		PhysicsHandle->ReleaseComponent();
 	}
 	
@@ -392,6 +403,11 @@ void ACCDCharacter::PerformCleaningTrace()
 			WashComp->TakeWashDamage(25.f); // 예시로 25의 세척 데미지 적용
 		}
 	}
+}
+
+void ACCDCharacter::Server_SetMaxWalkSpeed_Implementation(float NewSpeed)
+{
+	GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
 }
 
 void ACCDCharacter::Server_SetFirstPersonCameraRotation_Implementation(FRotator NewRotation)

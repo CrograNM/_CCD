@@ -70,6 +70,8 @@ protected:
 	bool bIsActionInProgress = false;
 
 public:
+	void UpdatePhysicsHandleTarget();
+	
 	/** --- Getter --- */
 	FORCEINLINE ECCD_EquipmentState GetEquipmentState() const { return EquipmentState; }
 
@@ -157,7 +159,16 @@ protected:
 	UFUNCTION(Server, Unreliable)
 	void Server_SetControlRotation(FRotator NewRotation);
 	
+	// 마지막으로 서버에 전송했던 회전값 기록
+	FRotator LastSentRotation;
+
+	// 동기화를 수행할 최소 각도 차이 (임계값)
+	const float RotationThreshold = 0.1f;
+	
 	// 대걸레 : 라인트레이스로 세척 실행
 	UFUNCTION(BlueprintCallable, Category = "Interaction")
 	void PerformCleaningTrace();
+	
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Movement")
+	void Server_SetMaxWalkSpeed(float NewSpeed);
 };
