@@ -1,5 +1,4 @@
 
-
 #include "Widget/ProgressWidget.h"
 
 #include "Actor/ProgressManager.h"

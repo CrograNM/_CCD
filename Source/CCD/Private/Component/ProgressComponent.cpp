@@ -1,5 +1,4 @@
 
-
 #include "Component/ProgressComponent.h"
 #include "Actor/ProgressManager.h"
 #include "Kismet/GameplayStatics.h"
@@ -32,8 +31,6 @@ void UProgressComponent::BeginPlay()
 void UProgressComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
 }
 
 void UProgressComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
