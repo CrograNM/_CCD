@@ -83,7 +83,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Interaction")
 	void PerformInteract();
-
+	UFUNCTION(Server, Reliable)
+	void Server_PerformInteract();	// PerformInteract RPC
+	
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	void SwitchToHands() { Server_SetEquipmentState(ECCD_EquipmentState::EES_Hands); }
 

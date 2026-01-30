@@ -21,6 +21,10 @@ public:
 	
 protected:
 	virtual void BeginPlay() override;
+	UFUNCTION()
+	void OnBurnAreaBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnBurnAreaEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 	
 	// --- 컴포넌트 ---
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -48,14 +52,11 @@ protected:
 	UPROPERTY()
 	TArray<class UBurnableComponent*> OverlappingBurnables;
 
-	UFUNCTION()
-	void OnBurnAreaBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, 
-							   UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, 
-							   bool bFromSweep, const FHitResult& SweepResult);
+	// --- 타이머 관련 ---
+	FTimerHandle BurnTimerHandle;
 
-	UFUNCTION()
-	void OnBurnAreaEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, 
-							 UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	// 실제로 대미지를 주는 로직을 담은 함수
+	void ApplyBurnDamage();
 	
 public:
 	// 캐릭터가 상호작용(E키) 눌렀을 때 호출됨 -> 소각로 문 열고 닫기

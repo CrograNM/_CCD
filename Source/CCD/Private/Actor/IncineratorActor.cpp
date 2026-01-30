@@ -9,7 +9,7 @@
 
 AIncineratorActor::AIncineratorActor()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 	
 	// 메쉬 컴포넌트 설정
@@ -25,7 +25,6 @@ AIncineratorActor::AIncineratorActor()
 	
 	// 서버에서만 대미지 판정을 하도록 설정
 	BurnArea->SetCollisionProfileName(TEXT("Trigger"));
-	
 }
 
 void AIncineratorActor::BeginPlay()
@@ -36,27 +35,15 @@ void AIncineratorActor::BeginPlay()
 	{
 		BurnArea->OnComponentBeginOverlap.AddDynamic(this, &AIncineratorActor::OnBurnAreaBeginOverlap);
 		BurnArea->OnComponentEndOverlap.AddDynamic(this, &AIncineratorActor::OnBurnAreaEndOverlap);
+		
+		// 1초마다 ApplyBurnDamage 함수를 반복 호출하도록 설정
+		GetWorldTimerManager().SetTimer(BurnTimerHandle, this, &AIncineratorActor::ApplyBurnDamage, 1.0f, true);
 	}
 }
 
 void AIncineratorActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
-	if (!HasAuthority()) return;
-	// 소각 영역 내의 Burnable 컴포넌트에 대미지 적용
-	for (int32 i = OverlappingBurnables.Num() - 1; i >= 0; --i)
-	{
-		if (OverlappingBurnables[i] && OverlappingBurnables[i]->GetOwner())
-		{
-			float Damage = DamagePerSecond * DeltaTime;
-			OverlappingBurnables[i]->TakeBurnDamage(Damage);
-		}
-		else
-		{
-			OverlappingBurnables.RemoveAt(i);
-		}
-	}
 }
 
 void AIncineratorActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -89,10 +76,37 @@ void AIncineratorActor::OnBurnAreaEndOverlap(UPrimitiveComponent* OverlappedComp
 	}
 }
 
+void AIncineratorActor::ApplyBurnDamage()
+{
+	// 서버에서만 판정
+	if (!HasAuthority()) return;
+
+	// 문이 열려있으면 작동하지 않음
+	if (bIsDoorOpen) return;
+	UE_LOG(LogTemp, Warning, TEXT("Incinerator is Burning"));
+	
+	// 소각 영역 내의 컴포넌트 순회
+	for (int32 i = OverlappingBurnables.Num() - 1; i >= 0; --i)
+	{
+		UBurnableComponent* BurnComp = OverlappingBurnables[i];
+        
+		// 유효성 검사 (액터가 이미 파괴되었을 수 있음)
+		if (BurnComp && BurnComp->GetOwner())
+		{
+			BurnComp->TakeBurnDamage(DamagePerSecond);
+		}
+		else
+		{
+			// 더 이상 유효하지 않은 컴포넌트는 목록에서 제거
+			OverlappingBurnables.RemoveAt(i);
+		}
+	}
+}
+
 void AIncineratorActor::Interact_Implementation(AActor* Interactor)
 {
 	if (!HasAuthority()) return; // 상태 변경은 서버에서만 수행
-	UE_LOG(LogTemp, Warning, TEXT("IncineratorActor::Interact_Implementation"));
+	UE_LOG(LogTemp, Warning, TEXT("Incinerator Door Move Request Received"));
 	
 	// 문 상태 토글
 	bIsDoorOpen = !bIsDoorOpen;

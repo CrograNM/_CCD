@@ -137,6 +137,11 @@ void ACCDCharacter::ApplyViewMode(bool bFirstPerson)
 
 void ACCDCharacter::PerformInteract()
 {
+	Server_PerformInteract();
+}
+
+void ACCDCharacter::Server_PerformInteract_Implementation()
+{
 	// 이미 물체를 잡고 있다면 놓기
 	if (GrabbedComponent)
 	{
@@ -178,6 +183,7 @@ void ACCDCharacter::PerformInteract()
 		}
 	}
 }
+
 void ACCDCharacter::Server_GrabObject_Implementation(UPrimitiveComponent* ComponentToGrab, FName BoneName, FVector GrabLocation)
 {
 	if (!PhysicsHandle || !ComponentToGrab) return;
