@@ -1,4 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -14,7 +13,6 @@ class CCD_API UBurnableComponent : public UActorComponent, public IInteractInter
 	GENERATED_BODY()
 
 public:	
-	// Sets default values for this component's properties
 	UBurnableComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
