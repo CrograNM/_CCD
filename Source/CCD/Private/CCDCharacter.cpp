@@ -168,13 +168,12 @@ void ACCDCharacter::PerformInteract()
 			{
 				Server_GrabObject(RootPrim, NAME_None, HitResult.ImpactPoint);
 			}
-            
 			IInteractInterface::Execute_Interact(BurnComp, this);
 		}
-		
 		// 이외의 상호작용 가능 액터들에 대해서도 인터페이스 호출
 		else if (HitActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass()))
 		{
+			UE_LOG(LogTemp, Warning, TEXT("ACCDCharacter::PerformInteract Interacted with %s"), *HitActor->GetName());
 			IInteractInterface::Execute_Interact(HitActor, this);
 		}
 	}

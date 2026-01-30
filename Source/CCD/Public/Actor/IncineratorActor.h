@@ -6,6 +6,7 @@
 #include "Interface/InteractInterface.h"
 #include "IncineratorActor.generated.h"
 
+class UStaticMeshComponent;
 class UBoxComponent;
 
 UCLASS()
@@ -16,9 +17,32 @@ class CCD_API AIncineratorActor : public AActor,  public IInteractInterface
 public:	
 	AIncineratorActor();
 	virtual void Tick(float DeltaTime) override;
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	
 protected:
 	virtual void BeginPlay() override;
+	
+	// --- 컴포넌트 ---
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UStaticMeshComponent> MainMesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UStaticMeshComponent> DoorMesh;
+	
+	// --- 문 제어 변수 ---
+	UPROPERTY(ReplicatedUsing = OnRep_DoorOpen) // 모든 플레이어에게 문 상태를 동기화
+	bool bIsDoorOpen = false;
+	
+	UFUNCTION()
+	void OnRep_DoorOpen();
+	
+	// 문이 열리고 닫힐 때의 목표 회전값
+	FRotator StartRotation;
+	FRotator TargetRotation;
+	
+	// 문이 열리는 각도 설정
+	UPROPERTY(EditAnywhere, Category = "Design")
+	float MaxOpenAngle = -90.0f;
 	
 	// 소각 영역 (충돌체)
 	UPROPERTY(VisibleAnywhere, Category = "Components")

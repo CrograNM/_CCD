@@ -2,21 +2,37 @@
 #include "Actor/IncineratorActor.h"
 #include "Components/BoxComponent.h"
 #include "Component/BurnableComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Net/UnrealNetwork.h"
 
 AIncineratorActor::AIncineratorActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
 	
+	// 메쉬 컴포넌트 설정
+	MainMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MainMesh"));
+	RootComponent = MainMesh;
+	
+	DoorMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DoorMesh"));
+	DoorMesh->SetupAttachment(RootComponent); 
+	
+	// 소각 영역 설정
 	BurnArea = CreateDefaultSubobject<UBoxComponent>(TEXT("BurnArea"));
 	BurnArea->SetupAttachment(RootComponent);
 	
 	// 서버에서만 대미지 판정을 하도록 설정
 	BurnArea->SetCollisionProfileName(TEXT("Trigger"));
+	
 }
 
 void AIncineratorActor::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	// 초기 목표 회전값 설정
+	StartRotation = DoorMesh->GetRelativeRotation();
+	TargetRotation = DoorMesh->GetRelativeRotation();
 	
 	if (HasAuthority())
 	{
@@ -28,9 +44,17 @@ void AIncineratorActor::BeginPlay()
 void AIncineratorActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	// 문 회전 보간 
+	FRotator CurrentRotation = DoorMesh->GetRelativeRotation();
+	if (!CurrentRotation.Equals(TargetRotation, 0.1f))
+	{
+		FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 5.0f);
+		DoorMesh->SetRelativeRotation(NewRotation);
+	}
+	
 	if (!HasAuthority()) return;
-
-	// 영역 안의 모든 물체에 초당 대미지 부여
+	// 소각 영역 내의 Burnable 컴포넌트에 대미지 적용
 	for (int32 i = OverlappingBurnables.Num() - 1; i >= 0; --i)
 	{
 		if (OverlappingBurnables[i] && OverlappingBurnables[i]->GetOwner())
@@ -43,6 +67,12 @@ void AIncineratorActor::Tick(float DeltaTime)
 			OverlappingBurnables.RemoveAt(i);
 		}
 	}
+}
+
+void AIncineratorActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AIncineratorActor, bIsDoorOpen);
 }
 
 void AIncineratorActor::OnBurnAreaBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -71,5 +101,19 @@ void AIncineratorActor::OnBurnAreaEndOverlap(UPrimitiveComponent* OverlappedComp
 
 void AIncineratorActor::Interact_Implementation(AActor* Interactor)
 {
+	if (!HasAuthority()) return; // 상태 변경은 서버에서만 수행
 	UE_LOG(LogTemp, Warning, TEXT("IncineratorActor::Interact_Implementation"));
+	
+	// 문 상태 토글
+	bIsDoorOpen = !bIsDoorOpen;
+    
+	// 서버에서도 OnRep 함수를 직접 호출하여 자신의 화면을 갱신합니다.
+	OnRep_DoorOpen();
+}
+
+void AIncineratorActor::OnRep_DoorOpen()
+{
+	// 목표 회전값 설정
+	float TargetYaw = bIsDoorOpen ? MaxOpenAngle : 0.0f;
+	TargetRotation = FRotator(StartRotation.Pitch, TargetYaw, StartRotation.Roll);
 }
