@@ -48,5 +48,32 @@ void AWasteActor_Base::Tick(float DeltaTime)
 void AWasteActor_Base::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AWasteActor_Base, bIsGrabbed);
 }
 
+void AWasteActor_Base::SetGrabbed(bool bInGrabbed)
+{
+	if (!HasAuthority()) return;
+	bIsGrabbed = bInGrabbed;
+	OnRep_IsGrabbed(); // 서버에서도 시각적 처리를 위해 호출
+}
+
+void AWasteActor_Base::OnRep_IsGrabbed()
+{
+	if (bIsGrabbed)
+	{
+		// [수정] 서버는 물리 핸들을 사용해야 하므로 시뮬레이션을 끄면 안 됩니다.
+		// 오직 클라이언트에서만 물리 엔진이 서버 복제 위치와 싸우지 않도록 끕니다.
+		if (!HasAuthority())
+		{
+			MeshComp->SetSimulatePhysics(false);
+		}
+		MeshComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore); // 캐릭터와 충돌 방지
+	}
+	else
+	{
+		// 놓았을 때는 다시 물리를 켭니다.
+		MeshComp->SetSimulatePhysics(true);
+		MeshComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+	}
+}
