@@ -4,12 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Interface/InteractInterface.h"
 #include "WashableComponent.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class CCD_API UWashableComponent : public UActorComponent, public IInteractInterface
+class CCD_API UWashableComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
@@ -30,8 +29,6 @@ protected:
 	class UProgressComponent* ProgressComp;
 
 public:	
-	// Implement Interact interface 오버라이드
-	virtual void Interact_Implementation(AActor* Interactor) override;
 	
 	UFUNCTION(BlueprintCallable, Category = "Washable")
 	float getWashHealthRatio() const { return WashHealth / 100.f; }

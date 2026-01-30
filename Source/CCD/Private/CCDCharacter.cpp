@@ -159,7 +159,7 @@ void ACCDCharacter::PerformInteract()
 		AActor* HitActor = HitResult.GetActor();
 		if (!HitActor) return;
 		
-		// 히트된 액터에서 BurnableComponent를 찾습니다.
+		// 피직스 핸들 발동 : 히트된 액터에서 BurnableComponent를 찾습니다.
 		if (UBurnableComponent* BurnComp = HitActor->FindComponentByClass<UBurnableComponent>())
 		{
 			// physics simulate 중인 메쉬인지 확인
@@ -170,6 +170,12 @@ void ACCDCharacter::PerformInteract()
 			}
             
 			IInteractInterface::Execute_Interact(BurnComp, this);
+		}
+		
+		// 이외의 상호작용 가능 액터들에 대해서도 인터페이스 호출
+		else if (HitActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass()))
+		{
+			IInteractInterface::Execute_Interact(HitActor, this);
 		}
 	}
 }
@@ -377,12 +383,10 @@ void ACCDCharacter::PerformCleaningTrace()
 		// 히트된 액터에서 WashableComponent를 찾습니다.
 		if (UWashableComponent* WashComp = HitResult.GetActor()->FindComponentByClass<UWashableComponent>())
 		{
-			IInteractInterface::Execute_Interact(WashComp, this);
+			UE_LOG(LogTemp, Warning, TEXT("WashComp %s Interacted"), *HitActor->GetName());
+			WashComp->TakeWashDamage(25.f); // 예시로 25의 세척 데미지 적용
 		}
 	}
-	
-		
-	
 }
 
 void ACCDCharacter::Server_SetFirstPersonCameraRotation_Implementation(FRotator NewRotation)

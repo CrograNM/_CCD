@@ -40,13 +40,6 @@ void UWashableComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	DOREPLIFETIME(UWashableComponent, WashHealth);
 }
 
-void UWashableComponent::Interact_Implementation(AActor* Interactor)
-{
-	UE_LOG( LogTemp, Warning, TEXT("Washable Component Interacted!") );
-	float DefaultDamage = 25.f;
-	TakeWashDamage(DefaultDamage);
-}
-
 void UWashableComponent::TakeWashDamage(float DamageAmount)
 {
 	// 권한 확인: 서버에서만 실행되도록 보장
