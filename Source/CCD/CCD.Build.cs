@@ -14,12 +14,12 @@ public class CCD : ModuleRules
 			"CoreUObject",
 			"Engine",
 			"InputCore",
-			"EnhancedInput"
+			"EnhancedInput",
+			"ActorSequence", 
+			"MovieScene", 
+			"LevelSequence"
 		});
 
-		PrivateDependencyModuleNames.AddRange(new string[] {  });
-
-		// Uncomment if you are using Slate UI
 		PrivateDependencyModuleNames.AddRange(new string[] {
 			"UMG",        // UUserWidget, UButton, UEditableTextBox 등
 			"Slate",      // Slate 위젯 사용 시 필요

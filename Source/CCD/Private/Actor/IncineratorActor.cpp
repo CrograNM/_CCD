@@ -3,6 +3,8 @@
 #include "Components/BoxComponent.h"
 #include "Component/BurnableComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "ActorSequenceComponent.h"
+#include "ActorSequencePlayer.h"
 #include "Net/UnrealNetwork.h"
 
 AIncineratorActor::AIncineratorActor()
@@ -44,14 +46,6 @@ void AIncineratorActor::BeginPlay()
 void AIncineratorActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
-	// 문 회전 보간 
-	FRotator CurrentRotation = DoorMesh->GetRelativeRotation();
-	if (!CurrentRotation.Equals(TargetRotation, 0.1f))
-	{
-		FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, DeltaTime, 5.0f);
-		DoorMesh->SetRelativeRotation(NewRotation);
-	}
 	
 	if (!HasAuthority()) return;
 	// 소각 영역 내의 Burnable 컴포넌트에 대미지 적용
@@ -113,7 +107,19 @@ void AIncineratorActor::Interact_Implementation(AActor* Interactor)
 
 void AIncineratorActor::OnRep_DoorOpen()
 {
-	// 목표 회전값 설정
-	float TargetYaw = bIsDoorOpen ? MaxOpenAngle : 0.0f;
-	TargetRotation = FRotator(StartRotation.Pitch, TargetYaw, StartRotation.Roll);
+	// 1. 블루프린트에서 추가된 Actor Sequence 컴포넌트를 찾습니다.
+	UActorSequenceComponent* SequenceComp = FindComponentByClass<UActorSequenceComponent>();
+	if (SequenceComp && SequenceComp->GetSequencePlayer())
+	{
+		if (bIsDoorOpen)
+		{
+			// 문을 여는 방향으로 재생
+			SequenceComp->GetSequencePlayer()->Play();
+		}
+		else
+		{
+			// 문을 닫는 방향(역재생)으로 재생
+			SequenceComp->GetSequencePlayer()->PlayReverse();
+		}
+	}
 }
