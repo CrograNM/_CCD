@@ -169,6 +169,8 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Interaction")
 	void PerformCleaningTrace();
 	
-	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Movement")
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	void SetRunning(float NewSpeed);
+	UFUNCTION(Server, Reliable, Category = "Movement")
 	void Server_SetMaxWalkSpeed(float NewSpeed);
 };

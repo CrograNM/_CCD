@@ -196,7 +196,9 @@ void ACCDCharacter::Server_GrabObject_Implementation(UPrimitiveComponent* Compon
 	// 서버에서 변수 할당 (이 값이 클라이언트에게 복제됨)
 	GrabbedComponent = ComponentToGrab;
 	
-	GrabbedComponent->SetSimulatePhysics(false);
+	GrabbedComponent->SetSimulatePhysics(true);
+	GrabbedComponent->SetLinearDamping(10.0f);  // 공기 저항 추가 (이동 떨림 방지)
+	GrabbedComponent->SetAngularDamping(10.0f); // 회전 저항 추가 (회전 꼬임 방지)
 	GrabbedComponent->IgnoreActorWhenMoving(this, true);
 	
 	// 물리 핸들로 잡기 실행
@@ -211,12 +213,12 @@ void ACCDCharacter::Server_ReleaseObject_Implementation()
 {
 	if (PhysicsHandle && GrabbedComponent)
 	{
-		GrabbedComponent->SetSimulatePhysics(true);
+		GrabbedComponent->SetLinearDamping(0.01f);
+		GrabbedComponent->SetAngularDamping(0.0f);
 		GrabbedComponent->IgnoreActorWhenMoving(this, false);
 		
 		PhysicsHandle->ReleaseComponent();
 	}
-	
 	// 서버에서 변수 해제 (클라이언트도 nullptr로 바뀜)
 	GrabbedComponent = nullptr;
 }
@@ -403,6 +405,15 @@ void ACCDCharacter::PerformCleaningTrace()
 			WashComp->TakeWashDamage(25.f); // 예시로 25의 세척 데미지 적용
 		}
 	}
+}
+
+void ACCDCharacter::SetRunning(float NewSpeed)
+{
+	// 1. 로컬 속도를 즉시 변경 (클라이언트 예측을 위해)
+	GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
+
+	// 2. 서버에게도 속도 변경을 요청
+	Server_SetMaxWalkSpeed(NewSpeed);
 }
 
 void ACCDCharacter::Server_SetMaxWalkSpeed_Implementation(float NewSpeed)
