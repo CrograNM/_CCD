@@ -32,10 +32,6 @@ void AIncineratorActor::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	// 초기 목표 회전값 설정
-	StartRotation = DoorMesh->GetRelativeRotation();
-	TargetRotation = DoorMesh->GetRelativeRotation();
-	
 	if (HasAuthority())
 	{
 		BurnArea->OnComponentBeginOverlap.AddDynamic(this, &AIncineratorActor::OnBurnAreaBeginOverlap);

@@ -36,14 +36,6 @@ protected:
 	UFUNCTION()
 	void OnRep_DoorOpen();
 	
-	// 문이 열리고 닫힐 때의 목표 회전값
-	FRotator StartRotation;
-	FRotator TargetRotation;
-	
-	// 문이 열리는 각도 설정
-	UPROPERTY(EditAnywhere, Category = "Design")
-	float MaxOpenAngle = -90.0f;
-	
 	// 소각 영역 (충돌체)
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<UBoxComponent> BurnArea;
