@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -10,137 +9,141 @@ class UCameraComponent;
 class USpringArmComponent;
 class UPhysicsHandleComponent;
 class UAnimMontage;
-
 class UCCD_EquipmentComponent;
 
 UCLASS()
 class CCD_API ACCDCharacter : public ACharacter
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	ACCDCharacter();
-	virtual void Tick(float DeltaTime) override;
-	void UpdatePhysicsHandleTarget() const;
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	
-	/** --- 장비 전환 및 뷰 모드 --- */
-	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	void SwitchToHands();
-	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	void SwitchToMop();
-	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	void SwitchToScanner();
-	
-	UFUNCTION(BlueprintCallable, Category = "Camera")
-	void ToggleView();
-	UFUNCTION(Server, Reliable)
-	void Server_ToggleView(bool bNewIsFirstPerson);		// ToggleView
-	void ApplyViewMode(bool bFirstPerson);				// ToggleView
-	
-	/** --- 상호작용 및 물리 핸들 --- */
-	UFUNCTION(BlueprintCallable, Category = "Interaction")
-	void PerformInteract();
-	UFUNCTION(Server, Reliable)
-	void Server_PerformInteract();	// PerformInteract RPC
-	
-	UFUNCTION(BlueprintCallable, Category = "Interaction")
-	void PerformCleaningTrace();
-	
-	/** --- 몽타주 제어 및 델리게이트 --- */
-	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Animation")
-	void Server_PlayActionOfMop();	// 대걸레 액션 재생 요청 및 라인 트레이스 호출
-	
-	UFUNCTION(NetMulticast, Reliable, Category = "Animation")
-	void Multicast_PlayEquipMontage(FName SectionName, float PlayRate);	// 장비 장착 몽타주 재생
-	UFUNCTION(NetMulticast, Reliable, Category = "Animation")
-	void Multicast_StopMontage();
-	UFUNCTION()
-	void OnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted); // 몽타주 종료 델리게이트 콜백
-	void BindMontageEndedDelegate();
-	
-	/** --- Getter / Setter --- */
-	TObjectPtr<UStaticMeshComponent> GetMopMesh() const { return MopMesh; }
-	TObjectPtr<UStaticMeshComponent> GetScannerMesh() const { return ScannerMesh; }
-	bool GetIsUnequipping() const { return bIsUnequipping; }
-	void SetIsUnequipping(bool bNewIsUnequipping) { bIsUnequipping = bNewIsUnequipping; }
-	bool GetIsActionInProgress() const { return bIsActionInProgress; }
-	void SetIsActionInProgress(bool bNewIsActionInProgress) { bIsActionInProgress = bNewIsActionInProgress; }
-	TObjectPtr<UAnimMontage> GetEquipMontage() const { return EquipMontage; }
-	
+    /** --- 1. 라이프 사이클 및 엔진 오버라이드 --- */
+    ACCDCharacter();
+    virtual void Tick(float DeltaTime) override;
+    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+    /** --- 2. 입력 인터페이스 (입력 바인딩용) --- */
+    UFUNCTION(BlueprintCallable, Category = "Camera")
+    void ToggleView();
+
+    UFUNCTION(BlueprintCallable, Category = "Equipment")
+    void SwitchToHands();
+
+    UFUNCTION(BlueprintCallable, Category = "Equipment")
+    void SwitchToMop();
+
+    UFUNCTION(BlueprintCallable, Category = "Equipment")
+    void SwitchToScanner();
+
+    UFUNCTION(BlueprintCallable, Category = "Interaction")
+    void PerformInteract();
+
+    /** --- 3. 애니메이션 및 멀티캐스트 (시각적 동기화) --- */
+    UFUNCTION(NetMulticast, Reliable, Category = "Animation")
+    void Multicast_PlayEquipMontage(FName SectionName, float PlayRate);
+
+    UFUNCTION(NetMulticast, Reliable, Category = "Animation")
+    void Multicast_StopMontage();
+
+    UFUNCTION()
+    void OnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+    void BindMontageEndedDelegate();
+    
+    /** --- 4. Getter / Setter --- */
+    FORCEINLINE TObjectPtr<UStaticMeshComponent> GetMopMesh() const { return MopMesh; }
+    FORCEINLINE TObjectPtr<UStaticMeshComponent> GetScannerMesh() const { return ScannerMesh; }
+    FORCEINLINE TObjectPtr<UAnimMontage> GetEquipMontage() const { return EquipMontage; }
+    
+    FORCEINLINE bool GetIsUnequipping() const { return bIsUnequipping; }
+    FORCEINLINE void SetIsUnequipping(bool bNewIsUnequipping) { bIsUnequipping = bNewIsUnequipping; }
+    
+    FORCEINLINE bool GetIsActionInProgress() const { return bIsActionInProgress; }
+    FORCEINLINE void SetIsActionInProgress(bool bNewIsActionInProgress) { bIsActionInProgress = bNewIsActionInProgress; }
+
 protected:
-	virtual void BeginPlay() override;
-	
-	/** --- 컴포넌트 --- */
-	/** --- 장비 컴포넌트 --- */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	TObjectPtr<class UCCD_EquipmentComponent> EquipmentComp;
-	
-	/** --- 카메라 --- */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<USpringArmComponent> CameraBoom;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UCameraComponent> FollowCamera;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UCameraComponent> FirstPersonCamera;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "Camera")
-	bool bIsFirstPerson = false;
-	
-	/** --- 장비 및 메시 --- */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UStaticMeshComponent> MopMesh;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UStaticMeshComponent> ScannerMesh;
-	
-	/** --- 애니메이션 몽타주 제어 --- */
-	UPROPERTY(EditAnywhere, Category = "Animation")
-	TObjectPtr<UAnimMontage> EquipMontage;	// 장비 교체 몽타주
-	UPROPERTY(BlueprintReadOnly, Category = "State")
-	bool bIsActionInProgress = false;
-	bool bIsUnequipping = false;
-	
-	/** --- 물리 및 상호작용 --- */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Physics", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UPhysicsHandleComponent> PhysicsHandle;
-	
-	UPROPERTY(EditAnywhere, Category = "Design")
-	float InteractRange = 300.f;
-	
-	// 현재 잡고 있는 컴포넌트 (쓰레기 메쉬)
-	UPROPERTY(Replicated)
-	class UPrimitiveComponent* GrabbedComponent;
+    /** --- 5. 라이프 사이클 내부 로직 --- */
+    virtual void BeginPlay() override;
 
-	// 잡기/놓기 로직
-	UFUNCTION(Server, Reliable)
-	void Server_GrabObject(UPrimitiveComponent* ComponentToGrab, FName BoneName, FVector GrabLocation);
-	
-	UFUNCTION(Server, Reliable)
-	void Server_ReleaseObject();
-	
-	/** --- (카메라) 회전값 복제 --- */
-	// 카메라 회전값 복제 변수
-	UPROPERTY(Replicated)
-	FRotator Rep_FirstPersonCameraRotation;
+    /** --- 6. 컴포넌트 (자식 BP에서 접근 가능) --- */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    TObjectPtr<UCCD_EquipmentComponent> EquipmentComp;
 
-	UFUNCTION(Server, Unreliable)
-	void Server_SetFirstPersonCameraRotation(FRotator NewRotation);
-	
-	// 리모트 컨트롤 회전값 복제 변수 -> 고개를 까닥이는 모션용
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
-	FRotator RemoteControlRotation;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
+    TObjectPtr<USpringArmComponent> CameraBoom;
 
-	UFUNCTION(Server, Unreliable)
-	void Server_SetControlRotation(FRotator NewRotation);
-	
-	// 마지막으로 서버에 전송했던 회전값 기록
-	FRotator LastSentRotation;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
+    TObjectPtr<UCameraComponent> FollowCamera;
 
-	// 동기화를 수행할 최소 각도 차이 (임계값)
-	const float RotationThreshold = 0.1f;
-	
-	UFUNCTION(BlueprintCallable, Category = "Movement")
-	void SetRunning(float NewSpeed);
-	UFUNCTION(Server, Reliable, Category = "Movement")
-	void Server_SetMaxWalkSpeed(float NewSpeed);
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
+    TObjectPtr<UCameraComponent> FirstPersonCamera;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Physics")
+    TObjectPtr<UPhysicsHandleComponent> PhysicsHandle;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment")
+    TObjectPtr<UStaticMeshComponent> MopMesh;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment")
+    TObjectPtr<UStaticMeshComponent> ScannerMesh;
+
+    /** --- 7. 서버 권한 로직 (RPC) --- */
+    UFUNCTION(Server, Reliable)
+    void Server_ToggleView(bool bNewIsFirstPerson);
+
+    UFUNCTION(Server, Reliable)
+    void Server_PerformInteract();
+
+    UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Animation")
+    void Server_PlayActionOfMop();
+
+    UFUNCTION(Server, Reliable)
+    void Server_GrabObject(UPrimitiveComponent* ComponentToGrab, FName BoneName, FVector GrabLocation);
+
+    UFUNCTION(Server, Reliable)
+    void Server_ReleaseObject();
+
+    UFUNCTION(Server, Reliable, Category = "Movement")
+    void Server_SetMaxWalkSpeed(float NewSpeed);
+
+    UFUNCTION(Server, Unreliable)
+    void Server_SetFirstPersonCameraRotation(FRotator NewRotation);
+
+    UFUNCTION(Server, Unreliable)
+    void Server_SetControlRotation(FRotator NewRotation);
+
+    /** --- 8. 상태 변수 및 복제 데이터 --- */
+    UPROPERTY(Replicated)
+    bool bIsFirstPerson = false;
+
+    UPROPERTY(Replicated)
+    class UPrimitiveComponent* GrabbedComponent;
+
+    UPROPERTY(Replicated)
+    FRotator Rep_FirstPersonCameraRotation;
+
+    UPROPERTY(Replicated)
+    FRotator RemoteControlRotation;
+
+    bool bIsUnequipping = false;
+    bool bIsActionInProgress = false;
+
+    /** --- 9. 내부 헬퍼 함수 --- */
+    void ApplyViewMode(bool bFirstPerson);
+    void UpdatePhysicsHandleTarget() const;
+    void PerformCleaningTrace();
+    
+    UFUNCTION(BlueprintCallable, Category = "Movement")
+    void SetRunning(float NewSpeed);
+
+    UPROPERTY(EditAnywhere, Category = "Animation")
+    TObjectPtr<UAnimMontage> EquipMontage;
+
+    UPROPERTY(EditAnywhere, Category = "Design")
+    float InteractRange = 300.f;
+
+private:
+    /** --- 10. 순수 내부 계산용 변수 (외부/자식 노출 불필요) --- */
+    FRotator LastSentRotation;
+    const float RotationThreshold = 0.1f;
 };
