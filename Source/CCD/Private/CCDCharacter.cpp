@@ -8,12 +8,16 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
+#include "Component/CCD_EquipmentComponent.h"
 #include "Net/UnrealNetwork.h"
 
 /** --- 생성자 및 기본 함수 --- */
 ACCDCharacter::ACCDCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	
+	// --- 장비 컴포넌트 추가 ---
+	EquipmentComp = CreateDefaultSubobject<UCCD_EquipmentComponent>(TEXT("EquipmentComp"));
 	
 	// --- 카메라 설정 ---
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -80,8 +84,7 @@ void ACCDCharacter::Tick(float DeltaTime)
 	// --- 잡고 있는 물체 위치 업데이트 ---
 	UpdatePhysicsHandleTarget();
 }
-
-void ACCDCharacter::UpdatePhysicsHandleTarget()
+void ACCDCharacter::UpdatePhysicsHandleTarget() const
 {
 	if (HasAuthority() && PhysicsHandle && GrabbedComponent)
 	{
@@ -90,24 +93,32 @@ void ACCDCharacter::UpdatePhysicsHandleTarget()
 		PhysicsHandle->SetTargetLocation(TargetLocation);
 	}
 }
-
-
+void ACCDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+}
 void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	// 변수 복제 등록
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ACCDCharacter, bIsFirstPerson);
-	DOREPLIFETIME(ACCDCharacter, EquipmentState);
 	DOREPLIFETIME(ACCDCharacter, Rep_FirstPersonCameraRotation); // 회전값 복제 -> FirstPersonCamera에 적용시킴
 	DOREPLIFETIME(ACCDCharacter, RemoteControlRotation);
 	DOREPLIFETIME(ACCDCharacter, GrabbedComponent);
 }
 
-/** --- 입력 및 상호작용 --- */
-void ACCDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+/** --- 장비 전환 및 뷰 모드 --- */
+void ACCDCharacter::SwitchToHands()
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
+	if (EquipmentComp) EquipmentComp->SwitchEquipment(ECCD_EquipmentState::EES_Hands);
+}
+void ACCDCharacter::SwitchToMop()
+{
+	if (EquipmentComp) EquipmentComp->SwitchEquipment(ECCD_EquipmentState::EES_Mop);
+}
+void ACCDCharacter::SwitchToScanner()
+{
+	if (EquipmentComp) EquipmentComp->SwitchEquipment(ECCD_EquipmentState::EES_Scanner);
 }
 
 void ACCDCharacter::ToggleView()
@@ -142,11 +153,11 @@ void ACCDCharacter::ApplyViewMode(bool bFirstPerson)
 	}
 }
 
+/** --- 상호작용 및 물리 핸들 --- */
 void ACCDCharacter::PerformInteract()
 {
 	Server_PerformInteract();
 }
-
 void ACCDCharacter::Server_PerformInteract_Implementation()
 {
 	// 이미 물체를 잡고 있다면 놓기
@@ -156,7 +167,7 @@ void ACCDCharacter::Server_PerformInteract_Implementation()
 		return;
 	}
 	// 맨손 상태가 아니면 상호작용 불가
-	if (EquipmentState != ECCD_EquipmentState::EES_Hands) return;
+	if (EquipmentComp->GetEquipmentState() != ECCD_EquipmentState::EES_Hands) return;
 
 	FVector TraceStart = FirstPersonCamera->GetComponentLocation();
 	FVector TraceEnd = TraceStart + (FirstPersonCamera->GetForwardVector() * InteractRange);
@@ -187,6 +198,33 @@ void ACCDCharacter::Server_PerformInteract_Implementation()
 		{
 			UE_LOG(LogTemp, Warning, TEXT("ACCDCharacter::PerformInteract Interacted with %s"), *HitActor->GetName());
 			IInteractInterface::Execute_Interact(HitActor, this);
+		}
+	}
+}
+void ACCDCharacter::PerformCleaningTrace() 
+{
+	UE_LOG( LogTemp, Warning, TEXT("PerformCleaningTrace called") );
+	
+	if (!HasAuthority()) return; // 세척 판정은 서버에서만 수행
+	if (EquipmentComp->GetEquipmentState() != ECCD_EquipmentState::EES_Mop) return;
+
+	FVector Start = FirstPersonCamera->GetComponentLocation();
+	FVector End = Start + (FirstPersonCamera->GetForwardVector() * InteractRange);
+
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+	{
+		AActor* HitActor = HitResult.GetActor();
+		if (!HitActor) return;
+		
+		// 히트된 액터에서 WashableComponent를 찾습니다.
+		if (UWashableComponent* WashComp = HitResult.GetActor()->FindComponentByClass<UWashableComponent>())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("WashComp %s Interacted"), *HitActor->GetName());
+			WashComp->TakeWashDamage(25.f); // 예시로 25의 세척 데미지 적용
 		}
 	}
 }
@@ -227,6 +265,8 @@ void ACCDCharacter::Server_ReleaseObject_Implementation()
 	// 서버에서 변수 해제 (클라이언트도 nullptr로 바뀜)
 	GrabbedComponent = nullptr;
 }
+
+/** --- 몽타주 제어 및 델리게이트 --- */
 void ACCDCharacter::Server_PlayActionOfMop_Implementation()
 {
 	if (bIsActionInProgress) return;
@@ -235,7 +275,7 @@ void ACCDCharacter::Server_PlayActionOfMop_Implementation()
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && AnimInstance->Montage_IsPlaying(EquipMontage)) return;
 	
-	if (EquipmentState == ECCD_EquipmentState::EES_Mop)
+	if (EquipmentComp->GetEquipmentState() == ECCD_EquipmentState::EES_Mop)
 	{
 		PerformCleaningTrace();
 		
@@ -244,94 +284,6 @@ void ACCDCharacter::Server_PlayActionOfMop_Implementation()
 		BindMontageEndedDelegate();	// 몽타주 종료 델리게이트 바인딩
 	}
 }
-
-/** --- 장비 관리 시스템 (네트워크) --- */
-void ACCDCharacter::Server_SetEquipmentState_Implementation(ECCD_EquipmentState NewState)
-{
-	if (EquipmentState == NewState || bIsUnequipping || bIsActionInProgress) return;
-
-	PendingEquipmentState = NewState;
-
-	if (EquipmentState != ECCD_EquipmentState::EES_Hands)
-	{
-		bIsUnequipping = true;
-		FName Section = (EquipmentState == ECCD_EquipmentState::EES_Mop) ? TEXT("DrawMop") : TEXT("DrawScanner");
-		bIsActionInProgress = true;	
-		Multicast_PlayEquipMontage(Section, -1.2f);
-		BindMontageEndedDelegate();
-	}
-	else
-	{
-		ProceedToEquip(NewState);
-	}
-}
-void ACCDCharacter::ProceedToEquip(ECCD_EquipmentState NewState)
-{
-	bIsUnequipping = false;
-
-	if (NewState == ECCD_EquipmentState::EES_Hands)
-	{
-		Multicast_StopMontage();
-		HandleEquipmentEffects(NewState);
-		return;
-	}
-
-	FName Section = (NewState == ECCD_EquipmentState::EES_Mop) ? TEXT("DrawMop") : TEXT("DrawScanner");
-	bIsActionInProgress = true;	
-	Multicast_PlayEquipMontage(Section, 1.0f);
-	BindMontageEndedDelegate();
-	HandleEquipmentEffects(NewState);
-}
-void ACCDCharacter::OnRep_EquipmentState(ECCD_EquipmentState PreviousState)
-{
-	HandleEquipmentEffects(EquipmentState);
-}
-
-/** --- 시각 효과 및 애니메이션 --- */
-void ACCDCharacter::HandleEquipmentEffects(ECCD_EquipmentState NewState)
-{
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && AnimInstance->Montage_IsPlaying(EquipMontage)) return;
-	
-	// 비-재생 중(중도 참가자 등)일 때의 최종 소켓 확정
-	switch (NewState)
-	{
-	case ECCD_EquipmentState::EES_Hands:
-		MopMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Back"));
-		ScannerMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hip"));
-		break;
-
-	case ECCD_EquipmentState::EES_Scanner:
-		ScannerMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hand"));
-		MopMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Back"));
-		break;
-
-	case ECCD_EquipmentState::EES_Mop:
-		MopMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Hand"));
-		ScannerMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hip"));
-		break;
-	}
-}
-void ACCDCharacter::HandleEquipNotify()
-{
-	if (!HasAuthority()) return;
-
-	if (bIsUnequipping)
-	{
-		MopMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Back"));
-		ScannerMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hip"));
-		EquipmentState = ECCD_EquipmentState::EES_Hands;
-	}
-	else
-	{
-		FName Socket = (PendingEquipmentState == ECCD_EquipmentState::EES_Mop) ? TEXT("MopSocket_Hand") : TEXT("ScannerSocket_Hand");
-		UStaticMeshComponent* TargetMesh = (PendingEquipmentState == ECCD_EquipmentState::EES_Mop) ? MopMesh : ScannerMesh;
-		TargetMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, Socket);
-		EquipmentState = PendingEquipmentState;
-	}
-}
-
-/** --- 몽타주 제어 및 델리게이트 --- */
 void ACCDCharacter::Multicast_PlayEquipMontage_Implementation(FName SectionName, float PlayRate)
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -370,7 +322,7 @@ void ACCDCharacter::OnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted
 	// 만약 장비 교체 중이었다면 기존 로직 수행
 	if (bIsUnequipping)
 	{
-		ProceedToEquip(PendingEquipmentState);
+		EquipmentComp->ProceedToEquip(EquipmentComp->GetPendingEquipmentState());
 	}
 }
 void ACCDCharacter::BindMontageEndedDelegate()
@@ -384,34 +336,7 @@ void ACCDCharacter::BindMontageEndedDelegate()
 	}
 }
 
-void ACCDCharacter::PerformCleaningTrace() 
-{
-	UE_LOG( LogTemp, Warning, TEXT("PerformCleaningTrace called") );
-	
-	if (!HasAuthority()) return; // 세척 판정은 서버에서만 수행
-	if (EquipmentState != ECCD_EquipmentState::EES_Mop) return;
-
-	FVector Start = FirstPersonCamera->GetComponentLocation();
-	FVector End = Start + (FirstPersonCamera->GetForwardVector() * InteractRange);
-
-	FHitResult HitResult;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
-
-	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
-	{
-		AActor* HitActor = HitResult.GetActor();
-		if (!HitActor) return;
-		
-		// 히트된 액터에서 WashableComponent를 찾습니다.
-		if (UWashableComponent* WashComp = HitResult.GetActor()->FindComponentByClass<UWashableComponent>())
-		{
-			UE_LOG(LogTemp, Warning, TEXT("WashComp %s Interacted"), *HitActor->GetName());
-			WashComp->TakeWashDamage(25.f); // 예시로 25의 세척 데미지 적용
-		}
-	}
-}
-
+/** --- 이동 속도 변경 --- */
 void ACCDCharacter::SetRunning(float NewSpeed)
 {
 	// 1. 로컬 속도를 즉시 변경 (클라이언트 예측을 위해)
@@ -420,17 +345,16 @@ void ACCDCharacter::SetRunning(float NewSpeed)
 	// 2. 서버에게도 속도 변경을 요청
 	Server_SetMaxWalkSpeed(NewSpeed);
 }
-
 void ACCDCharacter::Server_SetMaxWalkSpeed_Implementation(float NewSpeed)
 {
 	GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
 }
 
+/** --- 카메라 회전 동기화 --- */
 void ACCDCharacter::Server_SetFirstPersonCameraRotation_Implementation(FRotator NewRotation)
 {
 	Rep_FirstPersonCameraRotation = NewRotation;
 }
-
 void ACCDCharacter::Server_SetControlRotation_Implementation(FRotator NewRotation)
 {
 	RemoteControlRotation = NewRotation;
