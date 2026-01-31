@@ -33,6 +33,7 @@ void UCCD_EquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 void UCCD_EquipmentComponent::Server_SetEquipmentState_Implementation(ECCD_EquipmentState NewState)
 {
 	if (EquipmentState == NewState || !OwnerCharacter) return;
+	if ( OwnerCharacter->GetIsUnequipping() || OwnerCharacter->GetIsActionInProgress()) return;
 	
 	PendingEquipmentState = NewState;
 
