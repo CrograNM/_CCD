@@ -181,6 +181,7 @@ void ACCDCharacter::Server_PerformInteract_Implementation()
 	{
 		AActor* HitActor = HitResult.GetActor();
 		if (!HitActor) return;
+		UE_LOG(LogTemp, Warning, TEXT("PerformInteract Interacted with %s"), *HitActor->GetName());
 		
 		// 피직스 핸들 발동 : 히트된 액터에서 BurnableComponent를 찾습니다.
 		if (UBurnableComponent* BurnComp = HitActor->FindComponentByClass<UBurnableComponent>())
@@ -196,15 +197,12 @@ void ACCDCharacter::Server_PerformInteract_Implementation()
 		// 이외의 상호작용 가능 액터들에 대해서도 인터페이스 호출
 		else if (HitActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass()))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("ACCDCharacter::PerformInteract Interacted with %s"), *HitActor->GetName());
 			IInteractInterface::Execute_Interact(HitActor, this);
 		}
 	}
 }
 void ACCDCharacter::PerformCleaningTrace() 
 {
-	UE_LOG( LogTemp, Warning, TEXT("PerformCleaningTrace called") );
-	
 	if (!HasAuthority()) return; // 세척 판정은 서버에서만 수행
 	if (EquipmentComp->GetEquipmentState() != ECCD_EquipmentState::EES_Mop) return;
 
@@ -219,6 +217,7 @@ void ACCDCharacter::PerformCleaningTrace()
 	{
 		AActor* HitActor = HitResult.GetActor();
 		if (!HitActor) return;
+		UE_LOG(LogTemp, Warning, TEXT("PerformCleaningTrace Interacted with %s"), *HitActor->GetName());
 		
 		// 히트된 액터에서 WashableComponent를 찾습니다.
 		if (UWashableComponent* WashComp = HitResult.GetActor()->FindComponentByClass<UWashableComponent>())
