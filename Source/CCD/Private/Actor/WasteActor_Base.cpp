@@ -55,11 +55,9 @@ void AWasteActor_Base::OnRep_IsGrabbed()
 {
 	if (bIsGrabbed)
 	{
-		// 클라에서만 물리 끄기
 		if (!HasAuthority())
 		{
 			UpdatePhysicsReplicates(false);
-			
 		}
 		MeshComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore); // 캐릭터와 충돌 방지
 	}
@@ -74,7 +72,5 @@ void AWasteActor_Base::OnRep_IsGrabbed()
 void AWasteActor_Base::UpdatePhysicsReplicates(bool inReplicates)
 {
 	bReplicates = inReplicates;
-	//SetReplicateMovement(inReplicates);
 	//MeshComp->SetSimulatePhysics(inReplicates);
-	//MeshComp->SetIsReplicated(inReplicates);
 }

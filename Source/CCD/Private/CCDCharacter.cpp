@@ -243,9 +243,7 @@ void ACCDCharacter::Server_GrabObject_Implementation(UPrimitiveComponent* Compon
 	// 소유 액터가 WasteActor_Base라면 잡힘 상태 알림
 	if (AWasteActor_Base* WasteActor = Cast<AWasteActor_Base>(ComponentToGrab->GetOwner()))
 	{
-		//WasteActor->SetGrabbed(true);
-		//WasteActor->SetReplicateMovement(false);
-		WasteActor->UpdatePhysicsReplicates(false);
+		WasteActor->SetGrabbed(true);
 	}
 	// 물리 핸들로 잡기 실행
 	PhysicsHandle->GrabComponentAtLocationWithRotation(
@@ -261,9 +259,7 @@ void ACCDCharacter::Server_ReleaseObject_Implementation()
 	{
 		if (AWasteActor_Base* WasteActor = Cast<AWasteActor_Base>(GrabbedComponent->GetOwner()))
 		{
-			//WasteActor->SetGrabbed(false);
-			//WasteActor->SetReplicateMovement(true);
-			WasteActor->UpdatePhysicsReplicates(true);
+			WasteActor->SetGrabbed(false);
 		}
 		PhysicsHandle->ReleaseComponent();
 	}
