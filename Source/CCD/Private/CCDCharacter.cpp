@@ -52,6 +52,7 @@ ACCDCharacter::ACCDCharacter()
 	
 	// --- 물리 핸들 ---
 	PhysicsHandle = CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("PhysicsHandle"));
+	PhysicsHandle->SetIsReplicated(true);
 }
 void ACCDCharacter::BeginPlay()
 {
@@ -81,21 +82,18 @@ void ACCDCharacter::Tick(float DeltaTime)
 		FirstPersonCamera->SetRelativeRotation(NewRot);
 	}
 	
-	if (IsLocallyControlled() && GrabbedComponent)
-	{
-		FVector LookDir = FirstPersonCamera->GetForwardVector();
-		FVector TargetLocation = FirstPersonCamera->GetComponentLocation() + LookDir * 200.f;
-		FRotator TargetRotation = FirstPersonCamera->GetComponentRotation();
-		Server_UpdatePhysicsHandleTarget(TargetLocation, TargetRotation);
-	}
+	PhysicsHandleUpdate();
 }
-void ACCDCharacter::Server_UpdatePhysicsHandleTarget_Implementation(FVector_NetQuantize TargetLocation, FRotator TargetRotation)
-{
-	if (!PhysicsHandle || !GrabbedComponent) return;
 
-	// 서버에서만 PhysicsHandle 제어
-	PhysicsHandle->SetTargetLocation(TargetLocation);
-	PhysicsHandle->SetTargetRotation(TargetRotation);
+void ACCDCharacter::PhysicsHandleUpdate() const
+{
+	if (HasAuthority() && PhysicsHandle && GrabbedComponent)
+	{
+		FVector TargetLocation = FirstPersonCamera->GetComponentLocation() + (FirstPersonCamera->GetForwardVector() * 200.f);
+		FRotator TargetRotation = FirstPersonCamera->GetComponentRotation();
+
+		PhysicsHandle->SetTargetLocationAndRotation(TargetLocation, TargetRotation);
+	}
 }
 
 void ACCDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -207,7 +205,7 @@ void ACCDCharacter::Server_PerformInteract_Implementation()
 		}
 	}
 }
-void ACCDCharacter::PerformCleaningTrace() 
+void ACCDCharacter::PerformCleaningTrace() const
 {
 	if (!HasAuthority()) return; // 세척 판정은 서버에서만 수행
 	if (EquipmentComp->GetEquipmentState() != ECCD_EquipmentState::EES_Mop) return;

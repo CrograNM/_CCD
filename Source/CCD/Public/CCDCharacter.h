@@ -111,9 +111,6 @@ protected:
 
     UFUNCTION(Server, Unreliable)
     void Server_SetControlRotation(FRotator NewRotation);
-    
-    UFUNCTION(Server, Unreliable)
-    void Server_UpdatePhysicsHandleTarget(FVector_NetQuantize TargetLocation, FRotator TargetRotation);
 
     /** --- 8. 상태 변수 및 복제 데이터 --- */
     UPROPERTY(Replicated)
@@ -133,7 +130,8 @@ protected:
 
     /** --- 9. 내부 헬퍼 함수 --- */
     void ApplyViewMode(bool bFirstPerson);
-    void PerformCleaningTrace();
+    void PerformCleaningTrace() const;
+    void PhysicsHandleUpdate() const;
     
     UFUNCTION(BlueprintCallable, Category = "Movement")
     void SetRunning(float NewSpeed);

@@ -19,9 +19,6 @@ AWasteActor_Base::AWasteActor_Base()
 	MeshComp->SetSimulatePhysics(true);
 	MeshComp->SetIsReplicated(true);
 	
-	//MeshComp->Mobility = EComponentMobility::Movable;
-	//MeshComp->bReplicatePhysicsToAutonomousProxy = true;
-	
 	// 컴포넌트 생성 및 포함
 	BurnableComp = CreateDefaultSubobject<UBurnableComponent>(TEXT("BurnableComp"));
 	BurnableComp->SetIsReplicated(true);
@@ -57,10 +54,6 @@ void AWasteActor_Base::OnRep_IsGrabbed()
 {
 	if (bIsGrabbed)
 	{
-		// 잡고 있는 동안은 이동 복제 OFF
-		SetReplicateMovement(false);
-		//SetReplicatingMovement(false);
-		
 		// 클라에서만 물리 끄기
 		if (!HasAuthority())
 		{
@@ -70,10 +63,6 @@ void AWasteActor_Base::OnRep_IsGrabbed()
 	}
 	else
 	{
-		// 놓았을 때는 이동 복제 다시 켜기
-		SetReplicateMovement(true);
-		//SetReplicatingMovement(true);
-		
 		// 놓았을 때는 다시 물리 키기
 		MeshComp->SetSimulatePhysics(true);
 		MeshComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
