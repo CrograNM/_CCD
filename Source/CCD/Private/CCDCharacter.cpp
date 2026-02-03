@@ -81,18 +81,23 @@ void ACCDCharacter::Tick(float DeltaTime)
 		FirstPersonCamera->SetRelativeRotation(NewRot);
 	}
 	
-	// --- 잡고 있는 물체 위치 업데이트 ---
-	UpdatePhysicsHandleTarget();
-}
-void ACCDCharacter::UpdatePhysicsHandleTarget() const
-{
-	if (HasAuthority() && PhysicsHandle && GrabbedComponent)
+	if (IsLocallyControlled() && GrabbedComponent)
 	{
 		FVector LookDir = FirstPersonCamera->GetForwardVector();
-		FVector TargetLocation = FirstPersonCamera->GetComponentLocation() + (LookDir * 200.0f);
-		PhysicsHandle->SetTargetLocation(TargetLocation);
+		FVector TargetLocation = FirstPersonCamera->GetComponentLocation() + LookDir * 200.f;
+		FRotator TargetRotation = FirstPersonCamera->GetComponentRotation();
+		Server_UpdatePhysicsHandleTarget(TargetLocation, TargetRotation);
 	}
 }
+void ACCDCharacter::Server_UpdatePhysicsHandleTarget_Implementation(FVector_NetQuantize TargetLocation, FRotator TargetRotation)
+{
+	if (!PhysicsHandle || !GrabbedComponent) return;
+
+	// 서버에서만 PhysicsHandle 제어
+	PhysicsHandle->SetTargetLocation(TargetLocation);
+	PhysicsHandle->SetTargetRotation(TargetRotation);
+}
+
 void ACCDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -135,6 +140,7 @@ void ACCDCharacter::Server_ToggleView_Implementation(bool bNewIsFirstPerson)
 	bIsFirstPerson = bNewIsFirstPerson;
 	ApplyViewMode(bIsFirstPerson);
 }
+
 void ACCDCharacter::ApplyViewMode(bool bFirstPerson)
 {
 	FollowCamera->SetActive(!bFirstPerson);
@@ -240,6 +246,7 @@ void ACCDCharacter::Server_GrabObject_Implementation(UPrimitiveComponent* Compon
 	if (AWasteActor_Base* WasteActor = Cast<AWasteActor_Base>(ComponentToGrab->GetOwner()))
 	{
 		WasteActor->SetGrabbed(true);
+		WasteActor->SetReplicateMovement(false);
 	}
 	// 물리 핸들로 잡기 실행
 	PhysicsHandle->GrabComponentAtLocationWithRotation(
@@ -258,6 +265,7 @@ void ACCDCharacter::Server_ReleaseObject_Implementation()
 		if (AWasteActor_Base* WasteActor = Cast<AWasteActor_Base>(GrabbedComponent->GetOwner()))
 		{
 			WasteActor->SetGrabbed(false);
+			WasteActor->SetReplicateMovement(true);
 		}
 		PhysicsHandle->ReleaseComponent();
 	}
