@@ -40,7 +40,11 @@ protected:
 	UFUNCTION()
 	void OnRep_IsGrabbed();
 	
+	
 public:
 	// 서버에서 잡기 상태를 설정하는 함수
 	void SetGrabbed(bool bIsGrabbed);
+	
+	UFUNCTION()
+	void UpdatePhysicsReplicates(bool inReplicates);
 };

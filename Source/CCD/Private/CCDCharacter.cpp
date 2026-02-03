@@ -87,7 +87,7 @@ void ACCDCharacter::Tick(float DeltaTime)
 
 void ACCDCharacter::PhysicsHandleUpdate() const
 {
-	if (HasAuthority() && PhysicsHandle && GrabbedComponent)
+	if (PhysicsHandle && GrabbedComponent)
 	{
 		FVector TargetLocation = FirstPersonCamera->GetComponentLocation() + (FirstPersonCamera->GetForwardVector() * 200.f);
 		FRotator TargetRotation = FirstPersonCamera->GetComponentRotation();
@@ -232,19 +232,20 @@ void ACCDCharacter::PerformCleaningTrace() const
 	}
 }
 
+/** --- 물리 핸들: Grab/Release --- */
 void ACCDCharacter::Server_GrabObject_Implementation(UPrimitiveComponent* ComponentToGrab, FName BoneName, FVector GrabLocation)
 {
 	if (!PhysicsHandle || !ComponentToGrab) return;
 
 	// 서버에서 변수 할당 (이 값이 클라이언트에게 복제됨)
 	GrabbedComponent = ComponentToGrab;
-	//GrabbedComponent->SetSimulatePhysics(true);
 	
 	// 소유 액터가 WasteActor_Base라면 잡힘 상태 알림
 	if (AWasteActor_Base* WasteActor = Cast<AWasteActor_Base>(ComponentToGrab->GetOwner()))
 	{
-		WasteActor->SetGrabbed(true);
-		WasteActor->SetReplicateMovement(false);
+		//WasteActor->SetGrabbed(true);
+		//WasteActor->SetReplicateMovement(false);
+		WasteActor->UpdatePhysicsReplicates(false);
 	}
 	// 물리 핸들로 잡기 실행
 	PhysicsHandle->GrabComponentAtLocationWithRotation(
@@ -258,12 +259,11 @@ void ACCDCharacter::Server_ReleaseObject_Implementation()
 {
 	if (PhysicsHandle && GrabbedComponent)
 	{
-		//GrabbedComponent->SetSimulatePhysics(true);
-		
 		if (AWasteActor_Base* WasteActor = Cast<AWasteActor_Base>(GrabbedComponent->GetOwner()))
 		{
-			WasteActor->SetGrabbed(false);
-			WasteActor->SetReplicateMovement(true);
+			//WasteActor->SetGrabbed(false);
+			//WasteActor->SetReplicateMovement(true);
+			WasteActor->UpdatePhysicsReplicates(true);
 		}
 		PhysicsHandle->ReleaseComponent();
 	}

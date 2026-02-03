@@ -12,7 +12,8 @@ AWasteActor_Base::AWasteActor_Base()
 	// 네트워크 복제 설정
 	bReplicates = true;
 	bNetLoadOnClient = true;
-	SetReplicatingMovement(true);
+	AActor::SetReplicateMovement(true);
+	bAlwaysRelevant = true;
 	
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	RootComponent = MeshComp;
@@ -57,14 +58,23 @@ void AWasteActor_Base::OnRep_IsGrabbed()
 		// 클라에서만 물리 끄기
 		if (!HasAuthority())
 		{
-			MeshComp->SetSimulatePhysics(false);
+			UpdatePhysicsReplicates(false);
+			
 		}
 		MeshComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore); // 캐릭터와 충돌 방지
 	}
 	else
 	{
-		// 놓았을 때는 다시 물리 키기
-		MeshComp->SetSimulatePhysics(true);
+		UpdatePhysicsReplicates(true);
+		
 		MeshComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
 	}
+}
+
+void AWasteActor_Base::UpdatePhysicsReplicates(bool inReplicates)
+{
+	bReplicates = inReplicates;
+	//SetReplicateMovement(inReplicates);
+	//MeshComp->SetSimulatePhysics(inReplicates);
+	//MeshComp->SetIsReplicated(inReplicates);
 }
