@@ -16,8 +16,6 @@ class CCD_API AWasteActor_Base : public AActor
 
 public:
 	AWasteActor_Base();
-	virtual void Tick(float DeltaTime) override;
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -33,17 +31,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UBurnableComponent* BurnableComp;	
 	
-	// 현재 누군가에게 잡혀있는지 여부 (복제)
-	UPROPERTY(ReplicatedUsing = OnRep_IsGrabbed, BlueprintReadOnly, Category = "State")
-	bool bIsGrabbed = false;
-
-	UFUNCTION()
-	void OnRep_IsGrabbed();
-	
-	
 public:
-	// 서버에서 잡기 상태를 설정하는 함수
-	void SetGrabbed(bool bIsGrabbed);
 	
 	UFUNCTION()
 	void UpdatePhysicsReplicates(bool inReplicates);

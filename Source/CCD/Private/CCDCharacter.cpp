@@ -88,18 +88,20 @@ void ACCDCharacter::Tick(float DeltaTime)
 		FirstPersonCamera->SetRelativeRotation(NewRot);
 	}
 	
-	PhysicsHandleUpdate();
+	if (GrabbedComponent)
+	{
+		PhysicsHandleUpdate();
+	}
 }
 
 void ACCDCharacter::PhysicsHandleUpdate() const
 {
-	if (PhysicsHandle && GrabbedComponent)
-	{
-		FVector TargetLocation = FirstPersonCamera->GetComponentLocation() + (FirstPersonCamera->GetForwardVector() * 200.f);
-		FRotator TargetRotation = FirstPersonCamera->GetComponentRotation();
+	if (!PhysicsHandle || !GrabbedComponent) return;
+	
+	FVector TargetLocation = FirstPersonCamera->GetComponentLocation() + (FirstPersonCamera->GetForwardVector() * 200.f);
+	FRotator TargetRotation = FirstPersonCamera->GetComponentRotation();
 
-		PhysicsHandle->SetTargetLocationAndRotation(TargetLocation, TargetRotation);
-	}
+	PhysicsHandle->SetTargetLocationAndRotation(TargetLocation, TargetRotation);
 }
 
 void ACCDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -173,7 +175,7 @@ void ACCDCharacter::Server_PerformInteract_Implementation()
 	// 이미 물체를 잡고 있다면 놓기
 	if (GrabbedComponent)
 	{
-		Server_ReleaseObject();
+		Multicast_ReleaseObject();
 		return;
 	}
 	// 맨손 상태가 아니면 상호작용 불가
@@ -200,7 +202,7 @@ void ACCDCharacter::Server_PerformInteract_Implementation()
 			UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(HitActor->GetRootComponent());
 			if (RootPrim && RootPrim->IsSimulatingPhysics())
 			{
-				Server_GrabObject(RootPrim, NAME_None, HitResult.ImpactPoint);
+				Multicast_GrabObject(RootPrim, HitResult.ImpactPoint);
 			}
 			IInteractInterface::Execute_Interact(BurnComp, this);
 		}
@@ -211,6 +213,53 @@ void ACCDCharacter::Server_PerformInteract_Implementation()
 		}
 	}
 }
+void ACCDCharacter::Multicast_GrabObject_Implementation(UPrimitiveComponent* ComponentToGrab, FVector GrabLocation)
+{
+	GrabObject_Impl(ComponentToGrab, GrabLocation);
+}
+void ACCDCharacter::GrabObject_Impl(UPrimitiveComponent* ComponentToGrab, FVector GrabLocation)
+{
+	if (!PhysicsHandle || !ComponentToGrab) return;
+
+	GrabbedComponent = ComponentToGrab;
+	
+	GrabbedComponent->SetSimulatePhysics(true);
+	GrabbedComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+
+	if (AWasteActor_Base* WasteActor = Cast<AWasteActor_Base>(GrabbedComponent->GetOwner()))
+	{
+		WasteActor->UpdatePhysicsReplicates(false);
+	}
+	// 물리 핸들로 잡기 실행
+	PhysicsHandle->GrabComponentAtLocationWithRotation(
+		ComponentToGrab,
+		NAME_None,
+		GrabLocation,
+		ComponentToGrab->GetComponentRotation()
+	);
+}
+void ACCDCharacter::Multicast_ReleaseObject_Implementation()
+{
+	ReleaseObject_Impl();
+}
+void ACCDCharacter::ReleaseObject_Impl()
+{
+	if (!PhysicsHandle || !GrabbedComponent) return;
+	
+	PhysicsHandle->ReleaseComponent();
+	
+	if (GrabbedComponent)
+	{
+		GrabbedComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+
+		if (AWasteActor_Base* WasteActor = Cast<AWasteActor_Base>(GrabbedComponent->GetOwner()))
+		{
+			WasteActor->UpdatePhysicsReplicates(true);
+		}
+	}
+	GrabbedComponent = nullptr;
+}
+
 void ACCDCharacter::PerformCleaningTrace() const
 {
 	if (!HasAuthority()) return; // 세척 판정은 서버에서만 수행
@@ -236,41 +285,6 @@ void ACCDCharacter::PerformCleaningTrace() const
 			WashComp->TakeWashDamage(25.f); // 예시로 25의 세척 데미지 적용
 		}
 	}
-}
-
-/** --- 물리 핸들: Grab/Release --- */
-void ACCDCharacter::Server_GrabObject_Implementation(UPrimitiveComponent* ComponentToGrab, FName BoneName, FVector GrabLocation)
-{
-	if (!PhysicsHandle || !ComponentToGrab) return;
-
-	// 서버에서 변수 할당 (이 값이 클라이언트에게 복제됨)
-	GrabbedComponent = ComponentToGrab;
-	
-	// 소유 액터가 WasteActor_Base라면 잡힘 상태 알림
-	if (AWasteActor_Base* WasteActor = Cast<AWasteActor_Base>(ComponentToGrab->GetOwner()))
-	{
-		WasteActor->SetGrabbed(true);
-	}
-	// 물리 핸들로 잡기 실행
-	PhysicsHandle->GrabComponentAtLocationWithRotation(
-		ComponentToGrab,
-		BoneName,
-		GrabLocation,
-		ComponentToGrab->GetComponentRotation()
-	);
-}
-void ACCDCharacter::Server_ReleaseObject_Implementation()
-{
-	if (PhysicsHandle && GrabbedComponent)
-	{
-		if (AWasteActor_Base* WasteActor = Cast<AWasteActor_Base>(GrabbedComponent->GetOwner()))
-		{
-			WasteActor->SetGrabbed(false);
-		}
-		PhysicsHandle->ReleaseComponent();
-	}
-	// 서버에서 변수 해제 (클라이언트도 nullptr로 바뀜)
-	GrabbedComponent = nullptr;
 }
 
 /** --- 몽타주 제어 및 델리게이트 --- */

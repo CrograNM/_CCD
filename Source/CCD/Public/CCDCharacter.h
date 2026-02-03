@@ -94,17 +94,8 @@ protected:
     UFUNCTION(Server, Reliable)
     void Server_ToggleView(bool bNewIsFirstPerson);
 
-    UFUNCTION(Server, Reliable)
-    void Server_PerformInteract();
-
     UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Animation")
     void Server_PlayActionOfMop();
-
-    UFUNCTION(Server, Reliable)
-    void Server_GrabObject(UPrimitiveComponent* ComponentToGrab, FName BoneName, FVector GrabLocation);
-
-    UFUNCTION(Server, Reliable)
-    void Server_ReleaseObject();
 
     UFUNCTION(Server, Reliable, Category = "Movement")
     void Server_SetMaxWalkSpeed(float NewSpeed);
@@ -114,6 +105,18 @@ protected:
 
     UFUNCTION(Server, Unreliable)
     void Server_SetControlRotation(FRotator NewRotation);
+    
+    // 피직스 핸들: Server PerformInteract, Multicast Grab, Multicast Release 
+    UFUNCTION(Server, Reliable)
+    void Server_PerformInteract();
+    
+    UFUNCTION(NetMulticast, Reliable)
+    void Multicast_GrabObject(UPrimitiveComponent* ComponentToGrab, FVector GrabLocation);
+    void GrabObject_Impl(UPrimitiveComponent* ComponentToGrab, FVector GrabLocation);
+    
+    UFUNCTION(NetMulticast, Reliable)
+    void Multicast_ReleaseObject();
+    void ReleaseObject_Impl();
 
     /** --- 8. 상태 변수 및 복제 데이터 --- */
     UPROPERTY(Replicated)
