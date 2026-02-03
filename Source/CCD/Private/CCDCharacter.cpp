@@ -20,6 +20,7 @@ ACCDCharacter::ACCDCharacter()
 	EquipmentComp = CreateDefaultSubobject<UCCD_EquipmentComponent>(TEXT("EquipmentComp"));
 	
 	// --- 카메라 설정 ---
+	// 3인칭 카메라
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
 	CameraBoom->TargetArmLength = 400.0f;
@@ -27,9 +28,14 @@ ACCDCharacter::ACCDCharacter()
 
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
+	
+	// 1인칭 카메라
+	CameraRoot = CreateDefaultSubobject<USceneComponent>(TEXT("CameraRoot"));
+	CameraRoot->SetupAttachment(RootComponent); 
+	CameraRoot->SetRelativeLocation(FVector(0.0f, 0.0f, BaseEyeHeight)); 
 
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-	FirstPersonCamera->SetupAttachment(GetMesh(), TEXT("HeadSocket"));
+	FirstPersonCamera->SetupAttachment(CameraRoot); 
 	FirstPersonCamera->bUsePawnControlRotation = true;
 	
 	// 카메라 초기 상태 설정	( 3인칭 모드 시작 )

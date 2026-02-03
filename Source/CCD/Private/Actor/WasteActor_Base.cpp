@@ -72,5 +72,6 @@ void AWasteActor_Base::OnRep_IsGrabbed()
 void AWasteActor_Base::UpdatePhysicsReplicates(bool inReplicates)
 {
 	bReplicates = inReplicates;
+	//MeshComp->SetEnableGravity(inReplicates);
 	//MeshComp->SetSimulatePhysics(inReplicates);
 }

@@ -70,6 +70,9 @@ protected:
     TObjectPtr<UCCD_EquipmentComponent> EquipmentComp;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
+    TObjectPtr<USceneComponent> CameraRoot;
+    
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
     TObjectPtr<USpringArmComponent> CameraBoom;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
