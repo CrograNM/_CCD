@@ -44,6 +44,22 @@ void UProgressComponent::OnRep_ProgressValue()
 {
 }
 
+void UProgressComponent::UpdateProgressValue(float NewValue)
+{
+	// 1. 오직 서버에서만 점수 수정을 처리함
+	if (!GetOwner()->HasAuthority()) return;
+
+	if (ProgressManager)
+	{
+		// 이전 값과 차이만큼 매니저의 Max치를 보정 (예: 10 -> 15로 변하면 5만큼 더함)
+		float Diff = NewValue - ProgressValue;
+		ProgressManager->AddMaxProgress(Diff);
+	}
+
+	// 2. 값 변경 (이후 복제되어 클라이언트의 OnRep 호출)
+	ProgressValue = NewValue;
+}
+
 // 액터가 소각되거나 대걸레질이 완료되었을 때 호출
 void UProgressComponent::Notify_ProgressOver() const
 {

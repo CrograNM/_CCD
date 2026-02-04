@@ -28,6 +28,8 @@ public:
 	UFUNCTION()
 	void OnRep_ProgressValue();
 	
+	void UpdateProgressValue(float NewValue);
+	
 	// 액터가 소각되거나 대걸레질이 완료되었을 때 호출
 	void Notify_ProgressOver() const;
 };
