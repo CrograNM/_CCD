@@ -59,6 +59,12 @@ ACCDCharacter::ACCDCharacter()
 	// --- 물리 핸들 ---
 	PhysicsHandle = CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("PhysicsHandle"));
 	PhysicsHandle->SetIsReplicated(true);
+	
+	PhysicsHandle->LinearStiffness = 750.0f;  // 기본값은 보통 높음. 500~1000 사이로 조절
+	PhysicsHandle->AngularStiffness = 750.0f; // 회전 지연 정도
+	PhysicsHandle->LinearDamping = 50.0f;     // 출렁임을 방지하기 위한 감쇠
+	PhysicsHandle->AngularDamping = 50.0f;
+	PhysicsHandle->InterpolationSpeed = 20.0f; // 핸들 자체의 내부 보간 속도
 }
 void ACCDCharacter::BeginPlay()
 {
@@ -84,24 +90,36 @@ void ACCDCharacter::Tick(float DeltaTime)
 	}
 	else
 	{
-		FRotator NewRot = FMath::RInterpTo(FirstPersonCamera->GetRelativeRotation(), Rep_FirstPersonCameraRotation, DeltaTime, 15.0f);
+		FRotator NewRot = FMath::RInterpTo(FirstPersonCamera->GetRelativeRotation(), Rep_FirstPersonCameraRotation, DeltaTime, 30.0f);
 		FirstPersonCamera->SetRelativeRotation(NewRot);
 	}
 	
 	if (GrabbedComponent)
 	{
-		PhysicsHandleUpdate();
+		PhysicsHandleUpdate(DeltaTime);
 	}
 }
 
-void ACCDCharacter::PhysicsHandleUpdate() const
+void ACCDCharacter::PhysicsHandleUpdate(float DeltaTime)
 {
 	if (!PhysicsHandle || !GrabbedComponent) return;
-	
-	FVector TargetLocation = FirstPersonCamera->GetComponentLocation() + (FirstPersonCamera->GetForwardVector() * 200.f);
-	FRotator TargetRotation = FirstPersonCamera->GetComponentRotation();
+    
+	// 진짜 목표 지점
+	FVector RealTargetLocation = FirstPersonCamera->GetComponentLocation() + (FirstPersonCamera->GetForwardVector() * 200.f);
+	FRotator RealTargetRotation = FirstPersonCamera->GetComponentRotation();
 
-	PhysicsHandle->SetTargetLocationAndRotation(TargetLocation, TargetRotation);
+	float FollowSpeed = 10.0f; // 이 수치를 조절하여 따라가는 속도 변경 가능
+
+	// 현재 핸들 위치와 회전 가져오기
+	FVector CurrentLocation {};
+	FRotator CurrentRotation {};
+	PhysicsHandle->GetTargetLocationAndRotation(CurrentLocation, CurrentRotation);
+	
+	// 보간 계산
+	FVector NewLocation = FMath::VInterpTo(CurrentLocation, RealTargetLocation, DeltaTime, FollowSpeed);
+	FRotator NewRotation = FMath::RInterpTo(CurrentRotation, RealTargetRotation, DeltaTime, FollowSpeed);
+	
+	PhysicsHandle->SetTargetLocationAndRotation(NewLocation, NewRotation);
 }
 
 void ACCDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -146,7 +164,6 @@ void ACCDCharacter::Server_ToggleView_Implementation(bool bNewIsFirstPerson)
 	bIsFirstPerson = bNewIsFirstPerson;
 	ApplyViewMode(bIsFirstPerson);
 }
-
 void ACCDCharacter::ApplyViewMode(bool bFirstPerson)
 {
 	FollowCamera->SetActive(!bFirstPerson);

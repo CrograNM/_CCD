@@ -137,7 +137,7 @@ protected:
     /** --- 9. 내부 헬퍼 함수 --- */
     void ApplyViewMode(bool bFirstPerson);
     void PerformCleaningTrace() const;
-    void PhysicsHandleUpdate() const;
+    void PhysicsHandleUpdate(float DeltaTime);
     
     UFUNCTION(BlueprintCallable, Category = "Movement")
     void SetRunning(float NewSpeed);
