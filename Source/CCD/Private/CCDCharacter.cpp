@@ -105,17 +105,17 @@ void ACCDCharacter::PhysicsHandleUpdate(float DeltaTime)
 	if (!PhysicsHandle || !GrabbedComponent) return;
     
 	// 진짜 목표 지점
-	FVector RealTargetLocation = FirstPersonCamera->GetComponentLocation() + (FirstPersonCamera->GetForwardVector() * 200.f);
+	float TargetDistance = 200.f; // 이 수치를 조절하여 물체와의 거리 변경 가능
+	FVector RealTargetLocation = FirstPersonCamera->GetComponentLocation() + (FirstPersonCamera->GetForwardVector() * TargetDistance);
 	FRotator RealTargetRotation = FirstPersonCamera->GetComponentRotation();
-
-	float FollowSpeed = 10.0f; // 이 수치를 조절하여 따라가는 속도 변경 가능
-
+	
 	// 현재 핸들 위치와 회전 가져오기
 	FVector CurrentLocation {};
 	FRotator CurrentRotation {};
 	PhysicsHandle->GetTargetLocationAndRotation(CurrentLocation, CurrentRotation);
 	
 	// 보간 계산
+	float FollowSpeed = 10.0f; // 이 수치를 조절하여 따라가는 속도 변경 가능
 	FVector NewLocation = FMath::VInterpTo(CurrentLocation, RealTargetLocation, DeltaTime, FollowSpeed);
 	FRotator NewRotation = FMath::RInterpTo(CurrentRotation, RealTargetRotation, DeltaTime, FollowSpeed);
 	
