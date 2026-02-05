@@ -9,6 +9,32 @@ UCCD_EquipmentComponent::UCCD_EquipmentComponent()
 	SetIsReplicatedByDefault(true);
 }
 
+void UCCD_EquipmentComponent::OnRep_Pollution()
+{
+	UpdateMopMeshPollution();
+}
+
+void UCCD_EquipmentComponent::UpdateMopMeshPollution()
+{
+	if (UMaterialInstanceDynamic* MopMaterial = OwnerCharacter->GetMopMaterial())
+	{
+		// 머티리얼 파라미터 제어 (예: BloodAmount, PoopAmount)
+		MopMaterial->SetScalarParameterValue(TEXT("BloodIntensity"), MopPollution_Blood);
+		MopMaterial->SetScalarParameterValue(TEXT("ExcrementIntensity"), MopPollution_Excrement);
+        
+		// 혹은 두 색상을 섞어서 BaseColor 변경
+		FLinearColor CleanColor = FLinearColor::Blue;
+		FLinearColor BloodColor = FLinearColor::Red;
+		FLinearColor PoopColor = FLinearColor(0.3f, 0.15f, 0.05f); // 갈색
+
+		FLinearColor FinalColor = CleanColor;
+		FinalColor = FMath::Lerp(FinalColor, BloodColor, MopPollution_Blood);
+		FinalColor = FMath::Lerp(FinalColor, PoopColor, MopPollution_Excrement);
+        
+		MopMaterial->SetVectorParameterValue(TEXT("BaseColor"), FinalColor);
+	}
+}
+
 void UCCD_EquipmentComponent::BeginPlay()
 {
 	Super::BeginPlay();

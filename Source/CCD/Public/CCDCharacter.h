@@ -61,6 +61,7 @@ public:
     FORCEINLINE bool GetIsActionInProgress() const { return bIsActionInProgress; }
     FORCEINLINE void SetIsActionInProgress(bool bNewIsActionInProgress) { bIsActionInProgress = bNewIsActionInProgress; }
 
+    FORCEINLINE UMaterialInstanceDynamic* GetMopMaterial() const { return MopMaterial; }
 protected:
     /** --- 5. 라이프 사이클 내부 로직 --- */
     virtual void BeginPlay() override;
@@ -90,6 +91,9 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment")
     TObjectPtr<UStaticMeshComponent> ScannerMesh;
 
+    UPROPERTY()
+    UMaterialInstanceDynamic* MopMaterial;
+    
     /** --- 7. 서버 권한 로직 (RPC) --- */
     UFUNCTION(Server, Reliable)
     void Server_ToggleView(bool bNewIsFirstPerson);
@@ -136,7 +140,6 @@ protected:
 
     /** --- 9. 내부 헬퍼 함수 --- */
     void ApplyViewMode(bool bFirstPerson);
-    void SetMopMeshPollution() const;
     void PerformCleaningTrace() const;
     void PhysicsHandleUpdate(float DeltaTime);
     

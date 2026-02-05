@@ -70,6 +70,12 @@ ACCDCharacter::ACCDCharacter()
 void ACCDCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	// 대걸레 머티리얼 인스턴스 생성
+	if (MopMesh)
+	{
+		MopMaterial = MopMesh->CreateAndSetMaterialInstanceDynamic(0);
+	}
 }
 void ACCDCharacter::Tick(float DeltaTime)
 {
@@ -304,7 +310,7 @@ void ACCDCharacter::PerformCleaningTrace() const
 		{
 			if (Bucket->WashMop(EquipmentComp->MopPollution_Blood, EquipmentComp->MopPollution_Excrement))
 			{
-				SetMopMeshPollution();
+				EquipmentComp->UpdateMopMeshPollution();
 			}
 			else
 			{
@@ -332,7 +338,7 @@ void ACCDCharacter::PerformCleaningTrace() const
 			{
 				EquipmentComp->MopPollution_Excrement += 0.2f; // 배설물 오염도 증가
 			}
-			SetMopMeshPollution();
+			EquipmentComp->UpdateMopMeshPollution();
 		}
 	}
 }
@@ -430,11 +436,3 @@ void ACCDCharacter::Server_SetControlRotation_Implementation(FRotator NewRotatio
 {
 	RemoteControlRotation = NewRotation;
 }
-
-/** --- 대걸레 오염도 시각적 처리 --- */
-void ACCDCharacter::SetMopMeshPollution() const
-{
-	// EquipmentComp->MopPollution_Blood, EquipmentComp->MopPollution_Excrement
-	UE_LOG(LogTemp, Warning, TEXT("SetMopMeshPollution()"));
-}
-

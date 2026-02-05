@@ -40,8 +40,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	ECCD_EquipmentState GetPendingEquipmentState() const { return PendingEquipmentState; }
 	
+	UPROPERTY(ReplicatedUsing=OnRep_Pollution)
 	float MopPollution_Blood = 0.0f;
+	
+	UPROPERTY(Replicated=OnRep_Pollution)
 	float MopPollution_Excrement = 0.0f;
+	
+	UFUNCTION()
+	void OnRep_Pollution();
+	
+	void UpdateMopMeshPollution();
 	
 protected:
 	virtual void BeginPlay() override;
