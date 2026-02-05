@@ -23,3 +23,20 @@ void AWaterBucketActor::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+void AWaterBucketActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+}
+
+bool AWaterBucketActor::WashMop(float& InBloodAmount, float& InExcrementAmount)
+{
+	return false;
+}
+
+void AWaterBucketActor::OnRep_Pollution()
+{
+}
+
+void AWaterBucketActor::UpdateWaterColor()
+{
+}

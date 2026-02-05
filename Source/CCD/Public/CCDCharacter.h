@@ -147,7 +147,7 @@ protected:
 
     UPROPERTY(EditAnywhere, Category = "Design")
     float InteractRange = 300.f;
-
+    
 private:
     /** --- 10. 순수 내부 계산용 변수 (외부/자식 노출 불필요) --- */
     FRotator LastSentRotation;
