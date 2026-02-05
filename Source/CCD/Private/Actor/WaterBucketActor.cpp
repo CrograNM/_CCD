@@ -25,6 +25,7 @@ void AWaterBucketActor::BeginPlay()
 	if (WaterMeshComp)
 	{
 		WaterMaterial = WaterMeshComp->CreateAndSetMaterialInstanceDynamic(0);
+		UpdateWaterColor();
 	}
 }
 
