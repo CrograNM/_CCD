@@ -21,6 +21,10 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	
+	// 물 메시 컴포넌트 (블루프린트에서 설정)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UStaticMeshComponent* WaterMeshComp;
+	
 	UPROPERTY()
 	UMaterialInstanceDynamic* WaterMaterial; // 시각적 업데이트를 위한 머티리얼 인스턴스
 
@@ -35,4 +39,6 @@ protected:
 	void OnRep_Pollution(); // 오염도 변경시 호출
 	
 	void UpdateWaterColor(); // 물 색상 업데이트
+	
+	void SpillWater();
 };
