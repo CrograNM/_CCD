@@ -136,6 +136,7 @@ protected:
 
     /** --- 9. 내부 헬퍼 함수 --- */
     void ApplyViewMode(bool bFirstPerson);
+    void SetMopMeshPollution() const;
     void PerformCleaningTrace() const;
     void PhysicsHandleUpdate(float DeltaTime);
     

@@ -51,15 +51,56 @@ void AWaterBucketActor::GetLifetimeReplicatedProps(TArray<class FLifetimePropert
 
 bool AWaterBucketActor::WashMop(float& InBloodAmount, float& InExcrementAmount)
 {
-	return false;
+	// 물양동이 오염도가 1.0을 넘으면 더 이상 씻을 수 없음
+	if (Pollution_Blood + Pollution_Excrement >= 1.0f)
+	{
+		return false; 
+	}
+
+	// 물양동이에 오염물질 전이
+	float MaxPollutionValue = 0.2f; // 고정최대값으로 오염됨
+	Pollution_Blood += FMath::Clamp(InBloodAmount, 0.0f, MaxPollutionValue);
+	Pollution_Excrement += FMath::Clamp(InExcrementAmount, 0.0f, MaxPollutionValue);
+	Pollution_Blood = FMath::Clamp(Pollution_Blood, 0.0f, 1.0f);
+	Pollution_Excrement = FMath::Clamp(Pollution_Excrement, 0.0f, 1.0f);
+
+	// 대걸레는 깨끗해짐 (참조로 받아온 변수 수정)
+	float CleanValue = 0.5f; // 고정값으로 깨끗해짐
+	InBloodAmount -= CleanValue;
+	InExcrementAmount -= CleanValue;
+	InBloodAmount = FMath::Clamp(InBloodAmount, 0.0f, 1.0f);
+	InExcrementAmount = FMath::Clamp(InExcrementAmount, 0.0f, 1.0f);
+	
+	// 서버에서도 시각적 업데이트
+	OnRep_Pollution();
+
+	return true;
 }
 
 void AWaterBucketActor::OnRep_Pollution()
 {
+	UpdateWaterColor();
 }
 
 void AWaterBucketActor::UpdateWaterColor()
 {
+	if (WaterMaterial)
+	{
+		// 머티리얼 파라미터 제어 (예: BloodAmount, PoopAmount)
+		WaterMaterial->SetScalarParameterValue(TEXT("BloodIntensity"), Pollution_Blood);
+		WaterMaterial->SetScalarParameterValue(TEXT("ExcrementIntensity"), Pollution_Excrement);
+        
+		// 혹은 두 색상을 섞어서 BaseColor 변경
+		FLinearColor CleanColor = FLinearColor::Blue;
+		FLinearColor BloodColor = FLinearColor::Red;
+		FLinearColor PoopColor = FLinearColor(0.3f, 0.15f, 0.05f); // 갈색
+
+		FLinearColor FinalColor = CleanColor;
+		FinalColor = FMath::Lerp(FinalColor, BloodColor, Pollution_Blood);
+		FinalColor = FMath::Lerp(FinalColor, PoopColor, Pollution_Excrement);
+        
+		WaterMaterial->SetVectorParameterValue(TEXT("BaseColor"), FinalColor);
+	}
 }
 
 void AWaterBucketActor::SpillWater()

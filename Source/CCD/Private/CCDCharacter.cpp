@@ -2,6 +2,7 @@
 #include "CCDCharacter.h"
 
 #include "Actor/WasteActor_Base.h"
+#include "Actor/WaterBucketActor.h"
 #include "Camera/CameraComponent.h"
 #include "Component/BurnableComponent.h"
 #include "Component/WashableComponent.h"
@@ -210,7 +211,7 @@ void ACCDCharacter::Server_PerformInteract_Implementation()
 	{
 		AActor* HitActor = HitResult.GetActor();
 		if (!HitActor) return;
-		UE_LOG(LogTemp, Warning, TEXT("PerformInteract Interacted with %s"), *HitActor->GetName());
+		UE_LOG(LogTemp, Warning, TEXT("[Hand] Interacted with : %s"), *HitActor->GetName());
 		
 		// 피직스 핸들 발동 : 히트된 액터에서 BurnableComponent를 찾습니다.
 		if (UBurnableComponent* BurnComp = HitActor->FindComponentByClass<UBurnableComponent>())
@@ -281,6 +282,9 @@ void ACCDCharacter::PerformCleaningTrace() const
 {
 	if (!HasAuthority()) return; // 세척 판정은 서버에서만 수행
 	if (EquipmentComp->GetEquipmentState() != ECCD_EquipmentState::EES_Mop) return;
+	
+	UE_LOG(LogTemp, Warning, TEXT("[Mop] Pollution - Blood: %f, Excrement: %f"), 
+		EquipmentComp->MopPollution_Blood, EquipmentComp->MopPollution_Excrement);
 
 	FVector Start = FirstPersonCamera->GetComponentLocation();
 	FVector End = Start + (FirstPersonCamera->GetForwardVector() * InteractRange);
@@ -293,13 +297,42 @@ void ACCDCharacter::PerformCleaningTrace() const
 	{
 		AActor* HitActor = HitResult.GetActor();
 		if (!HitActor) return;
-		UE_LOG(LogTemp, Warning, TEXT("PerformCleaningTrace Interacted with %s"), *HitActor->GetName());
+		UE_LOG(LogTemp, Warning, TEXT("[Mop] Interact with : %s"), *HitActor->GetName());
 		
-		// 히트된 액터에서 WashableComponent를 찾습니다.
+		// 물양동이
+		if (AWaterBucketActor* Bucket = Cast<AWaterBucketActor>(HitActor))
+		{
+			if (Bucket->WashMop(EquipmentComp->MopPollution_Blood, EquipmentComp->MopPollution_Excrement))
+			{
+				SetMopMeshPollution();
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("[Mop] Bucket is too dirty."));
+			}
+			return;
+		}
+		if ( EquipmentComp->MopPollution_Blood + EquipmentComp->MopPollution_Excrement >= 1.0f )
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[Mop] Mop is too dirty to clean."));
+			
+			// 데칼 생성 로직 추가하기
+			
+			return;
+		}
+		// 데칼
 		if (UWashableComponent* WashComp = HitResult.GetActor()->FindComponentByClass<UWashableComponent>())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("WashComp %s Interacted"), *HitActor->GetName());
 			WashComp->TakeWashDamage(25.f); // 예시로 25의 세척 데미지 적용
+			if (WashComp->GetWashableType() == ECCD_WashableType::EWT_Blood)
+			{
+				EquipmentComp->MopPollution_Blood += 0.2f; // 피 오염도 증가
+			}
+			else if (WashComp->GetWashableType() == ECCD_WashableType::EWT_Excrement)
+			{
+				EquipmentComp->MopPollution_Excrement += 0.2f; // 배설물 오염도 증가
+			}
+			SetMopMeshPollution();
 		}
 	}
 }
@@ -398,4 +431,10 @@ void ACCDCharacter::Server_SetControlRotation_Implementation(FRotator NewRotatio
 	RemoteControlRotation = NewRotation;
 }
 
+/** --- 대걸레 오염도 시각적 처리 --- */
+void ACCDCharacter::SetMopMeshPollution() const
+{
+	// EquipmentComp->MopPollution_Blood, EquipmentComp->MopPollution_Excrement
+	UE_LOG(LogTemp, Warning, TEXT("SetMopMeshPollution()"));
+}
 
