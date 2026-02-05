@@ -35,7 +35,7 @@ protected:
 	
 	// --- 문 제어 변수 ---
 	UPROPERTY(ReplicatedUsing = OnRep_DoorOpen) // 모든 플레이어에게 문 상태를 동기화
-	bool bIsDoorOpen = false;
+	bool bIsDoorOpen = true;
 	
 	UFUNCTION()
 	void OnRep_DoorOpen();
