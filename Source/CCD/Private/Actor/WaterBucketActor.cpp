@@ -1,7 +1,10 @@
 
 #include "Actor/WaterBucketActor.h"
 
+#include "Actor/Decal_StainActor_Base.h"
 #include "Component/ProgressComponent.h"
+#include "Component/WashableComponent.h"
+#include "Components/DecalComponent.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -106,7 +109,45 @@ void AWaterBucketActor::UpdateWaterColor()
 
 void AWaterBucketActor::SpillWater()
 {
+	if (!HasAuthority() || !WaterMeshComp->IsVisible()) return;
+	
+	// 바닥 추적 (Line Trace)
+	FHitResult HitResult;
+	FVector Start = GetActorLocation();
+	FVector End = Start + FVector(0, 0, -500.0f);
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		
+		// 바닥 평면에 맞춘 회전값 (바닥 노멀 기준)
+		FRotator SpawnRot = HitResult.ImpactNormal.Rotation();
+		SpawnRot.Pitch -= 90.0f; // 데칼은 기본적으로 X축 방향으로 쏘므로 아래를 향하게 조정
+		
+		// Decal_StainActor_Base 스폰
+		if (ADecal_StainActor_Base* SpawnedDecal = GetWorld()->SpawnActor<ADecal_StainActor_Base>(DecalStainActorClass, HitResult.Location, SpawnRot, SpawnParams))
+		{
+			// Washable 컴포넌트 타입 설정
+			if (UWashableComponent* DecalWashComp = SpawnedDecal->FindComponentByClass<UWashableComponent>())
+			{
+				DecalWashComp->SetWashableType(ECCD_WashableType::EWT_Water);
+			}
+
+			// 오염도 설정
+			SpawnedDecal->SetPollution(Pollution_Blood, Pollution_Excrement);
+
+			// 깨끗한 물이었다면 바로 수명 설정
+			if (Pollution_Blood <= 0.f && Pollution_Excrement <= 0.f)
+			{
+				SpawnedDecal->SetLifeSpan(5.0f);
+			}
+		}
+	}
+
 	UE_LOG(LogTemp, Warning, TEXT("Spill Water!"));
-	WaterMeshComp ->SetVisibility(false);
+	WaterMeshComp->SetVisibility(false);
 	WaterMaterial = nullptr;
 }

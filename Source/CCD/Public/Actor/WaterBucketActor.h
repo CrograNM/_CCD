@@ -5,6 +5,8 @@
 #include "Actor/WasteActor_Base.h"
 #include "WaterBucketActor.generated.h"
 
+class ADecal_StainActor_Base;
+
 UCLASS()
 class CCD_API AWaterBucketActor : public AWasteActor_Base
 {
@@ -24,6 +26,10 @@ protected:
 	// 물 메시 컴포넌트 (블루프린트에서 설정)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* WaterMeshComp;
+	
+	// 스폰할 데칼 스테인 액터 블루프린트 클래스
+	UPROPERTY(EditDefaultsOnly, Category = "Spawning")
+	TSubclassOf<ADecal_StainActor_Base> DecalStainActorClass;
 	
 	UPROPERTY()
 	UMaterialInstanceDynamic* WaterMaterial; // 시각적 업데이트를 위한 머티리얼 인스턴스
