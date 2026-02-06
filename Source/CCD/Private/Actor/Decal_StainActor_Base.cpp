@@ -1,63 +1,96 @@
-
 #include "Actor/Decal_StainActor_Base.h"
-
 #include "Component/ProgressComponent.h"
 #include "Component/WashableComponent.h"
 #include "Components/DecalComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 ADecal_StainActor_Base::ADecal_StainActor_Base()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	
-	// 네트워크 복제 설정
 	bReplicates = true;
 	bNetLoadOnClient = true;
 	SetReplicatingMovement(true);
 	
-	// 컴포넌트 생성 및 포함
 	ProgressComp = CreateDefaultSubobject<UProgressComponent>(TEXT("ProgressComp"));
 	ProgressComp->SetIsReplicated(true);
 	WashableComp = CreateDefaultSubobject<UWashableComponent>(TEXT("WashableComp"));
 	WashableComp->SetIsReplicated(true);
 	
-	// 부모 데칼 컴포넌트의 복제 설정
 	GetDecal()->SetIsReplicated(true);
+}
+
+void ADecal_StainActor_Base::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+
+	// 에디터에서 WashableType에 따라 Decal Material 변경
+	if (WashableComp)
+	{
+		switch (WashableComp->GetWashableType())
+		{
+		case ECCD_WashableType::EWT_Blood:
+			GetDecal()->SetDecalMaterial(BloodDecalMaterial);
+			SetPollution(1.f, 0.f);
+			break;
+		case ECCD_WashableType::EWT_Excrement:
+			GetDecal()->SetDecalMaterial(ExcrementDecalMaterial);
+			SetPollution(0.f, 1.f);
+			break;
+		case ECCD_WashableType::EWT_Water:
+			GetDecal()->SetDecalMaterial(WaterDecalMaterial);
+			SetPollution(0.f, 0.f);
+			break;
+		}
+	}
 }
 
 void ADecal_StainActor_Base::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	// 부모 클래스인 ADecalActor가 가진 Decal 컴포넌트를 가져옴
-	UDecalComponent* DecalComp = GetDecal();
-	if (DecalComp)
+	if (GetDecal())
 	{
-		// 0번 슬롯의 머티리얼로 DMI 생성
-		UMaterialInterface* BaseMat = DecalComp->GetDecalMaterial();
-		if (BaseMat)
-		{
-			DecalDMI = DecalComp->CreateDynamicMaterialInstance();
-		}
+		DecalDMI = GetDecal()->CreateDynamicMaterialInstance();
 	}
-	UpdateDecalOpacity(WashableComp->getWashHealthRatio());
+	UpdateDecalMaterial();
 }
 
 void ADecal_StainActor_Base::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	// 세척이 완료되어 수명이 설정된 경우, 점점 투명해지도록 처리
+	if (GetLifeSpan() > 0.f && DecalDMI)
+	{
+		const float Opacity = GetLifeSpan() / InitialLifeSpan;
+		DecalDMI->SetScalarParameterValue(TEXT("Opacity"), Opacity);
+	}
 }
 
 void ADecal_StainActor_Base::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ADecal_StainActor_Base, Pollution_Blood);
+	DOREPLIFETIME(ADecal_StainActor_Base, Pollution_Excrement);
 }
 
-void ADecal_StainActor_Base::UpdateDecalOpacity(float NewRatio) const
+void ADecal_StainActor_Base::UpdateDecalMaterial() const
 {
 	if (DecalDMI)
 	{
-		// 머티리얼의 Scalar Parameter 업데이트
-		DecalDMI->SetScalarParameterValue(TEXT("WashHealthRatio"), NewRatio);
+		DecalDMI->SetScalarParameterValue(TEXT("WashHealthRatio"), WashableComp->GetWashHealthRatio());
+		DecalDMI->SetScalarParameterValue(TEXT("BloodIntensity"), Pollution_Blood);
+		DecalDMI->SetScalarParameterValue(TEXT("ExcrementIntensity"), Pollution_Excrement);
+	}
+}
+
+void ADecal_StainActor_Base::SetPollution(float InBlood, float InExcrement)
+{
+	if (HasAuthority())
+	{
+		Pollution_Blood = InBlood;
+		Pollution_Excrement = InExcrement;
+		UpdateDecalMaterial();
 	}
 }

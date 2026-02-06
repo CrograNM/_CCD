@@ -8,6 +8,7 @@
 class UProgressComponent;
 class UWashableComponent;
 class UMaterialInstanceDynamic;
+class UMaterialInterface;
 
 UCLASS()
 class CCD_API ADecal_StainActor_Base : public ADecalActor
@@ -18,25 +19,40 @@ public:
 	ADecal_StainActor_Base();
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void OnConstruction(const FTransform& Transform) override;
+
+	// 머티리얼 파라미터를 업데이트하는 함수
+	void UpdateDecalMaterial() const;
+	
+	// 외부에서 오염도를 설정하는 함수 (물 쏟을 때 사용)
+	void SetPollution(float InBlood, float InExcrement);
+	
+	UPROPERTY(Replicated)
+	float Pollution_Blood = 0.f;
+
+	UPROPERTY(Replicated)
+	float Pollution_Excrement = 0.f;
 
 protected:
 	virtual void BeginPlay() override;
 
-	// Decal Component는 부모 클래스에 이미 포함되어 있음
-	
 	// --- 컴포넌트 ---
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UProgressComponent* ProgressComp;
 	
-	// 세척 가능 컴포넌트 -> 상호작용(세척) 처리
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UWashableComponent* WashableComp;
 	
-	// 생성된 다이내믹 머티리얼 인스턴스 저장
+	// --- 머티리얼 및 상태 ---
+	UPROPERTY(EditAnywhere, Category = "Decal")
+	UMaterialInterface* BloodDecalMaterial;
+
+	UPROPERTY(EditAnywhere, Category = "Decal")
+	UMaterialInterface* ExcrementDecalMaterial;
+
+	UPROPERTY(EditAnywhere, Category = "Decal")
+	UMaterialInterface* WaterDecalMaterial;
+	
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> DecalDMI;
-	
-public:
-	// 머티리얼 파라미터를 업데이트하는 함수
-	void UpdateDecalOpacity(float NewRatio) const;
 };
