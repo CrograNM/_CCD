@@ -49,8 +49,10 @@ void UWashableComponent::TakeWashDamage(float DamageAmount)
 		// 세척된 액터의 머티리얼을 물 머티리얼과 점점 혼합시킨고, 완전히 물로 변하면 Lifespan을 설정하여 제거
 		// 완전히 물이 된 상태에서는 Lifespan 동안 투명도가 점점 줄어들도록 구현
 		
-		//SetWashableType(ECCD_WashableType::EWT_Water);
-		GetOwner()->SetLifeSpan(5.0f);
+		if (ADecal_StainActor_Base* StainActor = Cast<ADecal_StainActor_Base>(GetOwner()))
+		{
+			StainActor->NotifyCleaned();
+		}
 		
 		// 점수 컴포넌트가 유효하면 점수 증가
 		if (ProgressComp)

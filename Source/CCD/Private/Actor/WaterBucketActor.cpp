@@ -142,7 +142,7 @@ void AWaterBucketActor::SpillWater()
 			// 깨끗한 물이었다면 바로 수명 설정
 			if (Pollution_Blood <= 0.f && Pollution_Excrement <= 0.f)
 			{
-				SpawnedDecal->SetLifeSpan(5.0f);
+				SpawnedDecal->NotifyCleaned();
 			}
 		}
 	}
