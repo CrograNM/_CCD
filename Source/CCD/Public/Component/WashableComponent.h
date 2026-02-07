@@ -48,5 +48,6 @@ protected:
 	UFUNCTION()
 	void OnRep_WashHealth();
 	
+	// 같은 액터에 있는 점수 컴포넌트 참조
 	class UProgressComponent* ProgressComp;
 };

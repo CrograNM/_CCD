@@ -127,24 +127,14 @@ void AWaterBucketActor::SpillWater()
 		FRotator SpawnRot = HitResult.ImpactNormal.Rotation();
 		SpawnRot.Pitch -= 90.0f; // 데칼은 기본적으로 X축 방향으로 쏘므로 아래를 향하게 조정
 		
+		/*
+		 
 		// Decal_StainActor_Base 스폰
 		if (ADecal_StainActor_Base* SpawnedDecal = GetWorld()->SpawnActor<ADecal_StainActor_Base>(DecalStainActorClass, HitResult.Location, SpawnRot, SpawnParams))
 		{
-			// Washable 컴포넌트 타입 설정
-			if (UWashableComponent* DecalWashComp = SpawnedDecal->FindComponentByClass<UWashableComponent>())
-			{
-				DecalWashComp->SetWashableType(ECCD_WashableType::EWT_Water);
-			}
-
-			// 오염도 설정
-			SpawnedDecal->SetPollution(Pollution_Blood, Pollution_Excrement);
-
-			// 깨끗한 물이었다면 바로 수명 설정
-			if (Pollution_Blood <= 0.f && Pollution_Excrement <= 0.f)
-			{
-				SpawnedDecal->NotifyCleaned();
-			}
 		}
+		
+		*/
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("Spill Water!"));
