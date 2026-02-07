@@ -43,7 +43,7 @@ public:
 	UPROPERTY(ReplicatedUsing=OnRep_Pollution)
 	float MopPollution_Blood = 0.0f;
 	
-	UPROPERTY(Replicated=OnRep_Pollution)
+	UPROPERTY(ReplicatedUsing=OnRep_Pollution)
 	float MopPollution_Excrement = 0.0f;
 	
 	UFUNCTION()

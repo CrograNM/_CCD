@@ -95,15 +95,15 @@ void AWaterBucketActor::UpdateWaterColor()
 		WaterMaterial->SetScalarParameterValue(TEXT("ExcrementIntensity"), Pollution_Excrement);
         
 		// 혹은 두 색상을 섞어서 BaseColor 변경
-		FLinearColor CleanColor = FLinearColor::Blue;
-		FLinearColor BloodColor = FLinearColor::Red;
-		FLinearColor PoopColor = FLinearColor(0.3f, 0.15f, 0.05f); // 갈색
+		FLinearColor CleanColor = FLinearColor(0.228f, 0.343f, 0.405f, 1.0f); // 깨끗한 물 색상
+		FLinearColor BloodColor = FLinearColor(0.69f, 0.13f, 0.13f, 1.0f); // 핏빛
+		FLinearColor PoopColor = FLinearColor(0.0f, 0.5f, 0.0f, 1.0f); // 배설물
 
 		FLinearColor FinalColor = CleanColor;
 		FinalColor = FMath::Lerp(FinalColor, BloodColor, Pollution_Blood);
 		FinalColor = FMath::Lerp(FinalColor, PoopColor, Pollution_Excrement);
         
-		WaterMaterial->SetVectorParameterValue(TEXT("BaseColor"), FinalColor);
+		WaterMaterial->SetVectorParameterValue(TEXT("WaterColor"), FinalColor);
 	}
 }
 
