@@ -120,39 +120,40 @@ void AWaterBucketActor::SpillWater()
 	
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 	{
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		
-		// 바닥 평면에 맞춘 회전값 (바닥 노멀 기준)
-		FRotator SpawnRot = HitResult.ImpactNormal.Rotation();
-		SpawnRot.Pitch -= 90.0f; // 데칼은 기본적으로 X축 방향으로 쏘므로 아래를 향하게 조정
-		
-		// Decal_StainActor_Base 스폰
-		if (ADecal_StainActor_Base* SpawnedDecal = GetWorld()->SpawnActor<ADecal_StainActor_Base>(DecalStainActorClass, HitResult.Location, SpawnRot, SpawnParams))
+		// 1. SpawnActor 대신 SpawnActorDeferred를 사용합니다.
+		ADecal_StainActor_Base* SpawnedDecal = GetWorld()->SpawnActorDeferred<ADecal_StainActor_Base>(
+			DecalStainActorClass, 
+			FTransform(HitResult.ImpactNormal.Rotation(), HitResult.Location)
+		);
+
+		if (SpawnedDecal)
 		{
-			
-			// Washable 컴포넌트 타입 설정
 			if (UWashableComponent* DecalWashComp = SpawnedDecal->FindComponentByClass<UWashableComponent>())
 			{
 				DecalWashComp->SetWashableType(ECCD_WashableType::EWT_Water);
-				SpawnedDecal->RerunConstructionScripts();
 			}
-			
+
+			// 3. 색상 계산
 			// 오염도 설정 -> 색상을 섞어서 BaseColor 변경
-			//FLinearColor CleanColor = FLinearColor(0.228f, 0.343f, 0.405f, 1.0f); 
-			FLinearColor CleanColor = FLinearColor(0.69f, 0.13f, 0.13f, 1.0f);// 깨끗한 물 색상
+			FLinearColor CleanColor = FLinearColor(0.228f, 0.343f, 0.405f, 1.0f); // 깨끗한 물 색상
 			FLinearColor BloodColor = FLinearColor(0.69f, 0.13f, 0.13f, 1.0f); // 핏빛
 			FLinearColor PoopColor = FLinearColor(0.0f, 0.5f, 0.0f, 1.0f); // 배설물
 
 			FLinearColor FinalColor = CleanColor;
 			FinalColor = FMath::Lerp(FinalColor, BloodColor, Pollution_Blood);
 			FinalColor = FMath::Lerp(FinalColor, PoopColor, Pollution_Excrement);
-        
-			SpawnedDecal->DecalDMI->SetVectorParameterValue(TEXT("BaseColor Tint"), FinalColor);
-			SpawnedDecal->RerunConstructionScripts();
+
+			// 5. [핵심] 이제야 ConstructionScript와 BeginPlay를 실행합니다.
+			SpawnedDecal->FinishSpawning(SpawnedDecal->GetTransform());
+            
+			// 6. 만약 BP ConstructionScript에서 DMI를 만든다면, 여기서 마지막으로 색상을 꽂아줍니다.
+			if(SpawnedDecal->DecalDMI)
+			{
+				SpawnedDecal->DecalDMI->SetVectorParameterValue(TEXT("BaseColor Tint"), FinalColor);
+			}
 		}
 	}
-
+	
 	UE_LOG(LogTemp, Warning, TEXT("Spill Water!"));
 	WaterMeshComp->SetVisibility(false);
 	WaterMaterial = nullptr;
