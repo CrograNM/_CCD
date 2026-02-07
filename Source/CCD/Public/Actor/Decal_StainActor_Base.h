@@ -32,11 +32,13 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UWashableComponent* WashableComp;
 	
-	// 생성된 다이내믹 머티리얼 인스턴스 저장
-	UPROPERTY()
-	TObjectPtr<UMaterialInstanceDynamic> DecalDMI;
-	
+
 public:
 	// 머티리얼 파라미터를 업데이트하는 함수
 	void UpdateDecalOpacity(float NewRatio) const;
+	
+	
+	// 생성된 다이내믹 머티리얼 인스턴스 저장
+	UPROPERTY()
+	TObjectPtr<UMaterialInstanceDynamic> DecalDMI;
 };

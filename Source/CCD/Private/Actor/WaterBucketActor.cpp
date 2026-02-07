@@ -127,14 +127,30 @@ void AWaterBucketActor::SpillWater()
 		FRotator SpawnRot = HitResult.ImpactNormal.Rotation();
 		SpawnRot.Pitch -= 90.0f; // 데칼은 기본적으로 X축 방향으로 쏘므로 아래를 향하게 조정
 		
-		/*
-		 
 		// Decal_StainActor_Base 스폰
 		if (ADecal_StainActor_Base* SpawnedDecal = GetWorld()->SpawnActor<ADecal_StainActor_Base>(DecalStainActorClass, HitResult.Location, SpawnRot, SpawnParams))
 		{
+			
+			// Washable 컴포넌트 타입 설정
+			if (UWashableComponent* DecalWashComp = SpawnedDecal->FindComponentByClass<UWashableComponent>())
+			{
+				DecalWashComp->SetWashableType(ECCD_WashableType::EWT_Water);
+				SpawnedDecal->RerunConstructionScripts();
+			}
+			
+			// 오염도 설정 -> 색상을 섞어서 BaseColor 변경
+			//FLinearColor CleanColor = FLinearColor(0.228f, 0.343f, 0.405f, 1.0f); 
+			FLinearColor CleanColor = FLinearColor(0.69f, 0.13f, 0.13f, 1.0f);// 깨끗한 물 색상
+			FLinearColor BloodColor = FLinearColor(0.69f, 0.13f, 0.13f, 1.0f); // 핏빛
+			FLinearColor PoopColor = FLinearColor(0.0f, 0.5f, 0.0f, 1.0f); // 배설물
+
+			FLinearColor FinalColor = CleanColor;
+			FinalColor = FMath::Lerp(FinalColor, BloodColor, Pollution_Blood);
+			FinalColor = FMath::Lerp(FinalColor, PoopColor, Pollution_Excrement);
+        
+			SpawnedDecal->DecalDMI->SetVectorParameterValue(TEXT("BaseColor Tint"), FinalColor);
+			SpawnedDecal->RerunConstructionScripts();
 		}
-		
-		*/
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("Spill Water!"));
