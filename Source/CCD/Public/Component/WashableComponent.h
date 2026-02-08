@@ -38,9 +38,11 @@ public:
 protected:
 	virtual void BeginPlay() override;
 		
-	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Washable")
+	UPROPERTY(ReplicatedUsing = OnRep_WashableType, EditAnywhere, BlueprintReadWrite, Category = "Washable")
 	ECCD_WashableType WashableType = ECCD_WashableType::EWT_Blood;
-		
+	UFUNCTION()
+	void OnRep_WashableType();
+	
 	UPROPERTY(ReplicatedUsing = OnRep_WashHealth, EditAnywhere, Category = "Status")
 	float WashHealth = 100.f;
 	UFUNCTION()

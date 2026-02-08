@@ -50,7 +50,8 @@ void ADecal_StainActor_Base::Tick(float DeltaTime)
 
 void ADecal_StainActor_Base::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);	
+	DOREPLIFETIME(ADecal_StainActor_Base, DecalColor);
 }
 
 void ADecal_StainActor_Base::UpdateDecalOpacity(float NewRatio) const
@@ -71,7 +72,20 @@ void ADecal_StainActor_Base::UseWaterDecalMaterial()
 	if (BaseMat)
 	{
 		DecalDMI = DecalComp->CreateDynamicMaterialInstance();
+		
+		if (DecalDMI)
+		{
+			DecalDMI->SetVectorParameterValue(TEXT("BaseColor Tint"), DecalColor);
+		}
 	}
 	
 	UpdateDecalOpacity(WashableComp->GetWashHealthRatio());
+}
+
+void ADecal_StainActor_Base::OnRep_DecalColor()
+{
+	if (DecalDMI)
+	{
+		DecalDMI->SetVectorParameterValue(TEXT("BaseColor Tint"), DecalColor);
+	}
 }

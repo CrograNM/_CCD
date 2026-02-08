@@ -135,9 +135,11 @@ void AWaterBucketActor::SpillWater()
 			{
 				DecalWashComp->SetWashableType(ECCD_WashableType::EWT_Water);
 			}
-			
-			SpawnedDecal->UseWaterDecalMaterial();
-			SpawnedDecal->DecalDMI->SetVectorParameterValue(TEXT("BaseColor Tint"), WaterColor);
+			SpawnedDecal->DecalColor = WaterColor;
+			if (SpawnedDecal->DecalDMI)
+			{
+				SpawnedDecal->DecalDMI->SetVectorParameterValue(TEXT("BaseColor Tint"), WaterColor);
+			}
 		}
 	}
 	

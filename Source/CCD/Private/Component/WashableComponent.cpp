@@ -21,6 +21,18 @@ void UWashableComponent::BeginPlay()
 	ProgressComp = GetOwner()->FindComponentByClass<UProgressComponent>();
 }
 
+void UWashableComponent::OnRep_WashableType()
+{
+	// 타입이 Water로 변경되면 액터의 머티리얼 변경 함수 호출
+	if (WashableType == ECCD_WashableType::EWT_Water)
+	{
+		if (ADecal_StainActor_Base* StainActor = Cast<ADecal_StainActor_Base>(GetOwner()))
+		{
+			StainActor->UseWaterDecalMaterial();
+		}
+	}
+}
+
 void UWashableComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -74,5 +86,6 @@ void UWashableComponent::SetWashableType(ECCD_WashableType NewType)
 	if (GetOwner()->HasAuthority())
 	{
 		WashableType = NewType;
+		OnRep_WashableType();
 	}
 }

@@ -44,4 +44,10 @@ public:
 	// 생성된 다이내믹 머티리얼 인스턴스 저장
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> DecalDMI;
+	
+	UPROPERTY(ReplicatedUsing = OnRep_DecalColor)
+	FLinearColor DecalColor;
+
+	UFUNCTION()
+	void OnRep_DecalColor();
 };
