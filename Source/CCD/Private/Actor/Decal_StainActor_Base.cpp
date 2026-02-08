@@ -51,6 +51,36 @@ void ADecal_StainActor_Base::Tick(float DeltaTime)
 void ADecal_StainActor_Base::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ADecal_StainActor_Base, Rep_StainColor);
+}
+
+UMaterialInstanceDynamic* ADecal_StainActor_Base::GetDecalDMI()
+{
+	if (DecalDMI) return DecalDMI;
+
+	UDecalComponent* DecalComp = GetDecal();
+	if (DecalComp)
+	{
+		DecalDMI = DecalComp->CreateDynamicMaterialInstance();
+	}
+	return DecalDMI;
+}
+
+void ADecal_StainActor_Base::OnRep_StainColor()
+{
+	if (UMaterialInstanceDynamic* DMI = GetDecalDMI())
+	{
+		DMI->SetVectorParameterValue(TEXT("BaseColor Tint"), Rep_StainColor);
+	}
+}
+
+void ADecal_StainActor_Base::SetStainColor(FLinearColor NewColor)
+{
+	if (HasAuthority())
+	{
+		Rep_StainColor = NewColor;
+		OnRep_StainColor(); // 서버에서도 즉시 적용
+	}
 }
 
 void ADecal_StainActor_Base::UpdateDecalOpacity(float NewRatio) const

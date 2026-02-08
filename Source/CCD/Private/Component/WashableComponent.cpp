@@ -82,8 +82,13 @@ void UWashableComponent::OnRep_WashableType()
 {
 	if (ADecal_StainActor_Base* StainActor = Cast<ADecal_StainActor_Base>(GetOwner()))
 	{
-		// OnConstruction 로직을 다시 실행하여 머티리얼을 갱신
-		StainActor->OnConstruction(StainActor->GetTransform());
+		// 1. 블루프린트의 Construction Script를 강제로 다시 돌림 (텍스처 교체 로직이 거기 있다면)
+		StainActor->RerunConstructionScripts(); 
+        
+		// 2. 색상 다시 적용 (Rerun으로 날아갔을 수 있으므로)
+		StainActor->OnRep_StainColor();
+        
+		// 3. 투명도 업데이트
 		StainActor->UpdateDecalOpacity(GetWashHealthRatio());
 	}
 }

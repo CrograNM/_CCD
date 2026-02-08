@@ -128,29 +128,22 @@ void AWaterBucketActor::SpillWater()
 
 		if (SpawnedDecal)
 		{
+			// 1. 타입 설정 (서버 변수 세팅)
 			if (UWashableComponent* DecalWashComp = SpawnedDecal->FindComponentByClass<UWashableComponent>())
 			{
 				DecalWashComp->SetWashableType(ECCD_WashableType::EWT_Water);
 			}
 
-			// 3. 색상 계산
-			// 오염도 설정 -> 색상을 섞어서 BaseColor 변경
+			// 2. 색상 계산 및 복제 변수 세팅 (DMI를 직접 건드리지 말고 변수를 건드림)
 			FLinearColor CleanColor = FLinearColor(0.228f, 0.343f, 0.405f, 1.0f); // 깨끗한 물 색상
 			FLinearColor BloodColor = FLinearColor(0.69f, 0.13f, 0.13f, 1.0f); // 핏빛
 			FLinearColor PoopColor = FLinearColor(0.0f, 0.5f, 0.0f, 1.0f); // 배설물
-
 			FLinearColor FinalColor = CleanColor;
-			FinalColor = FMath::Lerp(FinalColor, BloodColor, Pollution_Blood);
-			FinalColor = FMath::Lerp(FinalColor, PoopColor, Pollution_Excrement);
+			
+			SpawnedDecal->SetStainColor(FinalColor); // 위에서 만든 함수 호출
 
-			// 5. [핵심] 이제야 ConstructionScript와 BeginPlay를 실행합니다.
+			// 3. 스폰 완료 (이때 Construction Script가 실행됨)
 			SpawnedDecal->FinishSpawning(SpawnedDecal->GetTransform());
-            
-			// 6. 만약 BP ConstructionScript에서 DMI를 만든다면, 여기서 마지막으로 색상을 꽂아줍니다.
-			if(SpawnedDecal->DecalDMI)
-			{
-				SpawnedDecal->DecalDMI->SetVectorParameterValue(TEXT("BaseColor Tint"), FinalColor);
-			}
 		}
 	}
 	

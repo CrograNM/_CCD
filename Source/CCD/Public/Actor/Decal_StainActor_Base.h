@@ -32,11 +32,21 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UWashableComponent* WashableComp;
 	
+	// 서버에서 결정된 색상을 클라이언트로 전달하기 위한 변수
+	UPROPERTY(ReplicatedUsing = OnRep_StainColor)
+	FLinearColor Rep_StainColor;
 
+	// DMI를 안전하게 가져오거나 생성하는 헬퍼 함수
+	UMaterialInstanceDynamic* GetDecalDMI();
+	
 public:
 	// 머티리얼 파라미터를 업데이트하는 함수
 	void UpdateDecalOpacity(float NewRatio) const;
 	
+	UFUNCTION()
+	void OnRep_StainColor();
+	
+	void SetStainColor(FLinearColor NewColor);
 	
 	// 생성된 다이내믹 머티리얼 인스턴스 저장
 	UPROPERTY()
