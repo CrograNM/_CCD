@@ -31,7 +31,7 @@ void ADecal_StainActor_Base::BeginPlay()
 	
 	// 부모 클래스인 ADecalActor가 가진 Decal 컴포넌트를 가져옴
 	UDecalComponent* DecalComp = GetDecal();
-	if (DecalComp)
+	if (DecalComp && WashableComp->GetWashableType() != ECCD_WashableType::EWT_Water)
 	{
 		// 0번 슬롯의 머티리얼로 DMI 생성
 		UMaterialInterface* BaseMat = DecalComp->GetDecalMaterial();
@@ -51,36 +51,6 @@ void ADecal_StainActor_Base::Tick(float DeltaTime)
 void ADecal_StainActor_Base::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(ADecal_StainActor_Base, Rep_StainColor);
-}
-
-UMaterialInstanceDynamic* ADecal_StainActor_Base::GetDecalDMI()
-{
-	if (DecalDMI) return DecalDMI;
-
-	UDecalComponent* DecalComp = GetDecal();
-	if (DecalComp)
-	{
-		DecalDMI = DecalComp->CreateDynamicMaterialInstance();
-	}
-	return DecalDMI;
-}
-
-void ADecal_StainActor_Base::OnRep_StainColor()
-{
-	if (UMaterialInstanceDynamic* DMI = GetDecalDMI())
-	{
-		DMI->SetVectorParameterValue(TEXT("BaseColor Tint"), Rep_StainColor);
-	}
-}
-
-void ADecal_StainActor_Base::SetStainColor(FLinearColor NewColor)
-{
-	if (HasAuthority())
-	{
-		Rep_StainColor = NewColor;
-		OnRep_StainColor(); // 서버에서도 즉시 적용
-	}
 }
 
 void ADecal_StainActor_Base::UpdateDecalOpacity(float NewRatio) const
@@ -90,4 +60,18 @@ void ADecal_StainActor_Base::UpdateDecalOpacity(float NewRatio) const
 		// 머티리얼의 Scalar Parameter 업데이트
 		DecalDMI->SetScalarParameterValue(TEXT("Opacity Intensity"), NewRatio);
 	}
+}
+
+void ADecal_StainActor_Base::UseWaterDecalMaterial()
+{
+	UDecalComponent* DecalComp = GetDecal();
+	DecalComp->SetDecalMaterial(WaterDecalMaterial);
+	
+	UMaterialInterface* BaseMat = DecalComp->GetDecalMaterial();
+	if (BaseMat)
+	{
+		DecalDMI = DecalComp->CreateDynamicMaterialInstance();
+	}
+	
+	UpdateDecalOpacity(WashableComp->GetWashHealthRatio());
 }

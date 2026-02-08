@@ -85,6 +85,7 @@ void UCCD_EquipmentComponent::OnRep_EquipmentState(ECCD_EquipmentState PreviousS
 
 void UCCD_EquipmentComponent::HandleEquipmentEffects(ECCD_EquipmentState NewState)
 {
+	if (!OwnerCharacter) return;
 	UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
 	if (AnimInstance && AnimInstance->Montage_IsPlaying(OwnerCharacter->GetEquipMontage())) return;
 	

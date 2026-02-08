@@ -44,6 +44,7 @@ protected:
 	UFUNCTION()
 	void OnRep_Pollution(); // 오염도 변경시 호출
 	
+	FLinearColor WaterColor = FLinearColor(0.228f, 0.343f, 0.405f, 1.0f);
 	void UpdateWaterColor(); // 물 색상 업데이트
 	
 	void SpillWater();

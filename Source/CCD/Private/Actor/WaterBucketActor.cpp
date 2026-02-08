@@ -98,12 +98,12 @@ void AWaterBucketActor::UpdateWaterColor()
 		FLinearColor CleanColor = FLinearColor(0.228f, 0.343f, 0.405f, 1.0f); // 깨끗한 물 색상
 		FLinearColor BloodColor = FLinearColor(0.69f, 0.13f, 0.13f, 1.0f); // 핏빛
 		FLinearColor PoopColor = FLinearColor(0.0f, 0.5f, 0.0f, 1.0f); // 배설물
-
-		FLinearColor FinalColor = CleanColor;
-		FinalColor = FMath::Lerp(FinalColor, BloodColor, Pollution_Blood);
-		FinalColor = FMath::Lerp(FinalColor, PoopColor, Pollution_Excrement);
+	
+		WaterColor = CleanColor;
+		WaterColor = FMath::Lerp(WaterColor, BloodColor, Pollution_Blood);
+		WaterColor = FMath::Lerp(WaterColor, PoopColor, Pollution_Excrement);
         
-		WaterMaterial->SetVectorParameterValue(TEXT("WaterColor"), FinalColor);
+		WaterMaterial->SetVectorParameterValue(TEXT("WaterColor"), WaterColor);
 	}
 }
 
@@ -120,30 +120,24 @@ void AWaterBucketActor::SpillWater()
 	
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 	{
-		// 1. SpawnActor 대신 SpawnActorDeferred를 사용합니다.
-		ADecal_StainActor_Base* SpawnedDecal = GetWorld()->SpawnActorDeferred<ADecal_StainActor_Base>(
-			DecalStainActorClass, 
-			FTransform(HitResult.ImpactNormal.Rotation(), HitResult.Location)
-		);
-
-		if (SpawnedDecal)
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		
+		// 바닥 평면에 맞춘 회전값 (바닥 노멀 기준)
+		FRotator SpawnRot = HitResult.ImpactNormal.Rotation();
+		SpawnRot.Pitch -= 90.0f; // 데칼은 기본적으로 X축 방향으로 쏘므로 아래를 향하게 조정
+		
+		if (ADecal_StainActor_Base* SpawnedDecal = GetWorld()->SpawnActor<ADecal_StainActor_Base>(
+			DecalStainActorClass, HitResult.Location, SpawnRot, SpawnParams))
 		{
 			// 1. 타입 설정 (서버 변수 세팅)
 			if (UWashableComponent* DecalWashComp = SpawnedDecal->FindComponentByClass<UWashableComponent>())
 			{
 				DecalWashComp->SetWashableType(ECCD_WashableType::EWT_Water);
 			}
-
-			// 2. 색상 계산 및 복제 변수 세팅 (DMI를 직접 건드리지 말고 변수를 건드림)
-			FLinearColor CleanColor = FLinearColor(0.228f, 0.343f, 0.405f, 1.0f); // 깨끗한 물 색상
-			FLinearColor BloodColor = FLinearColor(0.69f, 0.13f, 0.13f, 1.0f); // 핏빛
-			FLinearColor PoopColor = FLinearColor(0.0f, 0.5f, 0.0f, 1.0f); // 배설물
-			FLinearColor FinalColor = CleanColor;
 			
-			SpawnedDecal->SetStainColor(FinalColor); // 위에서 만든 함수 호출
-
-			// 3. 스폰 완료 (이때 Construction Script가 실행됨)
-			SpawnedDecal->FinishSpawning(SpawnedDecal->GetTransform());
+			SpawnedDecal->UseWaterDecalMaterial();
+			SpawnedDecal->DecalDMI->SetVectorParameterValue(TEXT("BaseColor Tint"), WaterColor);
 		}
 	}
 	
