@@ -308,13 +308,9 @@ void ACCDCharacter::PerformCleaningTrace() const
 		// 물양동이
 		if (AWaterBucketActor* Bucket = Cast<AWaterBucketActor>(HitActor))
 		{
-			if (Bucket->WashMop(EquipmentComp->MopPollution_Blood, EquipmentComp->MopPollution_Excrement))
+			if (!Bucket->IsWaterSpilled() && Bucket->WashMop(EquipmentComp->MopPollution_Blood, EquipmentComp->MopPollution_Excrement))
 			{
 				EquipmentComp->UpdateMopMeshPollution();
-			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("[Mop] Bucket is too dirty."));
 			}
 			return;
 		}

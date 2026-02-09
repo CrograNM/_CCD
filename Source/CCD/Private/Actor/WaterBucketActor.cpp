@@ -146,4 +146,5 @@ void AWaterBucketActor::SpillWater()
 	UE_LOG(LogTemp, Warning, TEXT("Spill Water!"));
 	WaterMeshComp->SetVisibility(false);
 	WaterMaterial = nullptr;
+	bIsWaterSpilled = true;
 }

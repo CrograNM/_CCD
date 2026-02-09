@@ -20,6 +20,8 @@ public:
 	// 대걸레를 씻는 함수 : 물이 너무 더러우면 false 반환
 	bool WashMop(float& InBloodAmount, float& InExcrementAmount);
 	
+	bool IsWaterSpilled() const { return bIsWaterSpilled; }
+	
 protected:
 	virtual void BeginPlay() override;
 	
@@ -34,6 +36,8 @@ protected:
 	UPROPERTY()
 	UMaterialInstanceDynamic* WaterMaterial; // 시각적 업데이트를 위한 머티리얼 인스턴스
 
+	bool bIsWaterSpilled {false};
+	
 	// 오염도: 0.0f ~ 1.0f (피, 배설물)
 	UPROPERTY(ReplicatedUsing = OnRep_Pollution, VisibleAnywhere, BlueprintReadOnly, Category="Pollution")
 	float Pollution_Blood {0.0f};
