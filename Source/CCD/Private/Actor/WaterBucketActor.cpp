@@ -62,14 +62,14 @@ bool AWaterBucketActor::WashMop(float& InBloodAmount, float& InExcrementAmount)
 	}
 
 	// 물양동이에 오염물질 전이
-	float MaxPollutionValue = 0.2f; // 고정최대값으로 오염됨
+	float MaxPollutionValue = 0.2f; // 고정최대값으로 오염됨 ( 0.2x5=1 -> 5회 사용 가능 )
 	Pollution_Blood += FMath::Clamp(InBloodAmount, 0.0f, MaxPollutionValue);
 	Pollution_Excrement += FMath::Clamp(InExcrementAmount, 0.0f, MaxPollutionValue);
 	Pollution_Blood = FMath::Clamp(Pollution_Blood, 0.0f, 1.0f);
 	Pollution_Excrement = FMath::Clamp(Pollution_Excrement, 0.0f, 1.0f);
 
 	// 대걸레는 깨끗해짐 (참조로 받아온 변수 수정)
-	float CleanValue = 0.5f; // 고정값으로 깨끗해짐
+	float CleanValue = 1.0f; // 고정값으로 깨끗해짐 (한번에 완전 세척)
 	InBloodAmount -= CleanValue;
 	InExcrementAmount -= CleanValue;
 	InBloodAmount = FMath::Clamp(InBloodAmount, 0.0f, 1.0f);
