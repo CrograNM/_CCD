@@ -71,7 +71,7 @@ void AProgressManager::UpdateUI()
 		if (UProgressWidget* ProgressWidget = Cast<UProgressWidget>(Widget))
 		{
 			ProgressWidget->UpdatePercent(GetProgressRatio());
-			UE_LOG(LogTemp, Log, TEXT("UI Updated: %f"), GetProgressRatio());
+			UE_LOG(LogTemp, Warning, TEXT("[UI Updated] Cur: %f, Max: %f, Ratio: %f"), CurrentProgress, MaxProgress, GetProgressRatio());
 		}
 	}
 }
