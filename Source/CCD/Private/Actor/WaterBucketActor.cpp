@@ -123,30 +123,21 @@ void AWaterBucketActor::SpillWater()
 	
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 	{
-		ADecal_StainActor_Base* SpawnedDecal = GetWorld()->SpawnActorDeferred<ADecal_StainActor_Base>(
-			DecalStainActorClass, 
-			FTransform(HitResult.ImpactNormal.Rotation(), HitResult.Location)
-		);
-
-		if (SpawnedDecal)
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		
+		// 바닥 평면에 맞춘 회전값 (바닥 노멀 기준)
+		FRotator SpawnRot = HitResult.ImpactNormal.Rotation();
+		SpawnRot.Pitch -= 90.0f; // 데칼은 기본적으로 X축 방향으로 쏘므로 아래를 향하게 조정
+		
+		if (ADecal_StainActor_Base* SpawnedDecal = GetWorld()->SpawnActor<ADecal_StainActor_Base>(
+			DecalStainActorClass, HitResult.Location, SpawnRot, SpawnParams))
 		{
 			if (UWashableComponent* DecalWashComp = SpawnedDecal->FindComponentByClass<UWashableComponent>())
 			{
 				DecalWashComp->SetWashableType(ECCD_WashableType::EWT_Water);
 			}
 
-			// 진행도(Progress) 전이 로직
-			if (UProgressComponent* DecalProg = SpawnedDecal->FindComponentByClass<UProgressComponent>())
-			{
-				// 양동이가 가지고 있던 점수를 데칼에게 그대로 전달
-				DecalProg->ProgressValue = ProgressComp->ProgressValue;
-			}
-
-			// 양동이의 진행도는 0으로 리셋
-			ProgressComp->UpdateProgressValue(0.0f);
-
-			SpawnedDecal->FinishSpawning(SpawnedDecal->GetTransform());
-			
 			SpawnedDecal->DecalColor = WaterColor;
 			if (SpawnedDecal->DecalDMI)
 			{
