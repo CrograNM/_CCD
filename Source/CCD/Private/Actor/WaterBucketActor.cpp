@@ -143,6 +143,14 @@ void AWaterBucketActor::SpillWater()
 			{
 				SpawnedDecal->DecalDMI->SetVectorParameterValue(TEXT("BaseColor Tint"), WaterColor);
 			}
+			
+			// 진행도(Progress) 전이 로직
+			if (UProgressComponent* DecalProg = SpawnedDecal->FindComponentByClass<UProgressComponent>())
+			{
+				// 양동이가 가지고 있던 점수를 데칼에게 그대로 전달
+				DecalProg->UpdateProgressValue(ProgressComp->ProgressValue);
+			}
+			ProgressComp->UpdateProgressValue(0.0f); // 양동이의 진행도는 0으로 리셋
 		}
 	}
 		
