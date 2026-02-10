@@ -46,6 +46,23 @@ void ADecal_StainActor_Base::BeginPlay()
 void ADecal_StainActor_Base::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	if (WashableComp->GetWashableType() == ECCD_WashableType::EWT_Water && ProgressComp->ProgressValue <= 0.0f)
+	{
+		// 시간을 누적하여 직접 투명도 계산 (LifeSpan 의존성 제거)
+		FadeTimeAccumulator += DeltaTime;
+        
+		// 5.0초 동안 서서히 투명해짐
+		const float FadeDuration = 5.0f;
+		const float Opacity = FMath::Clamp(1.0f - (FadeTimeAccumulator / FadeDuration), 0.0f, 1.0f);
+        
+		UpdateDecalOpacity(Opacity);
+		
+		if (Opacity <= 0.0f)
+		{
+			Destroy();
+		}
+	}
 }
 
 void ADecal_StainActor_Base::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

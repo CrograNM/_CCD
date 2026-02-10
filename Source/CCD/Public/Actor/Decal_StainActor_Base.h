@@ -50,4 +50,7 @@ public:
 
 	UFUNCTION()
 	void OnRep_DecalColor();
+	
+private:
+	float FadeTimeAccumulator = 0.0f;
 };
