@@ -75,6 +75,9 @@ bool AWaterBucketActor::WashMop(float& InBloodAmount, float& InExcrementAmount)
 	InBloodAmount = FMath::Clamp(InBloodAmount, 0.0f, 1.0f);
 	InExcrementAmount = FMath::Clamp(InExcrementAmount, 0.0f, 1.0f);
 	
+	// 양동이의 진행도도 업데이트 (오염도 합계 * 10) = 최대 10점 (데칼 기본 점수)
+	ProgressComp->UpdateProgressValue((Pollution_Blood + Pollution_Excrement) * 10.0f);
+	
 	// 서버에서도 시각적 업데이트
 	OnRep_Pollution();
 
