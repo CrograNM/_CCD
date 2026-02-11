@@ -16,6 +16,7 @@ void UCCD_EquipmentComponent::OnRep_Pollution()
 
 void UCCD_EquipmentComponent::UpdateMopMeshPollution()
 {
+	if (!OwnerCharacter) return;
 	if (UMaterialInstanceDynamic* MopMaterial = OwnerCharacter->GetMopMaterial())
 	{
 		// 머티리얼 파라미터 제어 (예: BloodAmount, PoopAmount)
@@ -111,6 +112,7 @@ void UCCD_EquipmentComponent::HandleEquipmentEffects(ECCD_EquipmentState NewStat
 
 void UCCD_EquipmentComponent::ProceedToEquip(ECCD_EquipmentState NewState)
 {
+	if (!OwnerCharacter) return;
 	OwnerCharacter->SetIsUnequipping(false);
 
 	if (NewState == ECCD_EquipmentState::EES_Hands)
@@ -129,6 +131,7 @@ void UCCD_EquipmentComponent::ProceedToEquip(ECCD_EquipmentState NewState)
 
 void UCCD_EquipmentComponent::HandleEquipNotify()
 {
+	if (!OwnerCharacter) return;
 	if (!OwnerCharacter->HasAuthority()) return;
 
 	if (OwnerCharacter->GetIsUnequipping()) 
