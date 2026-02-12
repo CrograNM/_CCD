@@ -40,6 +40,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	ECCD_EquipmentState GetPendingEquipmentState() const { return PendingEquipmentState; }
 	
+	// Mop
 	UPROPERTY(ReplicatedUsing=OnRep_Pollution)
 	float MopPollution_Blood = 0.0f;
 	
@@ -50,6 +51,11 @@ public:
 	void OnRep_Pollution();
 	
 	void UpdateMopMeshPollution();
+	
+	// Scanner 
+	UFUNCTION(BlueprintCallable, Category = "E_Scanner")
+	float GetScanActorDistance() const;
+	const float MaxScanDistance = 1000.f; // 탐지 최대 거리
 	
 protected:
 	virtual void BeginPlay() override;

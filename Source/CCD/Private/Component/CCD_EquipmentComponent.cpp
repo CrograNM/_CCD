@@ -1,6 +1,7 @@
 
 #include "Component/CCD_EquipmentComponent.h"
 #include "CCDCharacter.h"
+#include "Component/ProgressComponent.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values for this component's properties
@@ -34,6 +35,42 @@ void UCCD_EquipmentComponent::UpdateMopMeshPollution()
         
 		MopMaterial->SetVectorParameterValue(TEXT("BaseColor"), FinalColor);
 	}
+}
+
+float UCCD_EquipmentComponent::GetScanActorDistance() const
+{
+	if (!OwnerCharacter) return -1.f;
+	
+	// 모든 ProgressComp를 순회하며 가장 가까운 탐지 가능한 액터와의 거리를 계산
+	float ClosestDistance = MaxScanDistance;
+	FVector CharacterLocation = OwnerCharacter->GetActorLocation();
+	bool bFound = false;
+	
+	// 1. 모든 UProgressComponent 인스턴스를 순회
+	for (TObjectIterator<UProgressComponent> It; It; ++It)
+	{
+		UProgressComponent* CurrentComp = *It;
+
+		// 2. 현재 월드에 속한 컴포넌트인지 확인 (에디터/다른 월드 제외)
+		if (CurrentComp->GetWorld() != GetWorld()) continue;
+
+		// 3. 이미 청소가 완료된(Owner가 없는) 액터는 무시
+		AActor* TargetActor = CurrentComp->GetOwner();
+		if (!TargetActor || TargetActor == OwnerCharacter) continue;
+
+		// 4. 거리 계산
+		float Distance = FVector::Dist(CharacterLocation, TargetActor->GetActorLocation());
+
+		// 5. 최대 탐지 거리 내에 있고, 현재까지 찾은 거리보다 짧으면 갱신
+		if (Distance < ClosestDistance)
+		{
+			ClosestDistance = Distance;
+			bFound = true;
+		}
+	}
+    
+	// 탐지된 것이 없다면 MaxScanDistance 혹은 특정 값 반환
+	return bFound ? ClosestDistance : -1.f;
 }
 
 void UCCD_EquipmentComponent::BeginPlay()
