@@ -3,6 +3,7 @@
 #include "CCDCharacter.h"
 #include "Component/ProgressComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Widget/ScannerWidget.h"
 
 // Sets default values for this component's properties
 UCCD_EquipmentComponent::UCCD_EquipmentComponent()
@@ -71,6 +72,16 @@ float UCCD_EquipmentComponent::GetScanActorDistance() const
     
 	// 탐지된 것이 없다면 MaxScanDistance 혹은 특정 값 반환
 	return bFound ? ClosestDistance : -1.f;
+}
+
+void UCCD_EquipmentComponent::ScannerUpdate(float Distance) const
+{
+	// 위젯이 유효한지 확인
+	if (ScannerWidget)
+	{
+		// 위젯 내부의 업데이트 함수 호출
+		ScannerWidget->UpdateDistanceDisplay(Distance);
+	}
 }
 
 void UCCD_EquipmentComponent::BeginPlay()

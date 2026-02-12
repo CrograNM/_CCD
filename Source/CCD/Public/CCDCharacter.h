@@ -38,6 +38,9 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Interaction")
     void PerformInteract();
+    
+    UFUNCTION(BlueprintCallable, Category = "Equipment")
+    void UseEquipment();
 
     /** --- 3. 애니메이션 및 멀티캐스트 (시각적 동기화) --- */
     UFUNCTION(NetMulticast, Reliable, Category = "Animation")

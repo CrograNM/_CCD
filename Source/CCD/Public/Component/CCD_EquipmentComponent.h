@@ -15,6 +15,7 @@ enum class ECCD_EquipmentState : uint8
 #include "CCD_EquipmentComponent.generated.h"
 
 class ACCDCharacter;
+class UScannerWidget;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class CCD_API UCCD_EquipmentComponent : public UActorComponent
@@ -56,6 +57,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "E_Scanner")
 	float GetScanActorDistance() const;
 	const float MaxScanDistance = 1000.f; // 탐지 최대 거리
+	void ScannerUpdate(float Distance) const;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -66,8 +68,14 @@ protected:
 	
 	ECCD_EquipmentState PendingEquipmentState = ECCD_EquipmentState::EES_Hands;
 
-	UPROPERTY() TObjectPtr<UStaticMeshComponent> MopMesh;
-	UPROPERTY() TObjectPtr<UStaticMeshComponent> ScannerMesh;
+	UPROPERTY() 
+	TObjectPtr<UStaticMeshComponent> MopMesh;
+	
+	UPROPERTY() 
+	TObjectPtr<UStaticMeshComponent> ScannerMesh;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Scanner Widget")
+	TObjectPtr<UScannerWidget> ScannerWidget;
 
 	/** --- 네트워크 RPC --- */
 	UFUNCTION(Server, Reliable)

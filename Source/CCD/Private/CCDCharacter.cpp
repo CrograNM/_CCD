@@ -194,6 +194,26 @@ void ACCDCharacter::PerformInteract()
 {
 	Server_PerformInteract();
 }
+
+void ACCDCharacter::UseEquipment()
+{
+	if (EquipmentComp->GetEquipmentState() == ECCD_EquipmentState::EES_Hands) return;
+
+	switch(EquipmentComp->GetEquipmentState())
+	{
+		case ECCD_EquipmentState::EES_Mop:
+			Server_PlayActionOfMop();
+			break;
+		
+		case ECCD_EquipmentState::EES_Scanner:
+			EquipmentComp->ScannerUpdate(EquipmentComp->GetScanActorDistance());
+			break;
+		
+		default: 
+			break;
+	}
+}
+
 void ACCDCharacter::Server_PerformInteract_Implementation()
 {
 	// 이미 물체를 잡고 있다면 놓기
