@@ -78,18 +78,18 @@ float UCCD_EquipmentComponent::GetScanActorDistance() const
 	}
     
 	// 탐지된 것이 없다면 MaxScanDistance 혹은 특정 값 반환
-	UE_LOG(LogTemp, Warning, TEXT("[Scanner] Closest Scan Distance: %f"), bFound ? ClosestDistance : -1.f);
 	return bFound ? ClosestDistance : -1.f;
 }
 
 void UCCD_EquipmentComponent::ScannerUpdate(float Distance) const
 {
 	// 위젯이 유효한지 확인
-	if (ScannerWidget)
+	if (ScannerWidget) // 여기서 막히는중
 	{
 		ScannerWidgetComp->SetHiddenInGame(false);
 		
 		// 위젯 내부의 업데이트 함수 호출
+		UE_LOG(LogTemp, Warning, TEXT("[Scanner] Closest Scan Distance: %f"), Distance); 
 		ScannerWidget->UpdateDistanceDisplay(Distance);
 	}
 }
@@ -118,7 +118,7 @@ void UCCD_EquipmentComponent::BeginPlay()
 		if (ScannerWidgetComp)
 		{
 			// 에디터에서 할당한 위젯 클래스가 생성된 후 인스턴스를 가져옴
-			ScannerWidget = Cast<UScannerWidget>(ScannerWidgetComp->GetUserWidgetObject());
+			ScannerWidget = Cast<UScannerWidget>(ScannerWidgetComp->GetWidgetClass());
 		}
 	}
 }
