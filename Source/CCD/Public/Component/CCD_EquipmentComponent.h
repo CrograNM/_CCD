@@ -15,6 +15,7 @@ enum class ECCD_EquipmentState : uint8
 #include "CCD_EquipmentComponent.generated.h"
 
 class ACCDCharacter;
+class UWidgetComponent;
 class UScannerWidget;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -74,9 +75,14 @@ protected:
 	UPROPERTY() 
 	TObjectPtr<UStaticMeshComponent> ScannerMesh;
 	
-	UPROPERTY(BlueprintReadOnly, Category = "Scanner Widget")
+	// 스캐너 메쉬에 부착될 3D 위젯 컴포넌트
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Scanner UI")
+	TObjectPtr<UWidgetComponent> ScannerWidgetComp;
+	
+	// 위젯 내부의 실제 UI 클래스 참조
+	UPROPERTY()
 	TObjectPtr<UScannerWidget> ScannerWidget;
-
+	
 	/** --- 네트워크 RPC --- */
 	UFUNCTION(Server, Reliable)
 	void Server_SetEquipmentState(ECCD_EquipmentState NewState);

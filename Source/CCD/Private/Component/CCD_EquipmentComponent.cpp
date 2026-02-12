@@ -2,13 +2,20 @@
 #include "Component/CCD_EquipmentComponent.h"
 #include "CCDCharacter.h"
 #include "Component/ProgressComponent.h"
+#include "Components/WidgetComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Widget/ScannerWidget.h"
 
-// Sets default values for this component's properties
 UCCD_EquipmentComponent::UCCD_EquipmentComponent()
 {
 	SetIsReplicatedByDefault(true);
+	
+	// 3D 위젯 컴포넌트 생성
+	ScannerWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("ScannerWidgetComp"));
+    
+	// 기본 설정: 스캐너 메시의 자식으로 붙이기 위해 초기화 시점에는 미설정 (BeginPlay에서 수행)
+	ScannerWidgetComp->SetWidgetSpace(EWidgetSpace::World); // 3D 공간에 배치
+	ScannerWidgetComp->SetDrawSize(FVector2D(8.f, 6.f)); // 위젯 크기에 맞게 조절
 }
 
 void UCCD_EquipmentComponent::OnRep_Pollution()
@@ -71,6 +78,7 @@ float UCCD_EquipmentComponent::GetScanActorDistance() const
 	}
     
 	// 탐지된 것이 없다면 MaxScanDistance 혹은 특정 값 반환
+	UE_LOG(LogTemp, Warning, TEXT("[Scanner] Closest Scan Distance: %f"), bFound ? ClosestDistance : -1.f);
 	return bFound ? ClosestDistance : -1.f;
 }
 
@@ -79,6 +87,8 @@ void UCCD_EquipmentComponent::ScannerUpdate(float Distance) const
 	// 위젯이 유효한지 확인
 	if (ScannerWidget)
 	{
+		ScannerWidgetComp->SetHiddenInGame(false);
+		
 		// 위젯 내부의 업데이트 함수 호출
 		ScannerWidget->UpdateDistanceDisplay(Distance);
 	}
@@ -96,6 +106,20 @@ void UCCD_EquipmentComponent::BeginPlay()
 		ScannerMesh = OwnerCharacter->GetScannerMesh();
 		
 		HandleEquipmentEffects(EquipmentState);
+		
+		// 1. 위젯 컴포넌트를 스캐너 메쉬의 소켓에 부착
+		if (ScannerMesh && ScannerWidgetComp)
+		{
+			// 스캐너 메쉬의 디스플레이 부분에 미리 만든 소켓 이름 입력
+			ScannerWidgetComp->AttachToComponent(ScannerMesh, FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("ScreenSocket"));
+		}
+
+		// 2. 실제 위젯 인스턴스 참조 가져오기
+		if (ScannerWidgetComp)
+		{
+			// 에디터에서 할당한 위젯 클래스가 생성된 후 인스턴스를 가져옴
+			ScannerWidget = Cast<UScannerWidget>(ScannerWidgetComp->GetUserWidgetObject());
+		}
 	}
 }
 
