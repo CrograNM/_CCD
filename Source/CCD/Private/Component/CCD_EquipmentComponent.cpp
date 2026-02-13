@@ -18,81 +18,6 @@ UCCD_EquipmentComponent::UCCD_EquipmentComponent()
 	ScannerWidgetComp->SetDrawSize(FVector2D(8.f, 6.f)); // 위젯 크기에 맞게 조절
 }
 
-void UCCD_EquipmentComponent::OnRep_Pollution()
-{
-	UpdateMopMeshPollution();
-}
-
-void UCCD_EquipmentComponent::UpdateMopMeshPollution()
-{
-	if (!OwnerCharacter) return;
-	if (UMaterialInstanceDynamic* MopMaterial = OwnerCharacter->GetMopMaterial())
-	{
-		// 머티리얼 파라미터 제어 (예: BloodAmount, PoopAmount)
-		MopMaterial->SetScalarParameterValue(TEXT("BloodIntensity"), MopPollution_Blood);
-		MopMaterial->SetScalarParameterValue(TEXT("ExcrementIntensity"), MopPollution_Excrement);
-        
-		// 혹은 두 색상을 섞어서 BaseColor 변경
-		FLinearColor CleanColor = FLinearColor(0.228f, 0.343f, 0.405f, 1.0f); // 깨끗한 물 색상
-		FLinearColor BloodColor = FLinearColor(0.69f, 0.13f, 0.13f, 1.0f); // 핏빛
-		FLinearColor PoopColor = FLinearColor(0.0f, 0.5f, 0.0f, 1.0f); // 배설물
-
-		FLinearColor FinalColor = CleanColor;
-		FinalColor = FMath::Lerp(FinalColor, BloodColor, MopPollution_Blood);
-		FinalColor = FMath::Lerp(FinalColor, PoopColor, MopPollution_Excrement);
-        
-		MopMaterial->SetVectorParameterValue(TEXT("BaseColor"), FinalColor);
-	}
-}
-
-float UCCD_EquipmentComponent::GetScanActorDistance() const
-{
-	if (!OwnerCharacter) return -1.f;
-	
-	// 모든 ProgressComp를 순회하며 가장 가까운 탐지 가능한 액터와의 거리를 계산
-	float ClosestDistance = MaxScanDistance;
-	FVector CharacterLocation = OwnerCharacter->GetActorLocation();
-	bool bFound = false;
-	
-	// 1. 모든 UProgressComponent 인스턴스를 순회
-	for (TObjectIterator<UProgressComponent> It; It; ++It)
-	{
-		UProgressComponent* CurrentComp = *It;
-
-		// 2. 현재 월드에 속한 컴포넌트인지 확인 (에디터/다른 월드 제외)
-		if (CurrentComp->GetWorld() != GetWorld()) continue;
-
-		// 3. 이미 청소가 완료된(Owner가 없는) 액터는 무시
-		AActor* TargetActor = CurrentComp->GetOwner();
-		if (!TargetActor || TargetActor == OwnerCharacter) continue;
-
-		// 4. 거리 계산
-		float Distance = FVector::Dist(CharacterLocation, TargetActor->GetActorLocation());
-
-		// 5. 최대 탐지 거리 내에 있고, 현재까지 찾은 거리보다 짧으면 갱신
-		if (Distance < ClosestDistance)
-		{
-			ClosestDistance = Distance;
-			bFound = true;
-		}
-	}
-    
-	// 탐지된 것이 없다면 MaxScanDistance 혹은 특정 값 반환
-	return bFound ? ClosestDistance : -1.f;
-}
-
-void UCCD_EquipmentComponent::ScannerUpdate(float Distance) const
-{
-	// 위젯이 유효한지 확인
-	if (ScannerWidget) // 여기서 막히는중
-	{
-		ScannerWidgetComp->SetHiddenInGame(false);
-		
-		// 위젯 내부의 업데이트 함수 호출
-		UE_LOG(LogTemp, Warning, TEXT("[Scanner] Closest Scan Distance: %f"), Distance); 
-		ScannerWidget->UpdateDistanceDisplay(Distance);
-	}
-}
 
 void UCCD_EquipmentComponent::BeginPlay()
 {
@@ -113,13 +38,6 @@ void UCCD_EquipmentComponent::BeginPlay()
 			// 스캐너 메쉬의 디스플레이 부분에 미리 만든 소켓 이름 입력
 			ScannerWidgetComp->AttachToComponent(ScannerMesh, FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("ScreenSocket"));
 		}
-
-		// 2. 실제 위젯 인스턴스 참조 가져오기
-		if (ScannerWidgetComp)
-		{
-			// 에디터에서 할당한 위젯 클래스가 생성된 후 인스턴스를 가져옴
-			ScannerWidget = Cast<UScannerWidget>(ScannerWidgetComp->GetWidgetClass());
-		}
 	}
 }
 
@@ -127,6 +45,29 @@ void UCCD_EquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(UCCD_EquipmentComponent, EquipmentState);
+}
+
+void UCCD_EquipmentComponent::OnRep_Pollution()
+{
+	UpdateMopMeshPollution();
+}
+
+void UCCD_EquipmentComponent::ScannerUpdate(float Distance) const
+{
+	if (!ScannerWidget && ScannerWidgetComp)
+	{
+		const_cast<UCCD_EquipmentComponent*>(this)->ScannerWidget = Cast<UScannerWidget>(ScannerWidgetComp->GetUserWidgetObject());
+	}
+	
+	// 위젯이 유효한지 확인
+	if (ScannerWidget) // 여기서 막히는중
+	{
+		ScannerWidgetComp->SetHiddenInGame(false);
+		
+		// 위젯 내부의 업데이트 함수 호출
+		UE_LOG(LogTemp, Warning, TEXT("[Scanner] Closest Scan Distance: %f"), Distance); 
+		ScannerWidget->UpdateDistanceDisplay(Distance);
+	}
 }
 
 void UCCD_EquipmentComponent::Server_SetEquipmentState_Implementation(ECCD_EquipmentState NewState)
@@ -219,4 +160,62 @@ void UCCD_EquipmentComponent::HandleEquipNotify()
 		TargetMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, Socket);
 		EquipmentState = PendingEquipmentState;
 	}
+}
+
+void UCCD_EquipmentComponent::UpdateMopMeshPollution()
+{
+	if (!OwnerCharacter) return;
+	if (UMaterialInstanceDynamic* MopMaterial = OwnerCharacter->GetMopMaterial())
+	{
+		// 머티리얼 파라미터 제어 (예: BloodAmount, PoopAmount)
+		MopMaterial->SetScalarParameterValue(TEXT("BloodIntensity"), MopPollution_Blood);
+		MopMaterial->SetScalarParameterValue(TEXT("ExcrementIntensity"), MopPollution_Excrement);
+        
+		// 혹은 두 색상을 섞어서 BaseColor 변경
+		FLinearColor CleanColor = FLinearColor(0.228f, 0.343f, 0.405f, 1.0f); // 깨끗한 물 색상
+		FLinearColor BloodColor = FLinearColor(0.69f, 0.13f, 0.13f, 1.0f); // 핏빛
+		FLinearColor PoopColor = FLinearColor(0.0f, 0.5f, 0.0f, 1.0f); // 배설물
+
+		FLinearColor FinalColor = CleanColor;
+		FinalColor = FMath::Lerp(FinalColor, BloodColor, MopPollution_Blood);
+		FinalColor = FMath::Lerp(FinalColor, PoopColor, MopPollution_Excrement);
+        
+		MopMaterial->SetVectorParameterValue(TEXT("BaseColor"), FinalColor);
+	}
+}
+
+float UCCD_EquipmentComponent::GetScanActorDistance() const
+{
+	if (!OwnerCharacter) return -1.f;
+	
+	// 모든 ProgressComp를 순회하며 가장 가까운 탐지 가능한 액터와의 거리를 계산
+	float ClosestDistance = MaxScanDistance;
+	FVector CharacterLocation = OwnerCharacter->GetActorLocation();
+	bool bFound = false;
+	
+	// 1. 모든 UProgressComponent 인스턴스를 순회
+	for (TObjectIterator<UProgressComponent> It; It; ++It)
+	{
+		UProgressComponent* CurrentComp = *It;
+
+		// 2. 현재 월드에 속한 컴포넌트인지 확인 (에디터/다른 월드 제외)
+		if (CurrentComp->GetWorld() != GetWorld()) continue;
+
+		// 3. 이미 청소가 완료된(Owner가 없는) 액터는 무시
+		AActor* TargetActor = CurrentComp->GetOwner();
+		if (!TargetActor || TargetActor == OwnerCharacter) continue;
+
+		// 4. 거리 계산
+		float Distance = FVector::Dist(CharacterLocation, TargetActor->GetActorLocation());
+
+		// 5. 최대 탐지 거리 내에 있고, 현재까지 찾은 거리보다 짧으면 갱신
+		if (Distance < ClosestDistance)
+		{
+			ClosestDistance = Distance;
+			bFound = true;
+		}
+	}
+    
+	// 탐지된 것이 없다면 MaxScanDistance 혹은 특정 값 반환
+	return bFound ? ClosestDistance : -1.f;
 }
