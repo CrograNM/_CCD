@@ -106,7 +106,7 @@ void AIncineratorActor::ApplyBurnDamage()
 void AIncineratorActor::Interact_Implementation(AActor* Interactor)
 {
 	if (!HasAuthority()) return; // 상태 변경은 서버에서만 수행
-	UE_LOG(LogTemp, Warning, TEXT("Incinerator Door Move Request Received"));
+	UE_LOG(LogTemp, Warning, TEXT("[Interact] Incinerator Door Move Request Received"));
 	
 	// 문 상태 토글
 	bIsDoorOpen = !bIsDoorOpen;
