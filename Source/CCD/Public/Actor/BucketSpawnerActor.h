@@ -25,12 +25,15 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> MainMesh;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	TObjectPtr<UStaticMeshComponent> BucketMesh; // 애니메이션 용 양동이 메쉬
-	
 	// 스폰 영역 (충돌체)
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<UBoxComponent> SpawnArea;
+	
+	// --- 제어 변수 ---
+	//UPROPERTY(Replicated) 
+	bool bCanSpawn = true;
+	
+	void SpawnBucket();
 	
 public:
 	virtual void Interact_Implementation(AActor* Interactor) override;	

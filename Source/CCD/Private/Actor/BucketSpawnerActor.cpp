@@ -1,6 +1,8 @@
 
 #include "Actor/BucketSpawnerActor.h"
 #include "Components/BoxComponent.h"
+#include "ActorSequenceComponent.h"
+#include "ActorSequencePlayer.h"
 
 ABucketSpawnerActor::ABucketSpawnerActor()
 {
@@ -10,9 +12,6 @@ ABucketSpawnerActor::ABucketSpawnerActor()
 	// 메쉬 컴포넌트 설정
 	MainMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MainMesh"));
 	RootComponent = MainMesh;
-	
-	BucketMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BucketMesh"));
-	BucketMesh->SetupAttachment(RootComponent); 
 	
 	// 스폰 영역 설정
 	SpawnArea = CreateDefaultSubobject<UBoxComponent>(TEXT("SpawnArea"));
@@ -35,4 +34,20 @@ void ABucketSpawnerActor::Interact_Implementation(AActor* Interactor)
 {
 	if (!HasAuthority()) return;
 	UE_LOG(LogTemp, Warning, TEXT("[Interact] BucketSpawner Interact Received"));
+	
+	// 스폰 가능 여부 체크
+	if (!bCanSpawn) return;
+	// SpawnBucket();
+}
+
+void ABucketSpawnerActor::SpawnBucket()
+{
+	bCanSpawn = false;
+	UActorSequenceComponent* SequenceComp = FindComponentByClass<UActorSequenceComponent>();
+	if (SequenceComp && SequenceComp->GetSequencePlayer())
+	{
+		SequenceComp->GetSequencePlayer()->Play();
+		
+		float SequenceDuration = 4.5f;
+	}
 }
