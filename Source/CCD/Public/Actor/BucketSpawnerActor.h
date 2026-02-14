@@ -20,6 +20,8 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	bool IsSpawnAreaClear() const; // 영역 내부에 다른 액터가 있는지 확인하는 함수
+	void CheckAndResetSpawnState(); // 시퀀스 종료 후 호출될 함수 수정
 
 	// 컴포넌트
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -29,11 +31,23 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<UBoxComponent> SpawnArea;
 	
+	// --- 소환 설정 ---
+	UPROPERTY(EditAnywhere, Category = "Spawning")
+	TSubclassOf<AActor> BucketClass; // 소환할 양동이 클래스
+
+	UPROPERTY(EditAnywhere, Category = "Spawning")
+	FName SpawnSocketName = TEXT("BucketSocket"); // 소켓 이름
+	
 	// --- 제어 변수 ---
 	//UPROPERTY(Replicated) 
 	bool bCanSpawn = true;
 	
-	void SpawnBucket();
+	// 단계별 로직 처리를 위한 함수
+	void SpawnBucket();      // 시퀀스 시작
+	void ExecuteSpawning();  // 실제 양동이 생성 및 역재생 시작
+	void ResetSpawnState();  // 스폰 가능 상태로 복구
+	
+	FTimerHandle SpawnTimerHandle;
 	
 public:
 	virtual void Interact_Implementation(AActor* Interactor) override;	
