@@ -204,6 +204,7 @@ float UCCD_EquipmentComponent::GetScanActorDistance() const
 		// 3. 이미 청소가 완료된(Owner가 없는) 액터는 무시
 		AActor* TargetActor = CurrentComp->GetOwner();
 		if (!TargetActor || TargetActor == OwnerCharacter) continue;
+		if (CurrentComp->ProgressValue <= 0.f) continue; // 청소 필요 없는 액터는 무시
 
 		// 4. 거리 계산
 		float Distance = FVector::Dist(CharacterLocation, TargetActor->GetActorLocation());
