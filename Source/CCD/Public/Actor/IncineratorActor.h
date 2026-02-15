@@ -58,6 +58,13 @@ protected:
 	// 실제로 대미지를 주는 로직을 담은 함수
 	void ApplyBurnDamage();
 	
+	// --- VFX/SFX ---
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	TObjectPtr<USoundBase> DoorSound1; // 정방향 애니메이션 재생 시
+	
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	TObjectPtr<USoundBase> DoorSound2; // 역방향 애니메이션 재생 시
+	
 public:
 	// 캐릭터가 상호작용(E키) 눌렀을 때 호출됨 -> 소각로 문 열고 닫기
 	virtual void Interact_Implementation(AActor* Interactor) override;	

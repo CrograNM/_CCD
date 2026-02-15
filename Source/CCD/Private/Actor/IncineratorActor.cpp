@@ -5,6 +5,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "ActorSequenceComponent.h"
 #include "ActorSequencePlayer.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
 AIncineratorActor::AIncineratorActor()
@@ -124,11 +125,19 @@ void AIncineratorActor::OnRep_DoorOpen()
 		if (bIsDoorOpen)
 		{
 			// 문을 여는 방향으로 재생
+			if (DoorSound1)
+			{	
+				UGameplayStatics::PlaySoundAtLocation(this, DoorSound1, GetActorLocation()); 
+			}
 			SequenceComp->GetSequencePlayer()->Play();
 		}
 		else
 		{
 			// 문을 닫는 방향(역재생)으로 재생
+			if (DoorSound2)
+			{	
+				UGameplayStatics::PlaySoundAtLocation(this, DoorSound2, GetActorLocation()); 
+			}
 			SequenceComp->GetSequencePlayer()->PlayReverse();
 		}
 	}
