@@ -153,11 +153,6 @@ void ABucketSpawnerActor::Multicast_PlayReverseSequence_Implementation()
 		UGameplayStatics::PlaySoundAtLocation(this, SpawnSound2, GetActorLocation()); 
 	}
 	
-	if (SpawnEffect)
-	{
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), SpawnEffect, MainMesh->GetSocketLocation(SpawnSocketName));
-	}
-	
 	// 모든 클라이언트(서버 포함)에서 실행됨
 	UActorSequenceComponent* SequenceComp = FindComponentByClass<UActorSequenceComponent>();
 	if (SequenceComp && SequenceComp->GetSequencePlayer())
