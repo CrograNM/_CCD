@@ -22,11 +22,21 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	bool IsSpawnAreaClear() const; // 영역 내부에 다른 액터가 있는지 확인하는 함수
-	void CheckAndResetSpawnState(); // 시퀀스 종료 후 호출될 함수 수정
+	
+	UFUNCTION()
+	void OnSpawnAreaBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnSpawnAreaEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	// 컴포넌트
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> MainMesh;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UStaticMeshComponent> ButtonMesh;
+	
+	UPROPERTY()
+	UMaterialInstanceDynamic* ButtonMaterial; // 시각적 업데이트를 위한 머티리얼 인스턴스
 	
 	// 스폰 영역 (충돌체)
 	UPROPERTY(VisibleAnywhere, Category = "Components")
@@ -40,14 +50,13 @@ protected:
 	FName SpawnSocketName = TEXT("BucketSocket"); // 소켓 이름
 	
 	// --- 제어 변수 ---
-	UPROPERTY(Replicated) 
+	UPROPERTY(ReplicatedUsing=OnRep_CanSpawn) 
 	bool bCanSpawn = true;
 	
-	// 단계별 로직 처리를 위한 함수
-	void SpawnBucket();      // 시퀀스 시작
-	void ExecuteSpawning();  // 실제 양동이 생성 (서버 전용)
-	void ResetSpawnState();  // 스폰 가능 상태로 복구
+	UFUNCTION()
+	void OnRep_CanSpawn();
 	
+	void ExecuteSpawning(); // 실제로 양동이를 소환하는 함수 (타이머에서 호출, 역재생 로직 포함)
 	FTimerHandle SpawnTimerHandle;
 	
 	// --- 멀티캐스트 함수 ---

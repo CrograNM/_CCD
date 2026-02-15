@@ -17,6 +17,9 @@ ABucketSpawnerActor::ABucketSpawnerActor()
 	MainMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MainMesh"));
 	RootComponent = MainMesh;
 	
+	ButtonMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ButtonMesh"));
+	ButtonMesh->SetupAttachment(RootComponent);
+	
 	// 스폰 영역 설정
 	SpawnArea = CreateDefaultSubobject<UBoxComponent>(TEXT("SpawnArea"));
 	SpawnArea->SetupAttachment(RootComponent);
@@ -27,6 +30,17 @@ void ABucketSpawnerActor::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	if (ButtonMesh)
+	{
+		ButtonMaterial = ButtonMesh->CreateAndSetMaterialInstanceDynamic(0);
+		OnRep_CanSpawn(); // 초기 상태에 맞게 버튼 색상 설정
+	}
+	
+	if (HasAuthority())
+	{
+		SpawnArea->OnComponentBeginOverlap.AddDynamic(this, &ABucketSpawnerActor::OnSpawnAreaBeginOverlap);
+		SpawnArea->OnComponentEndOverlap.AddDynamic(this, &ABucketSpawnerActor::OnSpawnAreaEndOverlap);
+	}
 }
 
 bool ABucketSpawnerActor::IsSpawnAreaClear() const
@@ -48,8 +62,24 @@ bool ABucketSpawnerActor::IsSpawnAreaClear() const
 	return true;
 }
 
-void ABucketSpawnerActor::CheckAndResetSpawnState()
+void ABucketSpawnerActor::OnSpawnAreaBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if (!IsSpawnAreaClear())
+	{
+		bCanSpawn = false;
+		OnRep_CanSpawn();
+	}
+}
+
+void ABucketSpawnerActor::OnSpawnAreaEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (IsSpawnAreaClear())
+	{
+		bCanSpawn = true;
+		OnRep_CanSpawn();
+	}
 }
 
 void ABucketSpawnerActor::Tick(float DeltaTime)
@@ -77,29 +107,37 @@ void ABucketSpawnerActor::Interact_Implementation(AActor* Interactor)
 	// 서버가 모든 클라이언트에게 애니메이션 재생 명령
 	Multicast_PlaySequence();
 
-	// 서버에서 스폰 타이머 시작
+	// 서버에서 스폰 타이머 시작 (역재생 로직 포함)
 	bCanSpawn = false;
+	OnRep_CanSpawn();
 	GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &ABucketSpawnerActor::ExecuteSpawning, 0.5f, false);
 }
 
-void ABucketSpawnerActor::SpawnBucket()
+void ABucketSpawnerActor::OnRep_CanSpawn()
 {
-	bCanSpawn = false;
-	UActorSequenceComponent* SequenceComp = FindComponentByClass<UActorSequenceComponent>();
-	if (SequenceComp && SequenceComp->GetSequencePlayer())
+	if (bCanSpawn)
 	{
-		// 1. 애니메이션 정방향 재생
-		SequenceComp->GetSequencePlayer()->Play();
-
-		// 2. 0.5초 뒤에 실제 소환 함수 호출
-		GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &ABucketSpawnerActor::ExecuteSpawning, 0.5f, false);
+		// 스폰 가능 상태로 변경될 때 버튼 색상 변경
+		if (ButtonMaterial)
+		{
+			ButtonMaterial->SetVectorParameterValue(TEXT("EmissiveColor"), FVector(0.0f, 5.0f, 0.0f)); // 초록색으로 변경
+		}
+	}
+	else
+	{
+		// 스폰 불가능 상태로 변경될 때 버튼 색상 변경
+		if (ButtonMaterial)
+		{
+			ButtonMaterial->SetVectorParameterValue(TEXT("EmissiveColor"), FVector(5.0f, 0.0f, 0.0f)); // 빨간색으로 변경
+		}
 	}
 }
+
 void ABucketSpawnerActor::ExecuteSpawning()
 {
 	if (!HasAuthority()) return;
 	
-	// 1. 양동이 생성
+	// 양동이 생성
 	if (BucketClass)
 	{
 		FVector SpawnLocation = MainMesh->GetSocketLocation(SpawnSocketName);
@@ -111,23 +149,13 @@ void ABucketSpawnerActor::ExecuteSpawning()
 		GetWorld()->SpawnActor<AActor>(BucketClass, SpawnLocation, SpawnRotation, SpawnParams);
 	}
 
-	// 2. 모든 클라이언트에게 역재생 명령
+	// 모든 클라이언트에게 역재생 명령
 	Multicast_PlayReverseSequence();
-	
-	// 3. 다시 0.5초 뒤에 스폰 가능 상태로 변경 (역재생 완료 시점)
-	GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &ABucketSpawnerActor::ResetSpawnState, 0.5f, false);
-}
-
-void ABucketSpawnerActor::ResetSpawnState()
-{
-	// 역재생 애니메이션이 끝났을 때 호출됨
-	// 이제 다시 스폰 '시도'는 가능한 상태로 변경
-	bCanSpawn = true;
 }
 
 void ABucketSpawnerActor::Multicast_PlaySequence_Implementation()
 {
-	// 1. 사운드 재생: 소켓 위치에서 재생
+	// 사운드 재생: 소켓 위치에서 재생
 	if (SpawnSound1)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, SpawnSound1, GetActorLocation()); 
@@ -138,7 +166,7 @@ void ABucketSpawnerActor::Multicast_PlaySequence_Implementation()
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), SpawnEffect, MainMesh->GetSocketLocation(SpawnSocketName));
 	}
 	
-	// 모든 클라이언트(서버 포함)에서 실행됨
+	// 시퀀스 재생
 	UActorSequenceComponent* SequenceComp = FindComponentByClass<UActorSequenceComponent>();
 	if (SequenceComp && SequenceComp->GetSequencePlayer())
 	{
@@ -153,7 +181,7 @@ void ABucketSpawnerActor::Multicast_PlayReverseSequence_Implementation()
 		UGameplayStatics::PlaySoundAtLocation(this, SpawnSound2, GetActorLocation()); 
 	}
 	
-	// 모든 클라이언트(서버 포함)에서 실행됨
+	// 시퀀스 역재생
 	UActorSequenceComponent* SequenceComp = FindComponentByClass<UActorSequenceComponent>();
 	if (SequenceComp && SequenceComp->GetSequencePlayer())
 	{
