@@ -4,6 +4,7 @@
 #include "ActorSequenceComponent.h"
 #include "ActorSequencePlayer.h"
 #include "TimerManager.h"
+#include "Net/UnrealNetwork.h"
 
 ABucketSpawnerActor::ABucketSpawnerActor()
 {
@@ -54,6 +55,12 @@ void ABucketSpawnerActor::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+void ABucketSpawnerActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ABucketSpawnerActor, bCanSpawn);
+}
+
 void ABucketSpawnerActor::Interact_Implementation(AActor* Interactor)
 {
 	if (!HasAuthority()) return;
@@ -64,7 +71,13 @@ void ABucketSpawnerActor::Interact_Implementation(AActor* Interactor)
 		UE_LOG(LogTemp, Warning, TEXT("[BucketSpawner] Bucket Spawn Fail"));
 		return;
 	}
-	SpawnBucket();
+	
+	// 서버가 모든 클라이언트에게 애니메이션 재생 명령
+	Multicast_PlaySequence();
+
+	// 서버에서 스폰 타이머 시작
+	bCanSpawn = false;
+	GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &ABucketSpawnerActor::ExecuteSpawning, 0.5f, false);
 }
 
 void ABucketSpawnerActor::SpawnBucket()
@@ -82,6 +95,8 @@ void ABucketSpawnerActor::SpawnBucket()
 }
 void ABucketSpawnerActor::ExecuteSpawning()
 {
+	if (!HasAuthority()) return;
+	
 	// 1. 양동이 생성
 	if (BucketClass)
 	{
@@ -94,13 +109,9 @@ void ABucketSpawnerActor::ExecuteSpawning()
 		GetWorld()->SpawnActor<AActor>(BucketClass, SpawnLocation, SpawnRotation, SpawnParams);
 	}
 
-	// 2. 애니메이션 역재생
-	UActorSequenceComponent* SequenceComp = FindComponentByClass<UActorSequenceComponent>();
-	if (SequenceComp && SequenceComp->GetSequencePlayer())
-	{
-		SequenceComp->GetSequencePlayer()->PlayReverse();
-	}
-
+	// 2. 모든 클라이언트에게 역재생 명령
+	Multicast_PlayReverseSequence();
+	
 	// 3. 다시 0.5초 뒤에 스폰 가능 상태로 변경 (역재생 완료 시점)
 	GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &ABucketSpawnerActor::ResetSpawnState, 0.5f, false);
 }
@@ -110,4 +121,24 @@ void ABucketSpawnerActor::ResetSpawnState()
 	// 역재생 애니메이션이 끝났을 때 호출됨
 	// 이제 다시 스폰 '시도'는 가능한 상태로 변경
 	bCanSpawn = true;
+}
+
+void ABucketSpawnerActor::Multicast_PlaySequence_Implementation()
+{
+	// 모든 클라이언트(서버 포함)에서 실행됨
+	UActorSequenceComponent* SequenceComp = FindComponentByClass<UActorSequenceComponent>();
+	if (SequenceComp && SequenceComp->GetSequencePlayer())
+	{
+		SequenceComp->GetSequencePlayer()->Play();
+	}
+}
+
+void ABucketSpawnerActor::Multicast_PlayReverseSequence_Implementation()
+{
+	// 모든 클라이언트(서버 포함)에서 실행됨
+	UActorSequenceComponent* SequenceComp = FindComponentByClass<UActorSequenceComponent>();
+	if (SequenceComp && SequenceComp->GetSequencePlayer())
+	{
+		SequenceComp->GetSequencePlayer()->PlayReverse();
+	}
 }
