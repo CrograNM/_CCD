@@ -4,6 +4,8 @@
 #include "ActorSequenceComponent.h"
 #include "ActorSequencePlayer.h"
 #include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Net/UnrealNetwork.h"
 
 ABucketSpawnerActor::ABucketSpawnerActor()
@@ -125,6 +127,17 @@ void ABucketSpawnerActor::ResetSpawnState()
 
 void ABucketSpawnerActor::Multicast_PlaySequence_Implementation()
 {
+	// 1. 사운드 재생: 소켓 위치에서 재생
+	if (SpawnSound1)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, SpawnSound1, GetActorLocation()); 
+	}
+	
+	if (SpawnEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), SpawnEffect, MainMesh->GetSocketLocation(SpawnSocketName));
+	}
+	
 	// 모든 클라이언트(서버 포함)에서 실행됨
 	UActorSequenceComponent* SequenceComp = FindComponentByClass<UActorSequenceComponent>();
 	if (SequenceComp && SequenceComp->GetSequencePlayer())
@@ -135,6 +148,16 @@ void ABucketSpawnerActor::Multicast_PlaySequence_Implementation()
 
 void ABucketSpawnerActor::Multicast_PlayReverseSequence_Implementation()
 {
+	if (SpawnSound2)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, SpawnSound2, GetActorLocation()); 
+	}
+	
+	if (SpawnEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), SpawnEffect, MainMesh->GetSocketLocation(SpawnSocketName));
+	}
+	
 	// 모든 클라이언트(서버 포함)에서 실행됨
 	UActorSequenceComponent* SequenceComp = FindComponentByClass<UActorSequenceComponent>();
 	if (SequenceComp && SequenceComp->GetSequencePlayer())

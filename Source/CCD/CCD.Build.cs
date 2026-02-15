@@ -23,7 +23,8 @@ public class CCD : ModuleRules
 		PrivateDependencyModuleNames.AddRange(new string[] {
 			"UMG",        // UUserWidget, UButton, UEditableTextBox 등
 			"Slate",      // Slate 위젯 사용 시 필요
-			"SlateCore"   // SlateCore
+			"SlateCore", 
+			"Niagara"
 		});
 		
 		// Uncomment if you are using online features
