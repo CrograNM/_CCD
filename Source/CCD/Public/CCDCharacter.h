@@ -65,6 +65,9 @@ public:
     FORCEINLINE void SetIsActionInProgress(bool bNewIsActionInProgress) { bIsActionInProgress = bNewIsActionInProgress; }
 
     FORCEINLINE UMaterialInstanceDynamic* GetMopMaterial() const { return MopMaterial; }
+    
+    FORCEINLINE UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
+    
 protected:
     /** --- 5. 라이프 사이클 내부 로직 --- */
     virtual void BeginPlay() override;
