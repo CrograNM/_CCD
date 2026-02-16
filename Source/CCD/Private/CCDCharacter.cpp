@@ -1,15 +1,14 @@
 
 #include "CCDCharacter.h"
 
-#include "Actor/WasteActor_Base.h"
 #include "Actor/WaterBucketActor.h"
 #include "Camera/CameraComponent.h"
-#include "Component/BurnableComponent.h"
 #include "Component/WashableComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "Component/CCD_EquipmentComponent.h"
+#include "Component/CCD_InteractionComponent.h"
 #include "Net/UnrealNetwork.h"
 
 /** --- 생성자 및 기본 함수 --- */
@@ -17,7 +16,8 @@ ACCDCharacter::ACCDCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	
-	// --- 장비 컴포넌트 추가 ---
+	// --- 기능성 컴포넌트 추가 ---
+	InteractionComp = CreateDefaultSubobject<UCCD_InteractionComponent>(TEXT("InteractionComp"));
 	EquipmentComp = CreateDefaultSubobject<UCCD_EquipmentComponent>(TEXT("EquipmentComp"));
 	
 	// --- 카메라 설정 ---
@@ -100,33 +100,6 @@ void ACCDCharacter::Tick(float DeltaTime)
 		FRotator NewRot = FMath::RInterpTo(FirstPersonCamera->GetRelativeRotation(), Rep_FirstPersonCameraRotation, DeltaTime, 30.0f);
 		FirstPersonCamera->SetRelativeRotation(NewRot);
 	}
-	
-	if (GrabbedComponent)
-	{
-		PhysicsHandleUpdate(DeltaTime);
-	}
-}
-
-void ACCDCharacter::PhysicsHandleUpdate(float DeltaTime)
-{
-	if (!PhysicsHandle || !GrabbedComponent) return;
-    
-	// 진짜 목표 지점
-	float TargetDistance = 200.f; // 이 수치를 조절하여 물체와의 거리 변경 가능
-	FVector RealTargetLocation = FirstPersonCamera->GetComponentLocation() + (FirstPersonCamera->GetForwardVector() * TargetDistance);
-	FRotator RealTargetRotation = FirstPersonCamera->GetComponentRotation();
-	
-	// 현재 핸들 위치와 회전 가져오기
-	FVector CurrentLocation {};
-	FRotator CurrentRotation {};
-	PhysicsHandle->GetTargetLocationAndRotation(CurrentLocation, CurrentRotation);
-	
-	// 보간 계산
-	float FollowSpeed = 10.0f; // 이 수치를 조절하여 따라가는 속도 변경 가능
-	FVector NewLocation = FMath::VInterpTo(CurrentLocation, RealTargetLocation, DeltaTime, FollowSpeed);
-	FRotator NewRotation = FMath::RInterpTo(CurrentRotation, RealTargetRotation, DeltaTime, FollowSpeed);
-	
-	PhysicsHandle->SetTargetLocationAndRotation(NewLocation, NewRotation);
 }
 
 void ACCDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -141,6 +114,15 @@ void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(ACCDCharacter, Rep_FirstPersonCameraRotation); // 회전값 복제 -> FirstPersonCamera에 적용시킴
 	DOREPLIFETIME(ACCDCharacter, RemoteControlRotation);
 	DOREPLIFETIME(ACCDCharacter, GrabbedComponent);
+}
+
+void ACCDCharacter::PerformInteract()
+{
+	// 이제 모든 복잡한 트레이스/잡기 로직은 컴포넌트가 알아서 합니다.
+	if (InteractionComp)
+	{
+		InteractionComp->PerformInteract();
+	}
 }
 
 /** --- 장비 전환 및 뷰 모드 --- */
@@ -189,12 +171,6 @@ void ACCDCharacter::ApplyViewMode(bool bFirstPerson)
 	}
 }
 
-/** --- 상호작용 및 물리 핸들 --- */
-void ACCDCharacter::PerformInteract()
-{
-	Server_PerformInteract();
-}
-
 void ACCDCharacter::UseEquipment()
 {
 	if (EquipmentComp->GetEquipmentState() == ECCD_EquipmentState::EES_Hands) return;
@@ -212,96 +188,6 @@ void ACCDCharacter::UseEquipment()
 		default: 
 			break;
 	}
-}
-
-void ACCDCharacter::Server_PerformInteract_Implementation()
-{
-	// 이미 물체를 잡고 있다면 놓기
-	if (GrabbedComponent)
-	{
-		Multicast_ReleaseObject();
-		return;
-	}
-	// 맨손 상태가 아니면 상호작용 불가
-	if (EquipmentComp->GetEquipmentState() != ECCD_EquipmentState::EES_Hands) return;
-
-	FVector TraceStart = FirstPersonCamera->GetComponentLocation();
-	FVector TraceEnd = TraceStart + (FirstPersonCamera->GetForwardVector() * InteractRange);
-
-	FHitResult HitResult;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
-
-	// 라인트레이스로 컴포넌트 확인
-	if (GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_Visibility, Params))
-	{
-		AActor* HitActor = HitResult.GetActor();
-		if (!HitActor) return;
-		UE_LOG(LogTemp, Warning, TEXT("[Hand] Interacted with : %s"), *HitActor->GetName());
-		
-		// 피직스 핸들 발동 : 히트된 액터에서 BurnableComponent를 찾습니다.
-		if (UBurnableComponent* BurnComp = HitActor->FindComponentByClass<UBurnableComponent>())
-		{
-			// physics simulate 중인 메쉬인지 확인
-			UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(HitActor->GetRootComponent());
-			if (RootPrim && RootPrim->IsSimulatingPhysics())
-			{
-				Multicast_GrabObject(RootPrim, HitResult.ImpactPoint);
-			}
-			IInteractInterface::Execute_Interact(BurnComp, this);
-		}
-		// 이외의 상호작용 가능 액터들에 대해서도 인터페이스 호출
-		else if (HitActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass()))
-		{
-			IInteractInterface::Execute_Interact(HitActor, this);
-		}
-	}
-}
-void ACCDCharacter::Multicast_GrabObject_Implementation(UPrimitiveComponent* ComponentToGrab, FVector GrabLocation)
-{
-	GrabObject_Impl(ComponentToGrab, GrabLocation);
-}
-void ACCDCharacter::GrabObject_Impl(UPrimitiveComponent* ComponentToGrab, FVector GrabLocation)
-{
-	if (!PhysicsHandle || !ComponentToGrab) return;
-
-	GrabbedComponent = ComponentToGrab;
-	
-	GrabbedComponent->SetSimulatePhysics(true);
-	GrabbedComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
-
-	if (AWasteActor_Base* WasteActor = Cast<AWasteActor_Base>(GrabbedComponent->GetOwner()))
-	{
-		WasteActor->UpdatePhysicsReplicates(false);
-	}
-	// 물리 핸들로 잡기 실행
-	PhysicsHandle->GrabComponentAtLocationWithRotation(
-		ComponentToGrab,
-		NAME_None,
-		GrabLocation,
-		ComponentToGrab->GetComponentRotation()
-	);
-}
-void ACCDCharacter::Multicast_ReleaseObject_Implementation()
-{
-	ReleaseObject_Impl();
-}
-void ACCDCharacter::ReleaseObject_Impl()
-{
-	if (!PhysicsHandle || !GrabbedComponent) return;
-	
-	PhysicsHandle->ReleaseComponent();
-	
-	if (GrabbedComponent)
-	{
-		GrabbedComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
-
-		if (AWasteActor_Base* WasteActor = Cast<AWasteActor_Base>(GrabbedComponent->GetOwner()))
-		{
-			WasteActor->UpdatePhysicsReplicates(true);
-		}
-	}
-	GrabbedComponent = nullptr;
 }
 
 void ACCDCharacter::PerformCleaningTrace() const

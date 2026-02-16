@@ -10,6 +10,7 @@ class USpringArmComponent;
 class UPhysicsHandleComponent;
 class UAnimMontage;
 class UCCD_EquipmentComponent;
+class UCCD_InteractionComponent;
 
 UCLASS()
 class CCD_API ACCDCharacter : public ACharacter
@@ -24,6 +25,9 @@ public:
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
     /** --- 2. 입력 인터페이스 (입력 바인딩용) --- */
+    UFUNCTION(BlueprintCallable, Category = "Interact")
+    void PerformInteract();
+    
     UFUNCTION(BlueprintCallable, Category = "Camera")
     void ToggleView();
 
@@ -35,9 +39,6 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Equipment")
     void SwitchToScanner();
-
-    UFUNCTION(BlueprintCallable, Category = "Interaction")
-    void PerformInteract();
     
     UFUNCTION(BlueprintCallable, Category = "Equipment")
     void UseEquipment();
@@ -71,11 +72,8 @@ public:
 protected:
     /** --- 5. 라이프 사이클 내부 로직 --- */
     virtual void BeginPlay() override;
-
-    /** --- 6. 컴포넌트 (자식 BP에서 접근 가능) --- */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-    TObjectPtr<UCCD_EquipmentComponent> EquipmentComp;
-
+    
+    /** --- 6. 컴포넌트 --- */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
     TObjectPtr<USceneComponent> CameraRoot;
     
@@ -96,9 +94,13 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment")
     TObjectPtr<UStaticMeshComponent> ScannerMesh;
-
-    UPROPERTY()
-    UMaterialInstanceDynamic* MopMaterial;
+    
+    /** --- 캐릭터 기능성 컴포넌트 --- */
+    UPROPERTY(VisibleAnywhere, Category = "Components")
+    TObjectPtr<UCCD_InteractionComponent> InteractionComp;
+    
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    TObjectPtr<UCCD_EquipmentComponent> EquipmentComp;
     
     /** --- 7. 서버 권한 로직 (RPC) --- */
     UFUNCTION(Server, Reliable)
@@ -115,18 +117,6 @@ protected:
 
     UFUNCTION(Server, Unreliable)
     void Server_SetControlRotation(FRotator NewRotation);
-    
-    // 피직스 핸들: Server PerformInteract, Multicast Grab, Multicast Release 
-    UFUNCTION(Server, Reliable)
-    void Server_PerformInteract();
-    
-    UFUNCTION(NetMulticast, Reliable)
-    void Multicast_GrabObject(UPrimitiveComponent* ComponentToGrab, FVector GrabLocation);
-    void GrabObject_Impl(UPrimitiveComponent* ComponentToGrab, FVector GrabLocation);
-    
-    UFUNCTION(NetMulticast, Reliable)
-    void Multicast_ReleaseObject();
-    void ReleaseObject_Impl();
 
     /** --- 8. 상태 변수 및 복제 데이터 --- */
     UPROPERTY(Replicated)
@@ -147,7 +137,6 @@ protected:
     /** --- 9. 내부 헬퍼 함수 --- */
     void ApplyViewMode(bool bFirstPerson);
     void PerformCleaningTrace() const;
-    void PhysicsHandleUpdate(float DeltaTime);
     
     UFUNCTION(BlueprintCallable, Category = "Movement")
     void SetRunning(float NewSpeed);
@@ -162,4 +151,7 @@ private:
     /** --- 10. 순수 내부 계산용 변수 (외부/자식 노출 불필요) --- */
     FRotator LastSentRotation;
     const float RotationThreshold = 0.1f;
+    
+    UPROPERTY()
+    UMaterialInstanceDynamic* MopMaterial;
 };
