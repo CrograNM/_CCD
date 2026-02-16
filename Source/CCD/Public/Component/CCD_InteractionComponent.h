@@ -41,9 +41,12 @@ private:
 
 	UPROPERTY(Replicated)
 	TObjectPtr<UPrimitiveComponent> GrabbedComponent;
+	
+	UPROPERTY()
+	FRotator GrabRelativeRotation;
 
 	UPROPERTY(EditAnywhere, Category = "Design")
-	float InteractRange = 300.f; //
+	float InteractRange = 300.f;
 
 	// 헬퍼 함수
 	void PhysicsHandleUpdate(float DeltaTime);

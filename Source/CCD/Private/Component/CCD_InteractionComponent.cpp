@@ -49,7 +49,10 @@ void UCCD_InteractionComponent::PhysicsHandleUpdate(float DeltaTime)
 	// 진짜 목표 지점
 	float TargetDistance = 200.f; // 이 수치를 조절하여 물체와의 거리 변경 가능
 	FVector RealTargetLocation = OwnerCharacter->GetFirstPersonCamera()->GetComponentLocation() + (OwnerCharacter->GetFirstPersonCamera()->GetForwardVector() * TargetDistance);
-	FRotator RealTargetRotation = OwnerCharacter->GetFirstPersonCamera()->GetComponentRotation();
+	//FRotator RealTargetRotation = OwnerCharacter->GetFirstPersonCamera()->GetComponentRotation();
+	
+	float CurrentCameraYaw = OwnerCharacter->GetFirstPersonCamera()->GetComponentRotation().Yaw;
+	FRotator RealTargetRotation = FRotator(0.f, CurrentCameraYaw + GrabRelativeRotation.Yaw, 0.f);
 	
 	// 현재 핸들 위치와 회전 가져오기
 	FVector CurrentLocation {};
@@ -119,6 +122,10 @@ void UCCD_InteractionComponent::GrabObject_Impl(UPrimitiveComponent* ComponentTo
 
 	GrabbedComponent = ComponentToGrab;
 	
+	float CameraYaw = OwnerCharacter->GetFirstPersonCamera()->GetComponentRotation().Yaw;
+	float ObjectYaw = GrabbedComponent->GetComponentRotation().Yaw;
+	GrabRelativeRotation = FRotator(0.f, ObjectYaw - CameraYaw, 0.f);
+	
 	GrabbedComponent->SetSimulatePhysics(true);
 	GrabbedComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 
@@ -131,7 +138,7 @@ void UCCD_InteractionComponent::GrabObject_Impl(UPrimitiveComponent* ComponentTo
 		ComponentToGrab,
 		NAME_None,
 		GrabLocation,
-		ComponentToGrab->GetComponentRotation()
+		GrabbedComponent->GetComponentRotation()
 	);
 }
 
