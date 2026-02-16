@@ -11,6 +11,7 @@ class UPhysicsHandleComponent;
 class UAnimMontage;
 class UCCD_EquipmentComponent;
 class UCCD_InteractionComponent;
+class UCCD_ViewComponent;
 
 UCLASS()
 class CCD_API ACCDCharacter : public ACharacter
@@ -68,7 +69,9 @@ public:
     FORCEINLINE UMaterialInstanceDynamic* GetMopMaterial() const { return MopMaterial; }
     
     FORCEINLINE UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
-    
+    FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+    FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+    FORCEINLINE void SetRemoteControlRotation(FRotator NewRotation) { RemoteControlRotation = NewRotation;}
 protected:
     /** --- 5. 라이프 사이클 내부 로직 --- */
     virtual void BeginPlay() override;
@@ -96,6 +99,9 @@ protected:
     TObjectPtr<UStaticMeshComponent> ScannerMesh;
     
     /** --- 캐릭터 기능성 컴포넌트 --- */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    TObjectPtr<UCCD_ViewComponent> ViewComp;
+    
     UPROPERTY(VisibleAnywhere, Category = "Components")
     TObjectPtr<UCCD_InteractionComponent> InteractionComp;
     
@@ -103,31 +109,13 @@ protected:
     TObjectPtr<UCCD_EquipmentComponent> EquipmentComp;
     
     /** --- 7. 서버 권한 로직 (RPC) --- */
-    UFUNCTION(Server, Reliable)
-    void Server_ToggleView(bool bNewIsFirstPerson);
-
     UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Animation")
     void Server_PlayActionOfMop();
 
     UFUNCTION(Server, Reliable, Category = "Movement")
     void Server_SetMaxWalkSpeed(float NewSpeed);
 
-    UFUNCTION(Server, Unreliable)
-    void Server_SetFirstPersonCameraRotation(FRotator NewRotation);
-
-    UFUNCTION(Server, Unreliable)
-    void Server_SetControlRotation(FRotator NewRotation);
-
     /** --- 8. 상태 변수 및 복제 데이터 --- */
-    UPROPERTY(Replicated)
-    bool bIsFirstPerson = false;
-
-    UPROPERTY(Replicated)
-    class UPrimitiveComponent* GrabbedComponent;
-
-    UPROPERTY(Replicated)
-    FRotator Rep_FirstPersonCameraRotation;
-
     UPROPERTY(Replicated)
     FRotator RemoteControlRotation;
 
@@ -135,7 +123,6 @@ protected:
     bool bIsActionInProgress = false;
 
     /** --- 9. 내부 헬퍼 함수 --- */
-    void ApplyViewMode(bool bFirstPerson);
     void PerformCleaningTrace() const;
     
     UFUNCTION(BlueprintCallable, Category = "Movement")

@@ -9,6 +9,7 @@
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "Component/CCD_EquipmentComponent.h"
 #include "Component/CCD_InteractionComponent.h"
+#include "Component/CCD_ViewComponent.h"
 #include "Net/UnrealNetwork.h"
 
 /** --- 생성자 및 기본 함수 --- */
@@ -17,6 +18,7 @@ ACCDCharacter::ACCDCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 	
 	// --- 기능성 컴포넌트 추가 ---
+	ViewComp = CreateDefaultSubobject<UCCD_ViewComponent>(TEXT("ViewComp"));
 	InteractionComp = CreateDefaultSubobject<UCCD_InteractionComponent>(TEXT("InteractionComp"));
 	EquipmentComp = CreateDefaultSubobject<UCCD_EquipmentComponent>(TEXT("EquipmentComp"));
 	
@@ -38,13 +40,6 @@ ACCDCharacter::ACCDCharacter()
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCamera->SetupAttachment(CameraRoot); 
 	FirstPersonCamera->bUsePawnControlRotation = true;
-	
-	// 카메라 초기 상태 설정	( 3인칭 모드 시작 )
-	FollowCamera->SetActive(!bIsFirstPerson);		// 카메라 활성화 상태 변경
-	FirstPersonCamera->SetActive(bIsFirstPerson);	
-	GetMesh()->SetOwnerNoSee(bIsFirstPerson);		// 메시 가시성 처리
-	bUseControllerRotationYaw = false;
-	GetCharacterMovement()->bOrientRotationToMovement = true;
 	
 	// --- 장비 메시 설정 ---
 	MopMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MopMesh"));
@@ -80,26 +75,6 @@ void ACCDCharacter::BeginPlay()
 void ACCDCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
-	// --- FirstPersonCamera 회전 동기화 ---
-	if (IsLocallyControlled())
-	{
-		// 현재 로컬 카메라 회전값 가져오기
-		FRotator CurrentRot = FirstPersonCamera->GetRelativeRotation();
-
-		// 임계값 비교: 마지막 전송값과 차이가 날 때만 서버에 전송
-		if (!CurrentRot.Equals(LastSentRotation, RotationThreshold))
-		{
-			Server_SetFirstPersonCameraRotation(CurrentRot);
-			Server_SetControlRotation(GetControlRotation());
-			LastSentRotation = CurrentRot;
-		}
-	}
-	else
-	{
-		FRotator NewRot = FMath::RInterpTo(FirstPersonCamera->GetRelativeRotation(), Rep_FirstPersonCameraRotation, DeltaTime, 30.0f);
-		FirstPersonCamera->SetRelativeRotation(NewRot);
-	}
 }
 
 void ACCDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -110,10 +85,7 @@ void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 {
 	// 변수 복제 등록
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(ACCDCharacter, bIsFirstPerson);
-	DOREPLIFETIME(ACCDCharacter, Rep_FirstPersonCameraRotation); // 회전값 복제 -> FirstPersonCamera에 적용시킴
 	DOREPLIFETIME(ACCDCharacter, RemoteControlRotation);
-	DOREPLIFETIME(ACCDCharacter, GrabbedComponent);
 }
 
 void ACCDCharacter::PerformInteract()
@@ -141,36 +113,11 @@ void ACCDCharacter::SwitchToScanner()
 
 void ACCDCharacter::ToggleView()
 {
-	// 1. 로컬에서 즉시 변경
-	bIsFirstPerson = !bIsFirstPerson;
-	ApplyViewMode(bIsFirstPerson);
-	
-	// 2. 서버에도 알림
-	Server_ToggleView(bIsFirstPerson);
-}
-void ACCDCharacter::Server_ToggleView_Implementation(bool bNewIsFirstPerson)
-{
-	bIsFirstPerson = bNewIsFirstPerson;
-	ApplyViewMode(bIsFirstPerson);
-}
-void ACCDCharacter::ApplyViewMode(bool bFirstPerson)
-{
-	FollowCamera->SetActive(!bFirstPerson);
-	FirstPersonCamera->SetActive(bFirstPerson);
-	GetMesh()->SetOwnerNoSee(bFirstPerson);
-
-	if (bFirstPerson)
+	if (ViewComp)
 	{
-		bUseControllerRotationYaw = true; // 이제 서버에서도 true가 된다.
-		GetCharacterMovement()->bOrientRotationToMovement = false;
-	}
-	else
-	{
-		bUseControllerRotationYaw = false;
-		GetCharacterMovement()->bOrientRotationToMovement = true;
+		ViewComp->ToggleView(); // 복잡한 동기화는 컴포넌트가 처리
 	}
 }
-
 void ACCDCharacter::UseEquipment()
 {
 	if (EquipmentComp->GetEquipmentState() == ECCD_EquipmentState::EES_Hands) return;
@@ -327,14 +274,4 @@ void ACCDCharacter::SetRunning(float NewSpeed)
 void ACCDCharacter::Server_SetMaxWalkSpeed_Implementation(float NewSpeed)
 {
 	GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
-}
-
-/** --- 카메라 회전 동기화 --- */
-void ACCDCharacter::Server_SetFirstPersonCameraRotation_Implementation(FRotator NewRotation)
-{
-	Rep_FirstPersonCameraRotation = NewRotation;
-}
-void ACCDCharacter::Server_SetControlRotation_Implementation(FRotator NewRotation)
-{
-	RemoteControlRotation = NewRotation;
 }
