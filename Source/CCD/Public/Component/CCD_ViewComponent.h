@@ -22,6 +22,9 @@ public:
 	void ToggleView();
 	void ApplyViewMode(bool bFirstPerson);
 	
+	UFUNCTION(BlueprintCallable)
+	bool GetIsFirstPerson() const { return bIsFirstPerson; }
+	
 protected:
 	virtual void BeginPlay() override;
 	

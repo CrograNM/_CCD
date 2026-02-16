@@ -95,7 +95,8 @@ void UCCD_ViewComponent::Server_SetFirstPersonCameraRotation_Implementation(FRot
 }
 void UCCD_ViewComponent::Server_SetControlRotation_Implementation(FRotator NewRotation)
 {
-	if (OwnerCharacter) OwnerCharacter->SetRemoteControlRotation(NewRotation);
+	if (OwnerCharacter) 
+		OwnerCharacter->SetRemoteControlRotation(NewRotation);
 }
 void UCCD_ViewComponent::OnRep_IsFirstPerson()
 {

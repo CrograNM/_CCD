@@ -72,6 +72,7 @@ public:
     FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
     FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
     FORCEINLINE void SetRemoteControlRotation(FRotator NewRotation) { RemoteControlRotation = NewRotation;}
+    
 protected:
     /** --- 5. 라이프 사이클 내부 로직 --- */
     virtual void BeginPlay() override;
@@ -134,11 +135,7 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Design")
     float InteractRange = 300.f;
     
-private:
-    /** --- 10. 순수 내부 계산용 변수 (외부/자식 노출 불필요) --- */
-    FRotator LastSentRotation;
-    const float RotationThreshold = 0.1f;
-    
+private: 
     UPROPERTY()
     UMaterialInstanceDynamic* MopMaterial;
 };
