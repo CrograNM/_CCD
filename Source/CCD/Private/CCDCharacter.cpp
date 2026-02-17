@@ -97,7 +97,7 @@ void ACCDCharacter::PerformInteract()
 	}
 }
 
-/** --- 장비 전환 및 뷰 모드 --- */
+/** --- 장비 전환 및 뷰 모드 --- */ // 장비 로직 분리하기
 void ACCDCharacter::SwitchToHands()
 {
 	if (EquipmentComp) EquipmentComp->SwitchEquipment(ECCD_EquipmentState::EES_Hands);
