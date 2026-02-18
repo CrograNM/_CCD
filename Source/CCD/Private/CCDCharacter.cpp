@@ -20,7 +20,7 @@ ACCDCharacter::ACCDCharacter()
 	// --- 기능성 컴포넌트 추가 ---
 	ViewComp = CreateDefaultSubobject<UCCD_ViewComponent>(TEXT("ViewComp"));
 	InteractionComp = CreateDefaultSubobject<UCCD_InteractionComponent>(TEXT("InteractionComp"));
-	EquipmentComp = CreateDefaultSubobject<UCCD_EquipmentComponent>(TEXT("EquipmentComp"));
+	//EquipmentComp = CreateDefaultSubobject<UCCD_EquipmentComponent>(TEXT("EquipmentComp"));
 	
 	// --- 카메라 설정 ---
 	// 3인칭 카메라
