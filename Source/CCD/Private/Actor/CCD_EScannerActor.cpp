@@ -18,15 +18,16 @@ ACCD_EScannerActor::ACCD_EScannerActor()
 	ScannerWidgetComp->SetDrawSize(FVector2D(800.f, 600.f));
 }
 
+void ACCD_EScannerActor::ExecuteAction()
+{
+	UE_LOG(LogTemp, Warning, TEXT("ExecuteAction :: SCANNER"));
+	UpdateScanner();
+}
+
 void ACCD_EScannerActor::BeginPlay()
 {
 	Super::BeginPlay();
 	
-}
-
-void ACCD_EScannerActor::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 
 void ACCD_EScannerActor::UpdateScanner()

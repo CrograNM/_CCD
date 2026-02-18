@@ -56,7 +56,6 @@ public:
     void BindMontageEndedDelegate();
     
     /** --- 4. Getter / Setter --- */
-    FORCEINLINE TObjectPtr<UStaticMeshComponent> GetMopMesh() const { return MopMesh; }
     FORCEINLINE TObjectPtr<UAnimMontage> GetEquipMontage() const { return EquipMontage; }
     
     FORCEINLINE bool GetIsUnequipping() const { return bIsUnequipping; }
@@ -65,8 +64,6 @@ public:
     FORCEINLINE bool GetIsActionInProgress() const { return bIsActionInProgress; }
     FORCEINLINE void SetIsActionInProgress(bool bNewIsActionInProgress) { bIsActionInProgress = bNewIsActionInProgress; }
 
-    FORCEINLINE UMaterialInstanceDynamic* GetMopMaterial() const { return MopMaterial; }
-    
     FORCEINLINE UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
     FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
     FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
@@ -92,9 +89,6 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Physics")
     TObjectPtr<UPhysicsHandleComponent> PhysicsHandle;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment")
-    TObjectPtr<UStaticMeshComponent> MopMesh;
-    
     /** --- 캐릭터 기능성 컴포넌트 --- */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     TObjectPtr<UCCD_ViewComponent> ViewComp;
@@ -105,9 +99,6 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     TObjectPtr<UCCD_EquipmentComponent> EquipmentComp;
     
-    UPROPERTY(EditAnywhere, Blueprintable, Category = "Equip Components")
-    TObjectPtr<class UCCD_ScannerComponent> ScannerTool;
-	
     /** --- 7. 서버 권한 로직 (RPC) --- */
     UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Animation")
     void Server_PlayActionOfMop();
@@ -133,8 +124,4 @@ protected:
 
     UPROPERTY(EditAnywhere, Category = "Design")
     float InteractRange = 300.f;
-    
-private: 
-    UPROPERTY()
-    UMaterialInstanceDynamic* MopMaterial;
 };

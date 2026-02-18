@@ -134,7 +134,7 @@ void UCCD_EquipmentComponent::HandleEquipNotify()
 
 void UCCD_EquipmentComponent::UpdateMopMeshPollution()
 {
-	if (!OwnerCharacter) return;
+	/*if (!OwnerCharacter) return;
 	if (UMaterialInstanceDynamic* MopMaterial = OwnerCharacter->GetMopMaterial())
 	{
 		// 머티리얼 파라미터 제어 (예: BloodAmount, PoopAmount)
@@ -151,7 +151,7 @@ void UCCD_EquipmentComponent::UpdateMopMeshPollution()
 		FinalColor = FMath::Lerp(FinalColor, PoopColor, MopPollution_Excrement);
         
 		MopMaterial->SetVectorParameterValue(TEXT("BaseColor"), FinalColor);
-	}
+	}*/
 }
 
 void UCCD_EquipmentComponent::ExcuteActiveEquipment() const

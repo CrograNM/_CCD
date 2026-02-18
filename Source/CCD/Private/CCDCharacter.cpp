@@ -9,7 +9,6 @@
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "Component/CCD_EquipmentComponent.h"
 #include "Component/CCD_InteractionComponent.h"
-#include "Component/CCD_ScannerComponent.h"
 #include "Component/CCD_ViewComponent.h"
 #include "Net/UnrealNetwork.h"
 
@@ -42,12 +41,6 @@ ACCDCharacter::ACCDCharacter()
 	FirstPersonCamera->SetupAttachment(CameraRoot); 
 	FirstPersonCamera->bUsePawnControlRotation = true;
 	
-	// --- 장비 메시 설정 ---
-	MopMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MopMesh"));
-	MopMesh->SetIsReplicated(true);
-	MopMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
-	MopMesh->SetupAttachment(GetMesh(), TEXT("MopSocket_Back"));
-	
 	// --- 물리 핸들 ---
 	PhysicsHandle = CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("PhysicsHandle"));
 	PhysicsHandle->SetIsReplicated(true);
@@ -61,12 +54,6 @@ ACCDCharacter::ACCDCharacter()
 void ACCDCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	// 대걸레 머티리얼 인스턴스 생성
-	if (MopMesh)
-	{
-		MopMaterial = MopMesh->CreateAndSetMaterialInstanceDynamic(0);
-	}
 }
 void ACCDCharacter::Tick(float DeltaTime)
 {

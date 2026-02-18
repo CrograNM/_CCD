@@ -12,13 +12,11 @@ class CCD_API ACCD_EScannerActor : public ACCD_EquipActor_Base
 public:
 	ACCD_EScannerActor();
 	
+	virtual void ExecuteAction() override;
 	void UpdateScanner();
 
 protected:
 	virtual void BeginPlay() override;
-
-public:
-	virtual void Tick(float DeltaTime) override;
 	
 private:
 	float GetScanActorDistance() const;
