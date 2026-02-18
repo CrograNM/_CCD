@@ -22,13 +22,6 @@ ACCDCharacter::ACCDCharacter()
 	ViewComp = CreateDefaultSubobject<UCCD_ViewComponent>(TEXT("ViewComp"));
 	InteractionComp = CreateDefaultSubobject<UCCD_InteractionComponent>(TEXT("InteractionComp"));
 	EquipmentComp = CreateDefaultSubobject<UCCD_EquipmentComponent>(TEXT("EquipmentComp"));
-	ScannerTool = CreateDefaultSubobject<UCCD_ScannerComponent>(TEXT("ScannerTool"));
-	
-	// 매니저에게 장비 포인터 전달
-	if (EquipmentComp)
-	{
-		EquipmentComp->SetScannerTool(ScannerTool);
-	}
 	
 	// --- 카메라 설정 ---
 	// 3인칭 카메라

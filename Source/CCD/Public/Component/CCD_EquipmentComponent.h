@@ -18,6 +18,7 @@ class ACCDCharacter;
 class UWidgetComponent;
 class UScannerWidget;
 class UCCD_ScannerComponent;
+class ACCD_EquipActor_Base;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class CCD_API UCCD_EquipmentComponent : public UActorComponent
@@ -55,17 +56,11 @@ public:
 	
 	void UpdateMopMeshPollution();
 	
-	
 	// Use Equipment
 	void ExcuteActiveEquipment() const;
 	
-	void SetScannerTool(UCCD_ScannerComponent* InTool) { ScannerTool = InTool; }
-
 protected:
 	virtual void BeginPlay() override;
-	
-	// Scanner Tool 참조 (캐릭터가 생성자에서 할당)
-	UCCD_ScannerComponent* ScannerTool = nullptr;
 	
 	/** --- 장비 상태 및 메시 --- */
 	UPROPERTY(ReplicatedUsing = OnRep_EquipmentState)
@@ -85,8 +80,19 @@ protected:
 
 	/** --- 내부 로직 --- */
 	void HandleEquipmentEffects(ECCD_EquipmentState NewState);
+	
+	/** --- 장비 자동 스폰 및 저장소 --- */
+	// 에디터 디테일 패널에서 어떤 상태(Mop, Scanner)에 어떤 클래스를 스폰할지 지정합니다.
+	UPROPERTY(EditAnywhere, Category = "Equipment | Setup")
+	TMap<ECCD_EquipmentState, TSubclassOf<ACCD_EquipActor_Base>> ToolClassMap;
+
+	// 생성된 실제 액터들을 저장해두는 저장소입니다.
+	UPROPERTY()
+	TMap<ECCD_EquipmentState, TObjectPtr<ACCD_EquipActor_Base>> SpawnedToolMap;
 
 private:
-	// 소유자 캐릭터 참조
-	UPROPERTY() class ACCDCharacter* OwnerCharacter {};
+	void InitializeEquipment(); // 초기화 함수
+	
+	UPROPERTY()
+	TObjectPtr<ACCDCharacter> OwnerCharacter;
 };

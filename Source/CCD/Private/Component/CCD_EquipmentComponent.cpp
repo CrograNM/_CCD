@@ -1,7 +1,7 @@
 
 #include "Component/CCD_EquipmentComponent.h"
 #include "CCDCharacter.h"
-#include "Component/CCD_ScannerComponent.h"
+#include "Actor/CCD_EquipActor_Base.h"
 #include "Net/UnrealNetwork.h"
 
 UCCD_EquipmentComponent::UCCD_EquipmentComponent()
@@ -9,17 +9,13 @@ UCCD_EquipmentComponent::UCCD_EquipmentComponent()
 	SetIsReplicatedByDefault(true);
 }
 
-
 void UCCD_EquipmentComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	OwnerCharacter = Cast<ACCDCharacter>(GetOwner());
-	
-	// 소유자의 메시들을 찾아 참조 저장 (캐릭터 생성자에서 만든 메시들)
 	if (OwnerCharacter)
 	{
-		MopMesh = OwnerCharacter->GetMopMesh(); 
-		HandleEquipmentEffects(EquipmentState);
+		InitializeEquipment(); // 장비 초기화 실행
 	}
 }
 
@@ -68,24 +64,25 @@ void UCCD_EquipmentComponent::HandleEquipmentEffects(ECCD_EquipmentState NewStat
 	if (AnimInstance && AnimInstance->Montage_IsPlaying(OwnerCharacter->GetEquipMontage())) return;
 	
 	// 비-재생 중(중도 참가자 등)일 때의 최종 소켓 확정
-	switch (NewState)
-	{
-	case ECCD_EquipmentState::EES_Hands:
-		MopMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Back"));
-		ScannerTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hip"));
-		break;
-
-	case ECCD_EquipmentState::EES_Scanner:
-		ScannerTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hand"));
-		MopMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Back"));
-		break;
-
-	case ECCD_EquipmentState::EES_Mop:
-		MopMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Hand"));
-		ScannerTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hip"));
-		break;
-	}
+	//switch (NewState)
+	//{
+	//case ECCD_EquipmentState::EES_Hands:
+	//	MopMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Back"));
+	//	ScannerTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hip"));
+	//	break;
+//
+	//case ECCD_EquipmentState::EES_Scanner:
+	//	ScannerTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hand"));
+	//	MopMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Back"));
+	//	break;
+//
+	//case ECCD_EquipmentState::EES_Mop:
+	//	MopMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Hand"));
+	//	ScannerTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hip"));
+	//	break;
+	//}
 }
+
 
 void UCCD_EquipmentComponent::ProceedToEquip(ECCD_EquipmentState NewState)
 {
@@ -113,25 +110,25 @@ void UCCD_EquipmentComponent::HandleEquipNotify()
 
 	if (OwnerCharacter->GetIsUnequipping()) 
 	{
-		MopMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Back"));
-		ScannerTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hip"));
+		// MopMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Back"));
+		// ScannerTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hip"));
 		EquipmentState = ECCD_EquipmentState::EES_Hands;
 	}
 	else
 	{
-		switch(PendingEquipmentState)
-		{
-		case ECCD_EquipmentState::EES_Scanner:
-			ScannerTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hand"));
-			break;
-
-		case ECCD_EquipmentState::EES_Mop:
-			MopMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Hand"));
-			break;
-			
-		default: break;
-		}
-		EquipmentState = PendingEquipmentState;
+		// switch(PendingEquipmentState)
+		// {
+		// case ECCD_EquipmentState::EES_Scanner:
+		// 	ScannerTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hand"));
+		// 	break;
+		// 
+		// case ECCD_EquipmentState::EES_Mop:
+		// 	MopMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Hand"));
+		// 	break;
+		// 	
+		// default: break;
+		// }
+		// EquipmentState = PendingEquipmentState;
 	}
 }
 
@@ -159,19 +156,47 @@ void UCCD_EquipmentComponent::UpdateMopMeshPollution()
 
 void UCCD_EquipmentComponent::ExcuteActiveEquipment() const
 {
-	if (!OwnerCharacter || GetEquipmentState() == ECCD_EquipmentState::EES_Hands) return;
-
-	switch(GetEquipmentState())
+	if (SpawnedToolMap.Contains(EquipmentState))
 	{
-	case ECCD_EquipmentState::EES_Mop:
-		//OwnerCharacter->Server_PlayActionOfMop();
-		break;
-		
-	case ECCD_EquipmentState::EES_Scanner:
-		ScannerTool->UpdateScanner();
-		break;
-		
-	default: 
-		break;
+		if (ACCD_EquipActor_Base* ActiveTool = SpawnedToolMap[EquipmentState])
+		{
+			ActiveTool->ExecuteAction();
+		}
+	}
+}
+
+void UCCD_EquipmentComponent::InitializeEquipment()
+{
+	if (!GetWorld() || !OwnerCharacter) return;
+
+	// 설정된 모든 클래스 정보를 순회합니다.
+	for (auto& Elem : ToolClassMap)
+	{
+		ECCD_EquipmentState State = Elem.Key;
+		TSubclassOf<ACCD_EquipActor_Base> ToolClass = Elem.Value;
+
+		if (!ToolClass) continue;
+
+		// 서버에서만 실제 액터를 스폰합니다.
+		if (GetOwner()->HasAuthority())
+		{
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.Owner = OwnerCharacter;
+			SpawnParams.Instigator = OwnerCharacter;
+
+			ACCD_EquipActor_Base* NewTool = GetWorld()->SpawnActor<ACCD_EquipActor_Base>(ToolClass, SpawnParams);
+			if (NewTool)
+			{
+				// 장비 액터 초기화 (소유자 전달 등)
+				NewTool->InitializeEquipment(OwnerCharacter);
+
+				// 저장소(TMap)에 기록
+				SpawnedToolMap.Add(State, NewTool);
+
+				// 초기 위치 설정 (일단 등이나 허리 소켓에 붙여둡니다)
+				FName StowSocket = (State == ECCD_EquipmentState::EES_Mop) ? TEXT("MopSocket_Back") : TEXT("ScannerSocket_Hip");
+				NewTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, StowSocket);
+			}
+		}
 	}
 }
