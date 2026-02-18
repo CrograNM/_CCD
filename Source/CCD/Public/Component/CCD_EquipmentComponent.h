@@ -54,14 +54,16 @@ public:
 	
 	void UpdateMopMeshPollution();
 	
-	// Scanner 
-	UFUNCTION(BlueprintCallable, Category = "E_Scanner")
-	float GetScanActorDistance() const;
-	const float MaxScanDistance = 1000.f; // 탐지 최대 거리
-	void ScannerUpdate(float Distance) const;
+	
+	// Use Equipment
+	void ExcuteActiveEquipment() const;
 	
 protected:
 	virtual void BeginPlay() override;
+	
+	// Scanner 
+	UPROPERTY()
+	TObjectPtr<class UCCD_ScannerComponent> ScannerTool;
 	
 	/** --- 장비 상태 및 메시 --- */
 	UPROPERTY(ReplicatedUsing = OnRep_EquipmentState)
@@ -71,17 +73,6 @@ protected:
 
 	UPROPERTY() 
 	TObjectPtr<UStaticMeshComponent> MopMesh;
-	
-	UPROPERTY() 
-	TObjectPtr<UStaticMeshComponent> ScannerMesh;
-	
-	// 스캐너 메쉬에 부착될 3D 위젯 컴포넌트
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Scanner UI")
-	TObjectPtr<UWidgetComponent> ScannerWidgetComp;
-	
-	// 위젯 내부의 실제 UI 클래스 참조
-	UPROPERTY()
-	TObjectPtr<UScannerWidget> ScannerWidget;
 	
 	/** --- 네트워크 RPC --- */
 	UFUNCTION(Server, Reliable)

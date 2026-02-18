@@ -46,11 +46,6 @@ ACCDCharacter::ACCDCharacter()
 	MopMesh->SetIsReplicated(true);
 	MopMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 	MopMesh->SetupAttachment(GetMesh(), TEXT("MopSocket_Back"));
-
-	ScannerMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ScannerMesh"));
-	ScannerMesh->SetIsReplicated(true);
-	ScannerMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
-	ScannerMesh->SetupAttachment(GetMesh(), TEXT("ScannerSocket_Hip"));
 	
 	// --- 물리 핸들 ---
 	PhysicsHandle = CreateDefaultSubobject<UPhysicsHandleComponent>(TEXT("PhysicsHandle"));
@@ -120,20 +115,9 @@ void ACCDCharacter::ToggleView()
 }
 void ACCDCharacter::UseEquipment()
 {
-	if (EquipmentComp->GetEquipmentState() == ECCD_EquipmentState::EES_Hands) return;
-
-	switch(EquipmentComp->GetEquipmentState())
+	if (EquipmentComp)
 	{
-		case ECCD_EquipmentState::EES_Mop:
-			Server_PlayActionOfMop();
-			break;
-		
-		case ECCD_EquipmentState::EES_Scanner:
-			EquipmentComp->ScannerUpdate(EquipmentComp->GetScanActorDistance());
-			break;
-		
-		default: 
-			break;
+		EquipmentComp->ExcuteActiveEquipment();
 	}
 }
 

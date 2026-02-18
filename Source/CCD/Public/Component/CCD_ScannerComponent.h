@@ -2,19 +2,32 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "Components/SceneComponent.h"
 #include "CCD_ScannerComponent.generated.h"
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class CCD_API UCCD_ScannerComponent : public UActorComponent
+class CCD_API UCCD_ScannerComponent : public USceneComponent
 {
 	GENERATED_BODY()
 
 public:
 	UCCD_ScannerComponent();
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
+	
+	void UpdateScanner();
+	
 protected:
 	virtual void BeginPlay() override;
+
+private:
+	float GetScanActorDistance() const;
+	const float MaxScanDistance = 1000.f; // 탐지 최대 거리
 	
+	UPROPERTY(VisibleAnywhere, Category = "Scanner")
+	TObjectPtr<UStaticMeshComponent> ScannerMesh;
+
+	UPROPERTY(VisibleAnywhere, Category = "Scanner")
+	TObjectPtr<class UWidgetComponent> ScannerWidgetComp;
+
+	UPROPERTY()
+	TObjectPtr<class UScannerWidget> ScannerWidget;
 };

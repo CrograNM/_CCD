@@ -1,6 +1,7 @@
 
 #include "Component/CCD_EquipmentComponent.h"
 #include "CCDCharacter.h"
+#include "Component/CCD_ScannerComponent.h"
 #include "Component/ProgressComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -10,12 +11,7 @@ UCCD_EquipmentComponent::UCCD_EquipmentComponent()
 {
 	SetIsReplicatedByDefault(true);
 	
-	// 3D 위젯 컴포넌트 생성
-	ScannerWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("ScannerWidgetComp"));
-    
-	// 기본 설정: 스캐너 메시의 자식으로 붙이기 위해 초기화 시점에는 미설정 (BeginPlay에서 수행)
-	ScannerWidgetComp->SetWidgetSpace(EWidgetSpace::World); // 3D 공간에 배치
-	ScannerWidgetComp->SetDrawSize(FVector2D(8.f, 6.f)); // 위젯 크기에 맞게 조절
+	ScannerTool = CreateDefaultSubobject<UCCD_ScannerComponent>(TEXT("ScannerTool"));
 }
 
 
@@ -28,16 +24,7 @@ void UCCD_EquipmentComponent::BeginPlay()
 	if (OwnerCharacter)
 	{
 		MopMesh = OwnerCharacter->GetMopMesh(); 
-		ScannerMesh = OwnerCharacter->GetScannerMesh();
-		
 		HandleEquipmentEffects(EquipmentState);
-		
-		// 1. 위젯 컴포넌트를 스캐너 메쉬의 소켓에 부착
-		if (ScannerMesh && ScannerWidgetComp)
-		{
-			// 스캐너 메쉬의 디스플레이 부분에 미리 만든 소켓 이름 입력
-			ScannerWidgetComp->AttachToComponent(ScannerMesh, FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("ScreenSocket"));
-		}
 	}
 }
 
@@ -50,24 +37,6 @@ void UCCD_EquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 void UCCD_EquipmentComponent::OnRep_Pollution()
 {
 	UpdateMopMeshPollution();
-}
-
-void UCCD_EquipmentComponent::ScannerUpdate(float Distance) const
-{
-	if (!ScannerWidget && ScannerWidgetComp)
-	{
-		const_cast<UCCD_EquipmentComponent*>(this)->ScannerWidget = Cast<UScannerWidget>(ScannerWidgetComp->GetUserWidgetObject());
-	}
-	
-	// 위젯이 유효한지 확인
-	if (ScannerWidget) // 여기서 막히는중
-	{
-		ScannerWidgetComp->SetHiddenInGame(false);
-		
-		// 위젯 내부의 업데이트 함수 호출
-		UE_LOG(LogTemp, Warning, TEXT("[Scanner] Closest Scan Distance: %f"), Distance); 
-		ScannerWidget->UpdateDistanceDisplay(Distance);
-	}
 }
 
 void UCCD_EquipmentComponent::Server_SetEquipmentState_Implementation(ECCD_EquipmentState NewState)
@@ -108,17 +77,17 @@ void UCCD_EquipmentComponent::HandleEquipmentEffects(ECCD_EquipmentState NewStat
 	{
 	case ECCD_EquipmentState::EES_Hands:
 		MopMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Back"));
-		ScannerMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hip"));
+		ScannerTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hip"));
 		break;
 
 	case ECCD_EquipmentState::EES_Scanner:
-		ScannerMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hand"));
+		ScannerTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hand"));
 		MopMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Back"));
 		break;
 
 	case ECCD_EquipmentState::EES_Mop:
 		MopMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Hand"));
-		ScannerMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hip"));
+		ScannerTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hip"));
 		break;
 	}
 }
@@ -150,14 +119,23 @@ void UCCD_EquipmentComponent::HandleEquipNotify()
 	if (OwnerCharacter->GetIsUnequipping()) 
 	{
 		MopMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Back"));
-		ScannerMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hip"));
+		ScannerTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hip"));
 		EquipmentState = ECCD_EquipmentState::EES_Hands;
 	}
 	else
 	{
-		FName Socket = (PendingEquipmentState == ECCD_EquipmentState::EES_Mop) ? TEXT("MopSocket_Hand") : TEXT("ScannerSocket_Hand");
-		UStaticMeshComponent* TargetMesh = (PendingEquipmentState == ECCD_EquipmentState::EES_Mop) ? MopMesh : ScannerMesh;
-		TargetMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, Socket);
+		switch(PendingEquipmentState)
+		{
+		case ECCD_EquipmentState::EES_Scanner:
+			ScannerTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hand"));
+			break;
+
+		case ECCD_EquipmentState::EES_Mop:
+			MopMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Hand"));
+			break;
+			
+		default: break;
+		}
 		EquipmentState = PendingEquipmentState;
 	}
 }
@@ -184,39 +162,21 @@ void UCCD_EquipmentComponent::UpdateMopMeshPollution()
 	}
 }
 
-float UCCD_EquipmentComponent::GetScanActorDistance() const
+void UCCD_EquipmentComponent::ExcuteActiveEquipment() const
 {
-	if (!OwnerCharacter) return -1.f;
-	
-	// 모든 ProgressComp를 순회하며 가장 가까운 탐지 가능한 액터와의 거리를 계산
-	float ClosestDistance = MaxScanDistance;
-	FVector CharacterLocation = OwnerCharacter->GetActorLocation();
-	bool bFound = false;
-	
-	// 1. 모든 UProgressComponent 인스턴스를 순회
-	for (TObjectIterator<UProgressComponent> It; It; ++It)
+	if (!OwnerCharacter || GetEquipmentState() == ECCD_EquipmentState::EES_Hands) return;
+
+	switch(GetEquipmentState())
 	{
-		UProgressComponent* CurrentComp = *It;
-
-		// 2. 현재 월드에 속한 컴포넌트인지 확인 (에디터/다른 월드 제외)
-		if (CurrentComp->GetWorld() != GetWorld()) continue;
-
-		// 3. 이미 청소가 완료된(Owner가 없는) 액터는 무시
-		AActor* TargetActor = CurrentComp->GetOwner();
-		if (!TargetActor || TargetActor == OwnerCharacter) continue;
-		if (CurrentComp->ProgressValue <= 0.f) continue; // 청소 필요 없는 액터는 무시
-
-		// 4. 거리 계산
-		float Distance = FVector::Dist(CharacterLocation, TargetActor->GetActorLocation());
-
-		// 5. 최대 탐지 거리 내에 있고, 현재까지 찾은 거리보다 짧으면 갱신
-		if (Distance < ClosestDistance)
-		{
-			ClosestDistance = Distance;
-			bFound = true;
-		}
+	case ECCD_EquipmentState::EES_Mop:
+		//OwnerCharacter->Server_PlayActionOfMop();
+		break;
+		
+	case ECCD_EquipmentState::EES_Scanner:
+		ScannerTool->UpdateScanner();
+		break;
+		
+	default: 
+		break;
 	}
-    
-	// 탐지된 것이 없다면 MaxScanDistance 혹은 특정 값 반환
-	return bFound ? ClosestDistance : -1.f;
 }

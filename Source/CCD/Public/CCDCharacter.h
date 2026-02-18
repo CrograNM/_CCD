@@ -57,7 +57,6 @@ public:
     
     /** --- 4. Getter / Setter --- */
     FORCEINLINE TObjectPtr<UStaticMeshComponent> GetMopMesh() const { return MopMesh; }
-    FORCEINLINE TObjectPtr<UStaticMeshComponent> GetScannerMesh() const { return ScannerMesh; }
     FORCEINLINE TObjectPtr<UAnimMontage> GetEquipMontage() const { return EquipMontage; }
     
     FORCEINLINE bool GetIsUnequipping() const { return bIsUnequipping; }
@@ -95,9 +94,6 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment")
     TObjectPtr<UStaticMeshComponent> MopMesh;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment")
-    TObjectPtr<UStaticMeshComponent> ScannerMesh;
     
     /** --- 캐릭터 기능성 컴포넌트 --- */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
