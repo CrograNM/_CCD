@@ -63,24 +63,28 @@ void UCCD_EquipmentComponent::HandleEquipmentEffects(ECCD_EquipmentState NewStat
 	UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
 	if (AnimInstance && AnimInstance->Montage_IsPlaying(OwnerCharacter->GetEquipMontage())) return;
 	
-	// 비-재생 중(중도 참가자 등)일 때의 최종 소켓 확정
-	//switch (NewState)
-	//{
-	//case ECCD_EquipmentState::EES_Hands:
-	//	MopMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Back"));
-	//	ScannerTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hip"));
-	//	break;
-//
-	//case ECCD_EquipmentState::EES_Scanner:
-	//	ScannerTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hand"));
-	//	MopMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Back"));
-	//	break;
-//
-	//case ECCD_EquipmentState::EES_Mop:
-	//	MopMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Hand"));
-	//	ScannerTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hip"));
-	//	break;
-	//}
+	// 맵에 저장된 모든 액터를 순회하며 상태에 맞춰 재배치합니다.
+	for (auto& Elem : SpawnedToolMap)
+	{
+		ECCD_EquipmentState ToolType = Elem.Key;
+		ACCD_EquipActor_Base* ToolActor = Elem.Value;
+
+		if (!ToolActor) continue;
+
+		// 현재 도구가 선택된 상태(NewState)라면 손으로, 아니면 보관 위치로 보냅니다.
+		FName TargetSocket;
+		if (ToolType == ECCD_EquipmentState::EES_Mop)
+		{
+			TargetSocket = (ToolType == NewState) ? TEXT("MopSocket_Hand") : TEXT("MopSocket_Back");
+		}
+		else if (ToolType == ECCD_EquipmentState::EES_Scanner)
+		{
+			TargetSocket = (ToolType == NewState) ? TEXT("ScannerSocket_Hand") : TEXT("ScannerSocket_Hip");
+		}
+
+		ToolActor->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TargetSocket);
+		ToolActor->SetEquipmentActive(ToolType == NewState);
+	}
 }
 
 
@@ -108,27 +112,35 @@ void UCCD_EquipmentComponent::HandleEquipNotify()
 	if (!OwnerCharacter) return;
 	if (!OwnerCharacter->HasAuthority()) return;
 
+	// 1. 장비를 집어넣는 중(Unequipping)인 경우
 	if (OwnerCharacter->GetIsUnequipping()) 
 	{
-		// MopMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Back"));
-		// ScannerTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hip"));
-		EquipmentState = ECCD_EquipmentState::EES_Hands;
+		for (auto& Elem : SpawnedToolMap)
+		{
+			if (!Elem.Value) continue;
+
+			// 모든 장비를 보관용 소켓으로 이동시킵니다.
+			FName StowSocket = (Elem.Key == ECCD_EquipmentState::EES_Mop) ? TEXT("MopSocket_Back") : TEXT("ScannerSocket_Hip");
+			Elem.Value->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, StowSocket);
+			Elem.Value->SetEquipmentActive(false);
+		}
+		EquipmentState = ECCD_EquipmentState::EES_Hands; // 상태를 맨손으로 확정
 	}
+	// 2. 장비를 꺼내는 중(Equipping)인 경우
 	else
 	{
-		// switch(PendingEquipmentState)
-		// {
-		// case ECCD_EquipmentState::EES_Scanner:
-		// 	ScannerTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hand"));
-		// 	break;
-		// 
-		// case ECCD_EquipmentState::EES_Mop:
-		// 	MopMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Hand"));
-		// 	break;
-		// 	
-		// default: break;
-		// }
-		// EquipmentState = PendingEquipmentState;
+		if (SpawnedToolMap.Contains(PendingEquipmentState))
+		{
+			ACCD_EquipActor_Base* TargetTool = SpawnedToolMap[PendingEquipmentState];
+			if (TargetTool)
+			{
+				// 대기 중인 장비(Pending)를 손 소켓으로 이동시킵니다.
+				FName HandSocket = (PendingEquipmentState == ECCD_EquipmentState::EES_Mop) ? TEXT("MopSocket_Hand") : TEXT("ScannerSocket_Hand");
+				TargetTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, HandSocket);
+				TargetTool->SetEquipmentActive(true);
+			}
+		}
+		EquipmentState = PendingEquipmentState; // 목표 상태로 확정
 	}
 }
 
