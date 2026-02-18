@@ -20,7 +20,6 @@ ACCD_EScannerActor::ACCD_EScannerActor()
 
 void ACCD_EScannerActor::ExecuteAction()
 {
-	UE_LOG(LogTemp, Warning, TEXT("ExecuteAction :: SCANNER"));
 	UpdateScanner();
 }
 

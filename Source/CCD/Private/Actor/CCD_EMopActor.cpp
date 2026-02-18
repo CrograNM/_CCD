@@ -17,12 +17,11 @@ ACCD_EMopActor::ACCD_EMopActor()
 void ACCD_EMopActor::ExecuteAction()
 {
 	// 서버에서만 세척 판정 수행
+	if (OwnerCharacter) 
+		OwnerCharacter->Server_PlayActionOfMop_Implementation();
+	
 	if (HasAuthority())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ExecuteAction :: MOP"));
-		
-		if (OwnerCharacter) 
-			OwnerCharacter->Server_PlayActionOfMop_Implementation();
 		PerformMopTrace();
 	}
 }
