@@ -1,7 +1,7 @@
 
 #include "Component/CCD_EquipmentComponent.h"
 #include "CCDCharacter.h"
-#include "Component/CCD_ScannerComponent.h"
+//#include "Component/CCD_ScannerComponent.h"
 #include "Component/ProgressComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Net/UnrealNetwork.h"
