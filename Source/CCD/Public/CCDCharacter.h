@@ -105,6 +105,9 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     TObjectPtr<UCCD_EquipmentComponent> EquipmentComp;
     
+    UPROPERTY(EditAnywhere, Blueprintable, Category = "Equip Components")
+    TObjectPtr<class UCCD_ScannerComponent> ScannerTool;
+	
     /** --- 7. 서버 권한 로직 (RPC) --- */
     UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Animation")
     void Server_PlayActionOfMop();

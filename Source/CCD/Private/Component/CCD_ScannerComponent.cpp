@@ -13,7 +13,6 @@ UCCD_ScannerComponent::UCCD_ScannerComponent()
 
 	// 2. 3D 위젯 생성 및 자기 자신에게 부착
 	ScannerWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("ScannerWidgetComp"));
-	// 메쉬 내부의 소켓(ScreenSocket)에 위젯을 붙입니다.
 	ScannerWidgetComp->SetupAttachment(this, TEXT("ScreenSocket")); 
 	ScannerWidgetComp->SetWidgetSpace(EWidgetSpace::World);
 	ScannerWidgetComp->SetDrawSize(FVector2D(800.f, 600.f));

@@ -17,6 +17,7 @@ enum class ECCD_EquipmentState : uint8
 class ACCDCharacter;
 class UWidgetComponent;
 class UScannerWidget;
+class UCCD_ScannerComponent;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class CCD_API UCCD_EquipmentComponent : public UActorComponent
@@ -58,12 +59,13 @@ public:
 	// Use Equipment
 	void ExcuteActiveEquipment() const;
 	
+	void SetScannerTool(UCCD_ScannerComponent* InTool) { ScannerTool = InTool; }
+
 protected:
 	virtual void BeginPlay() override;
 	
-	// Scanner 
-	UPROPERTY(EditAnywhere, Blueprintable, Category = "Equip Component")
-	TObjectPtr<class UCCD_ScannerComponent> ScannerTool;
+	// Scanner Tool 참조 (캐릭터가 생성자에서 할당)
+	UCCD_ScannerComponent* ScannerTool = nullptr;
 	
 	/** --- 장비 상태 및 메시 --- */
 	UPROPERTY(ReplicatedUsing = OnRep_EquipmentState)

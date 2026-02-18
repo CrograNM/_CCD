@@ -7,8 +7,6 @@
 UCCD_EquipmentComponent::UCCD_EquipmentComponent()
 {
 	SetIsReplicatedByDefault(true);
-	
-	ScannerTool = CreateDefaultSubobject<UCCD_ScannerComponent>(TEXT("ScannerTool"));
 }
 
 
