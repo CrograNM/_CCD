@@ -3,6 +3,8 @@
 
 #include "Actor/CCD_EScannerActor.h"
 
+#include <Net/UnrealNetwork.h>
+
 #include "Component/ProgressComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Widget/ScannerWidget.h"
@@ -10,7 +12,8 @@
 ACCD_EScannerActor::ACCD_EScannerActor()
 {
 	PrimaryActorTick.bCanEverTick = false;
-
+	bReplicates = true;
+	
 	// 2. 3D 위젯 생성 및 자기 자신에게 부착
 	ScannerWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("ScannerWidgetComp"));
 	ScannerWidgetComp->SetupAttachment(MeshComp, TEXT("ScreenSocket")); 
@@ -18,21 +21,33 @@ ACCD_EScannerActor::ACCD_EScannerActor()
 	ScannerWidgetComp->SetDrawSize(FVector2D(800.f, 600.f));
 }
 
+void ACCD_EScannerActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ACCD_EScannerActor, ScannerDistance);
+}
+
 void ACCD_EScannerActor::ExecuteAction()
 {
-	UpdateScanner();
+	// UE_LOG(LogTemp, Warning, TEXT("[Scanner] ExecuteAction"));
+	// 서버에서 거리를 계산하여 변수에 담습니다.
+	if (HasAuthority())
+	{
+		ScannerDistance = GetScanActorDistance();
+        
+		// 서버 자기 자신도 UI를 업데이트해야 하므로 직접 호출합니다.
+		OnRep_ScannerDistance();
+	}
 }
 
-void ACCD_EScannerActor::BeginPlay()
+void ACCD_EScannerActor::OnRep_ScannerDistance()
 {
-	Super::BeginPlay();
-	
+	// 값이 복제되어 오면 클라이언트에서 UI를 갱신합니다.
+	UpdateScannerUI();
 }
 
-void ACCD_EScannerActor::UpdateScanner()
+void ACCD_EScannerActor::UpdateScannerUI()
 {
-	float Distance = GetScanActorDistance();
-	
 	if (!ScannerWidget && ScannerWidgetComp)
 	{
 		ScannerWidget = Cast<UScannerWidget>(ScannerWidgetComp->GetUserWidgetObject());
@@ -41,7 +56,8 @@ void ACCD_EScannerActor::UpdateScanner()
 	if (ScannerWidget)
 	{
 		ScannerWidgetComp->SetHiddenInGame(false);
-		ScannerWidget->UpdateDistanceDisplay(Distance);
+		// 복제된 ScannerDistance 값을 UI에 반영합니다.
+		ScannerWidget->UpdateDistanceDisplay(ScannerDistance);
 	}
 }
 

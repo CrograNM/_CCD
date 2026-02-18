@@ -145,6 +145,7 @@ void UCCD_EquipmentComponent::ExcuteActiveEquipment() const
 	{
 		if (ACCD_EquipActor_Base* ActiveTool = SpawnedToolMap[EquipmentState])
 		{
+			// UE_LOG(LogTemp, Warning, TEXT("[EquipComp] ExecuteAction"));
 			ActiveTool->ExecuteAction();
 		}
 	}

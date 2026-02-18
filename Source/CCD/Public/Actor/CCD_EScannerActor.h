@@ -11,12 +11,18 @@ class CCD_API ACCD_EScannerActor : public ACCD_EquipActor_Base
 
 public:
 	ACCD_EScannerActor();
-	
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void ExecuteAction() override;
-	void UpdateScanner();
-
+	
 protected:
-	virtual void BeginPlay() override;
+	// 서버에서 계산한 거리를 클라이언트에 전달
+	UPROPERTY(ReplicatedUsing = OnRep_ScannerDistance)
+	float ScannerDistance = -1.0f;
+
+	UFUNCTION()
+	void OnRep_ScannerDistance();
+
+	void UpdateScannerUI(); 
 	
 private:
 	float GetScanActorDistance() const;
