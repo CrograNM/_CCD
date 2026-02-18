@@ -4,16 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Components/StaticMeshComponent.h"
-#include "CCD_ScannerComponent2.generated.h"
+#include "CCD_ScannerComponent.generated.h"
 
 UCLASS()
-class CCD_API UCCD_ScannerComponent2 : public UStaticMeshComponent
-{
-	GENERATED_BODY()
-};
-
-/*
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class CCD_API UCCD_ScannerComponent : public UStaticMeshComponent
 {
 	GENERATED_BODY()
@@ -38,4 +31,4 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<class UScannerWidget> ScannerWidget;
-};*/
+};
