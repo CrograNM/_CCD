@@ -15,9 +15,6 @@ enum class ECCD_EquipmentState : uint8
 #include "CCD_EquipmentComponent.generated.h"
 
 class ACCDCharacter;
-class UWidgetComponent;
-class UScannerWidget;
-class UCCD_ScannerComponent;
 class ACCD_EquipActor_Base;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -45,7 +42,7 @@ public:
 	ECCD_EquipmentState GetPendingEquipmentState() const { return PendingEquipmentState; }
 	
 	// Use Equipment
-	void ExcuteActiveEquipment() const;
+	void ExecuteActiveEquipment() const;
 	
 protected:
 	virtual void BeginPlay() override;

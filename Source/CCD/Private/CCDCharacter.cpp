@@ -109,7 +109,7 @@ void ACCDCharacter::Server_UseEquipment_Implementation()
 {
 	if (EquipmentComp)
 	{
-		EquipmentComp->ExcuteActiveEquipment();
+		EquipmentComp->ExecuteActiveEquipment();
 	}
 }
 

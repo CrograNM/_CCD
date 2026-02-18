@@ -139,7 +139,7 @@ void UCCD_EquipmentComponent::HandleEquipNotify()
 	}
 }
 
-void UCCD_EquipmentComponent::ExcuteActiveEquipment() const
+void UCCD_EquipmentComponent::ExecuteActiveEquipment() const
 {
 	if (SpawnedToolMap.Contains(EquipmentState))
 	{
