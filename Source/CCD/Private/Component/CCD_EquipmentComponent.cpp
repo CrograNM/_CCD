@@ -1,17 +1,14 @@
 
 #include "Component/CCD_EquipmentComponent.h"
 #include "CCDCharacter.h"
-//#include "Component/CCD_ScannerComponent.h"
-#include "Component/ProgressComponent.h"
-#include "Components/WidgetComponent.h"
+#include "Component/CCD_ScannerComponent.h"
 #include "Net/UnrealNetwork.h"
-#include "Widget/ScannerWidget.h"
 
 UCCD_EquipmentComponent::UCCD_EquipmentComponent()
 {
 	SetIsReplicatedByDefault(true);
 	
-	//ScannerTool = CreateDefaultSubobject<UCCD_ScannerComponent>(TEXT("ScannerTool"));
+	ScannerTool = CreateDefaultSubobject<UCCD_ScannerComponent>(TEXT("ScannerTool"));
 }
 
 
@@ -68,7 +65,7 @@ void UCCD_EquipmentComponent::OnRep_EquipmentState(ECCD_EquipmentState PreviousS
 
 void UCCD_EquipmentComponent::HandleEquipmentEffects(ECCD_EquipmentState NewState)
 {
-	/*if (!OwnerCharacter) return;
+	if (!OwnerCharacter) return;
 	UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
 	if (AnimInstance && AnimInstance->Montage_IsPlaying(OwnerCharacter->GetEquipMontage())) return;
 	
@@ -89,7 +86,7 @@ void UCCD_EquipmentComponent::HandleEquipmentEffects(ECCD_EquipmentState NewStat
 		MopMesh->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("MopSocket_Hand"));
 		ScannerTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ScannerSocket_Hip"));
 		break;
-	}*/
+	}
 }
 
 void UCCD_EquipmentComponent::ProceedToEquip(ECCD_EquipmentState NewState)
@@ -113,7 +110,7 @@ void UCCD_EquipmentComponent::ProceedToEquip(ECCD_EquipmentState NewState)
 
 void UCCD_EquipmentComponent::HandleEquipNotify()
 {
-	/*if (!OwnerCharacter) return;
+	if (!OwnerCharacter) return;
 	if (!OwnerCharacter->HasAuthority()) return;
 
 	if (OwnerCharacter->GetIsUnequipping()) 
@@ -137,7 +134,7 @@ void UCCD_EquipmentComponent::HandleEquipNotify()
 		default: break;
 		}
 		EquipmentState = PendingEquipmentState;
-	}*/
+	}
 }
 
 void UCCD_EquipmentComponent::UpdateMopMeshPollution()
@@ -163,7 +160,7 @@ void UCCD_EquipmentComponent::UpdateMopMeshPollution()
 }
 
 void UCCD_EquipmentComponent::ExcuteActiveEquipment() const
-{/*
+{
 	if (!OwnerCharacter || GetEquipmentState() == ECCD_EquipmentState::EES_Hands) return;
 
 	switch(GetEquipmentState())
@@ -178,5 +175,5 @@ void UCCD_EquipmentComponent::ExcuteActiveEquipment() const
 		
 	default: 
 		break;
-	}*/
+	}
 }

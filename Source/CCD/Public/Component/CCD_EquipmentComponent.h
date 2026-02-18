@@ -62,8 +62,8 @@ protected:
 	virtual void BeginPlay() override;
 	
 	// Scanner 
-	//UPROPERTY()
-	//TObjectPtr<class UCCD_ScannerComponent> ScannerTool;
+	UPROPERTY(EditAnywhere, Blueprintable, Category = "Equip Component")
+	TObjectPtr<class UCCD_ScannerComponent> ScannerTool;
 	
 	/** --- 장비 상태 및 메시 --- */
 	UPROPERTY(ReplicatedUsing = OnRep_EquipmentState)

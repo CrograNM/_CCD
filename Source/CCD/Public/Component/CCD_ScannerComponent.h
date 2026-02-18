@@ -22,9 +22,6 @@ protected:
 private:
 	float GetScanActorDistance() const;
 	const float MaxScanDistance = 1000.f; // 탐지 최대 거리
-	
-	UPROPERTY(VisibleAnywhere, Category = "Scanner")
-	TObjectPtr<UStaticMeshComponent> ScannerMesh;
 
 	UPROPERTY(VisibleAnywhere, Category = "Scanner")
 	TObjectPtr<class UWidgetComponent> ScannerWidgetComp;
