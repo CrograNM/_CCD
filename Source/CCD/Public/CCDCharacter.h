@@ -44,13 +44,22 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Equipment")
     void UseEquipment();
 
-    /** --- 3. 애니메이션 및 멀티캐스트 (시각적 동기화) --- */
+    /** --- 3. 애니메이션 및 동기화 --- */
     UFUNCTION(NetMulticast, Reliable, Category = "Animation")
     void Multicast_PlayEquipMontage(FName SectionName, float PlayRate);
 
     UFUNCTION(NetMulticast, Reliable, Category = "Animation")
     void Multicast_StopMontage();
-
+    
+    UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Animation")
+    void Server_PlayActionOfMop();
+    
+    UFUNCTION(Server, Reliable, Category = "Movement")
+    void Server_SetMaxWalkSpeed(float NewSpeed);
+    
+    UFUNCTION(Server, Reliable, Category = "Equipment")
+    void Server_UseEquipment();
+    
     UFUNCTION()
     void OnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted);
     void BindMontageEndedDelegate();
@@ -89,7 +98,7 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Physics")
     TObjectPtr<UPhysicsHandleComponent> PhysicsHandle;
 
-    /** --- 캐릭터 기능성 컴포넌트 --- */
+    /** --- 7. 캐릭터 기능성 컴포넌트 --- */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     TObjectPtr<UCCD_ViewComponent> ViewComp;
     
@@ -99,23 +108,13 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     TObjectPtr<UCCD_EquipmentComponent> EquipmentComp;
     
-    /** --- 7. 서버 권한 로직 (RPC) --- */
-    UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Animation")
-    void Server_PlayActionOfMop();
-
-    UFUNCTION(Server, Reliable, Category = "Movement")
-    void Server_SetMaxWalkSpeed(float NewSpeed);
-
     /** --- 8. 상태 변수 및 복제 데이터 --- */
     UPROPERTY(Replicated)
     FRotator RemoteControlRotation;
-
     bool bIsUnequipping = false;
     bool bIsActionInProgress = false;
 
     /** --- 9. 내부 헬퍼 함수 --- */
-    void PerformCleaningTrace() const;
-    
     UFUNCTION(BlueprintCallable, Category = "Movement")
     void SetRunning(float NewSpeed);
 

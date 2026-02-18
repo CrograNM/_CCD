@@ -103,6 +103,10 @@ void ACCDCharacter::ToggleView()
 }
 void ACCDCharacter::UseEquipment()
 {
+	Server_UseEquipment();
+}
+void ACCDCharacter::Server_UseEquipment_Implementation()
+{
 	if (EquipmentComp)
 	{
 		EquipmentComp->ExcuteActiveEquipment();
@@ -154,6 +158,7 @@ void ACCDCharacter::Multicast_StopMontage_Implementation()
 		AnimInstance->Montage_Stop(0.2f, EquipMontage);
 	}
 }
+
 void ACCDCharacter::OnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	if (!HasAuthority()) return;

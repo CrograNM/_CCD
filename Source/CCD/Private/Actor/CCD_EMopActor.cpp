@@ -18,7 +18,7 @@ void ACCD_EMopActor::ExecuteAction()
 {
 	// 서버에서만 세척 판정 수행
 	if (OwnerCharacter) 
-		OwnerCharacter->Server_PlayActionOfMop_Implementation();
+		OwnerCharacter->Server_PlayActionOfMop();
 	
 	if (HasAuthority())
 	{
