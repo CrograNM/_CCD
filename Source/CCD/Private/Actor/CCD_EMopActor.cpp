@@ -98,6 +98,7 @@ void ACCD_EMopActor::UpdateMopMaterial()
 		FinalColor = FMath::Lerp(FinalColor, BloodColor, MopPollution_Blood);
 		FinalColor = FMath::Lerp(FinalColor, PoopColor, MopPollution_Excrement);
 		
+		// 이후 대걸레 자체의 머티리얼 파라미터를 제어해야함 (현재는 임시 머티리얼로 M_BucketWater 사용 중)
 		DynamicMopMaterial->SetVectorParameterValue(TEXT("BaseColor"), FinalColor);
 	}
 }
