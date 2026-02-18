@@ -109,61 +109,6 @@ void ACCDCharacter::UseEquipment()
 	}
 }
 
-void ACCDCharacter::PerformCleaningTrace() const
-{
-	if (!HasAuthority()) return; // 세척 판정은 서버에서만 수행
-	if (EquipmentComp->GetEquipmentState() != ECCD_EquipmentState::EES_Mop) return;
-	
-	UE_LOG(LogTemp, Warning, TEXT("[Mop] Pollution - Blood: %f, Excrement: %f"), 
-		EquipmentComp->MopPollution_Blood, EquipmentComp->MopPollution_Excrement);
-
-	FVector Start = FirstPersonCamera->GetComponentLocation();
-	FVector End = Start + (FirstPersonCamera->GetForwardVector() * InteractRange);
-
-	FHitResult HitResult;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
-
-	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
-	{
-		AActor* HitActor = HitResult.GetActor();
-		if (!HitActor) return;
-		UE_LOG(LogTemp, Warning, TEXT("[Mop] Interact with : %s"), *HitActor->GetName());
-		
-		// 물양동이
-		if (AWaterBucketActor* Bucket = Cast<AWaterBucketActor>(HitActor))
-		{
-			if (!Bucket->IsWaterSpilled() && Bucket->WashMop(EquipmentComp->MopPollution_Blood, EquipmentComp->MopPollution_Excrement))
-			{
-				EquipmentComp->UpdateMopMeshPollution();
-			}
-			return;
-		}
-		if ( EquipmentComp->MopPollution_Blood + EquipmentComp->MopPollution_Excrement >= 1.0f )
-		{
-			UE_LOG(LogTemp, Warning, TEXT("[Mop] Mop is too dirty to clean."));
-			
-			// 데칼 생성 로직 추가하기
-			
-			return;
-		}
-		// 데칼
-		if (UWashableComponent* WashComp = HitResult.GetActor()->FindComponentByClass<UWashableComponent>())
-		{
-			WashComp->TakeWashDamage(25.f); // 예시로 25의 세척 데미지 적용
-			if (WashComp->GetWashableType() == ECCD_WashableType::EWT_Blood)
-			{
-				EquipmentComp->MopPollution_Blood += 0.2f; // 피 오염도 증가
-			}
-			else if (WashComp->GetWashableType() == ECCD_WashableType::EWT_Excrement)
-			{
-				EquipmentComp->MopPollution_Excrement += 0.2f; // 배설물 오염도 증가
-			}
-			EquipmentComp->UpdateMopMeshPollution();
-		}
-	}
-}
-
 /** --- 몽타주 제어 및 델리게이트 --- */
 void ACCDCharacter::Server_PlayActionOfMop_Implementation()
 {
@@ -175,8 +120,6 @@ void ACCDCharacter::Server_PlayActionOfMop_Implementation()
 	
 	if (EquipmentComp->GetEquipmentState() == ECCD_EquipmentState::EES_Mop)
 	{
-		PerformCleaningTrace();
-		
 		bIsActionInProgress = true;	// 액션 진행중 플래그 설정
 		Multicast_PlayEquipMontage(TEXT("SwingMop"), 1.5f);	// 대걸레 휘두르기 애니메이션 재생
 		BindMontageEndedDelegate();	// 몽타주 종료 델리게이트 바인딩

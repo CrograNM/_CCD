@@ -25,11 +25,6 @@ void UCCD_EquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 	DOREPLIFETIME(UCCD_EquipmentComponent, EquipmentState);
 }
 
-void UCCD_EquipmentComponent::OnRep_Pollution()
-{
-	UpdateMopMeshPollution();
-}
-
 void UCCD_EquipmentComponent::Server_SetEquipmentState_Implementation(ECCD_EquipmentState NewState)
 {
 	if (EquipmentState == NewState || !OwnerCharacter) return;
@@ -142,28 +137,6 @@ void UCCD_EquipmentComponent::HandleEquipNotify()
 		}
 		EquipmentState = PendingEquipmentState; // 목표 상태로 확정
 	}
-}
-
-void UCCD_EquipmentComponent::UpdateMopMeshPollution()
-{
-	/*if (!OwnerCharacter) return;
-	if (UMaterialInstanceDynamic* MopMaterial = OwnerCharacter->GetMopMaterial())
-	{
-		// 머티리얼 파라미터 제어 (예: BloodAmount, PoopAmount)
-		MopMaterial->SetScalarParameterValue(TEXT("BloodIntensity"), MopPollution_Blood);
-		MopMaterial->SetScalarParameterValue(TEXT("ExcrementIntensity"), MopPollution_Excrement);
-        
-		// 혹은 두 색상을 섞어서 BaseColor 변경
-		FLinearColor CleanColor = FLinearColor(0.228f, 0.343f, 0.405f, 1.0f); // 깨끗한 물 색상
-		FLinearColor BloodColor = FLinearColor(0.69f, 0.13f, 0.13f, 1.0f); // 핏빛
-		FLinearColor PoopColor = FLinearColor(0.0f, 0.5f, 0.0f, 1.0f); // 배설물
-
-		FLinearColor FinalColor = CleanColor;
-		FinalColor = FMath::Lerp(FinalColor, BloodColor, MopPollution_Blood);
-		FinalColor = FMath::Lerp(FinalColor, PoopColor, MopPollution_Excrement);
-        
-		MopMaterial->SetVectorParameterValue(TEXT("BaseColor"), FinalColor);
-	}*/
 }
 
 void UCCD_EquipmentComponent::ExcuteActiveEquipment() const

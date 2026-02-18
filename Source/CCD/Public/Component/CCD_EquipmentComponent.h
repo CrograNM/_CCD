@@ -44,32 +44,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	ECCD_EquipmentState GetPendingEquipmentState() const { return PendingEquipmentState; }
 	
-	// Mop
-	UPROPERTY(ReplicatedUsing=OnRep_Pollution)
-	float MopPollution_Blood = 0.0f;
-	
-	UPROPERTY(ReplicatedUsing=OnRep_Pollution)
-	float MopPollution_Excrement = 0.0f;
-	
-	UFUNCTION()
-	void OnRep_Pollution();
-	
-	void UpdateMopMeshPollution();
-	
 	// Use Equipment
 	void ExcuteActiveEquipment() const;
 	
 protected:
 	virtual void BeginPlay() override;
 	
-	/** --- 장비 상태 및 메시 --- */
+	/** --- 변수 : 장비 상태 --- */
 	UPROPERTY(ReplicatedUsing = OnRep_EquipmentState)
 	ECCD_EquipmentState EquipmentState = ECCD_EquipmentState::EES_Hands;
-	
 	ECCD_EquipmentState PendingEquipmentState = ECCD_EquipmentState::EES_Hands;
-
-	UPROPERTY() 
-	TObjectPtr<UStaticMeshComponent> MopMesh;
 	
 	/** --- 네트워크 RPC --- */
 	UFUNCTION(Server, Reliable)
@@ -91,7 +75,8 @@ protected:
 	TMap<ECCD_EquipmentState, TObjectPtr<ACCD_EquipActor_Base>> SpawnedToolMap;
 
 private:
-	void InitializeEquipment(); // 초기화 함수
+	// 초기화 함수
+	void InitializeEquipment(); 
 	
 	UPROPERTY()
 	TObjectPtr<ACCDCharacter> OwnerCharacter;
