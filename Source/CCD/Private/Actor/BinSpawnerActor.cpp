@@ -4,7 +4,6 @@
 #include "ActorSequenceComponent.h"
 #include "ActorSequencePlayer.h"
 #include "NiagaraFunctionLibrary.h"
-#include "ToolBuilderUtil.h"
 #include "Kismet/GameplayStatics.h"
 
 ABinSpawnerActor::ABinSpawnerActor()
@@ -32,7 +31,7 @@ void ABinSpawnerActor::Interact_Implementation(AActor* Interactor)
 	}
 	
 	// 서버가 모든 클라이언트에게 애니메이션 재생 명령
-	Multicast_PlaySequence();
+	Multicast_PlaySequence1();
 
 	bCanSpawn = false;
 	OnRep_CanSpawn();
@@ -55,7 +54,7 @@ void ABinSpawnerActor::ExecuteSpawning()
 	}
 }
 
-void ABinSpawnerActor::Multicast_PlaySequence()
+void ABinSpawnerActor::Multicast_PlaySequence1_Implementation()
 {
 	if (SpawnSound1)
 	{
@@ -81,7 +80,7 @@ void ABinSpawnerActor::Multicast_PlaySequence2_Implementation()
 {
 	if (SpawnSound2)
 	{
-		UGameplayStatics::PlaySoundAtLocation(this, SpawnSound1, GetActorLocation()); 
+		UGameplayStatics::PlaySoundAtLocation(this, SpawnSound2, GetActorLocation()); 
 	}
 	
 	// 시퀀스 재생
