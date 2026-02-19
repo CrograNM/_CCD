@@ -56,15 +56,15 @@ protected:
 	UFUNCTION()
 	void OnRep_CanSpawn();
 	
-	void ExecuteSpawning(); // 실제로 양동이를 소환하는 함수 (타이머에서 호출, 역재생 로직 포함)
+	virtual void ExecuteSpawning(); // 실제로 양동이를 소환하는 함수 (타이머에서 호출, 역재생 로직 포함)
 	FTimerHandle SpawnTimerHandle;
 	
 	// --- 멀티캐스트 함수 ---
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_PlaySequence(); // 모든 클라이언트에서 시퀀스를 정방향으로 재생
+	virtual void Multicast_PlaySequence(); // 모든 클라이언트에서 시퀀스를 정방향으로 재생
 
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_PlayReverseSequence(); // 모든 클라이언트에서 시퀀스를 역방향으로 재생
+	virtual void Multicast_PlayReverseSequence(); // 모든 클라이언트에서 시퀀스를 역방향으로 재생
 	
 	// --- VFX/SFX ---
 	UPROPERTY(EditAnywhere, Category = "Effects")

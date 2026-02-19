@@ -96,7 +96,7 @@ void ABucketSpawnerActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 void ABucketSpawnerActor::Interact_Implementation(AActor* Interactor)
 {
 	if (!HasAuthority()) return;
-	UE_LOG(LogTemp, Warning, TEXT("[Interact] BucketSpawner Interact Received"));
+	UE_LOG(LogTemp, Warning, TEXT("[Interact] BucketSpawner"));
 	
 	if (!bCanSpawn || !IsSpawnAreaClear())
 	{
@@ -106,10 +106,11 @@ void ABucketSpawnerActor::Interact_Implementation(AActor* Interactor)
 	
 	// 서버가 모든 클라이언트에게 애니메이션 재생 명령
 	Multicast_PlaySequence();
-
-	// 서버에서 스폰 타이머 시작 (역재생 로직 포함)
+	
 	bCanSpawn = false;
 	OnRep_CanSpawn();
+	
+	// 서버에서 스폰 타이머 시작 (역재생 로직 포함)
 	GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &ABucketSpawnerActor::ExecuteSpawning, 0.5f, false);
 }
 
