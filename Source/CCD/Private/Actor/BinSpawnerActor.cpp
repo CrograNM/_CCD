@@ -1,12 +1,15 @@
 
 #include "Actor/BinSpawnerActor.h"
 
+#include "Components/BoxComponent.h"
+
 ABinSpawnerActor::ABinSpawnerActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
 	
-	ButtonMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ButtonMesh2"));
-	ButtonMesh->SetupAttachment(RootComponent);
+	ButtonMesh2 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ButtonMesh2"));
+	ButtonMesh2->SetupAttachment(RootComponent);
 }
 
 void ABinSpawnerActor::BeginPlay()
