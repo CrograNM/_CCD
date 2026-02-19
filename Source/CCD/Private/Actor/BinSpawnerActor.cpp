@@ -10,8 +10,6 @@ ABinSpawnerActor::ABinSpawnerActor()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
-	
-	SpawnSocketName = TEXT("BinSocket");
 }
 
 void ABinSpawnerActor::BeginPlay()
@@ -21,17 +19,26 @@ void ABinSpawnerActor::BeginPlay()
 
 void ABinSpawnerActor::Interact_Implementation(AActor* Interactor)
 {
-	if (!HasAuthority()) return;
-	UE_LOG(LogTemp, Warning, TEXT("[Interact] BinSpawner"));
-	
-	if (!bCanSpawn || !IsSpawnAreaClear())
+	if (!HasAuthority() || !Interactor || !bCanSpawn) return;
+
+	// 방향 판별
+	FVector SpawnerLocation = GetActorLocation();
+	FVector InteractorLocation = Interactor->GetActorLocation();
+	FVector ToInteractor = (InteractorLocation - SpawnerLocation).GetSafeNormal();
+
+	// 양수면 오른쪽, 음수면 왼쪽
+	float DotResult = FVector::DotProduct(GetActorForwardVector(), ToInteractor);
+	bIsInteractedFromRight = (DotResult > 0.0f);
+
+	// 판별된 방향에 따라 시퀀스 재생 (태그 활용)
+	if (bIsInteractedFromRight)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[BinSpawner] Bin Spawn Fail"));
-		return;
+		Multicast_PlaySequence2(); // 오른쪽용 시퀀스 재생 로직 실행
 	}
-	
-	// 서버가 모든 클라이언트에게 애니메이션 재생 명령
-	Multicast_PlaySequence1();
+	else
+	{
+		Multicast_PlaySequence1(); // 왼쪽용 시퀀스 재생 로직 실행
+	}
 
 	bCanSpawn = false;
 	OnRep_CanSpawn();
@@ -44,8 +51,11 @@ void ABinSpawnerActor::ExecuteSpawning()
 	// 양동이 생성
 	if (BucketClass)
 	{
-		FVector SpawnLocation = MainMesh->GetSocketLocation(SpawnSocketName);
-		FRotator SpawnRotation = MainMesh->GetSocketRotation(SpawnSocketName);
+		// 방향에 따라 사용할 소켓 이름 결정
+		FName TargetSocket = bIsInteractedFromRight ? RightSpawnSocket : LeftSpawnSocket;
+		
+		FVector SpawnLocation = MainMesh->GetSocketLocation(TargetSocket);
+		FRotator SpawnRotation = MainMesh->GetSocketRotation(TargetSocket);
 
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -55,6 +65,34 @@ void ABinSpawnerActor::ExecuteSpawning()
 }
 
 void ABinSpawnerActor::Multicast_PlaySequence1_Implementation()
+{	
+	PlaySpawnSound();
+	
+	// 시퀀스 재생
+	UActorSequenceComponent* SequenceComp = FindComponentByTag<UActorSequenceComponent>(FName("Sequence1"));
+	if (SequenceComp && SequenceComp->GetSequencePlayer())
+	{
+		SequenceComp->GetSequencePlayer()->Play();
+	}
+	
+	GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &ABinSpawnerActor::ExecuteSpawning, 1.4f, false);
+}
+
+void ABinSpawnerActor::Multicast_PlaySequence2_Implementation()
+{
+	PlaySpawnSound();
+	
+	// 시퀀스 재생
+	UActorSequenceComponent* SequenceComp = FindComponentByTag<UActorSequenceComponent>(FName("Sequence2"));
+	if (SequenceComp && SequenceComp->GetSequencePlayer())
+	{
+		SequenceComp->GetSequencePlayer()->Play();
+	}
+	
+	GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &ABinSpawnerActor::ExecuteSpawning, 1.4f, false);
+}
+
+void ABinSpawnerActor:: PlaySpawnSound() 
 {
 	if (SpawnSound1)
 	{
@@ -66,29 +104,9 @@ void ABinSpawnerActor::Multicast_PlaySequence1_Implementation()
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), SpawnEffect, MainMesh->GetSocketLocation(SpawnSocketName));
 	}
 	
-	// 시퀀스 재생
-	UActorSequenceComponent* SequenceComp = FindComponentByTag<UActorSequenceComponent>(FName("Sequence1"));
-	if (SequenceComp && SequenceComp->GetSequencePlayer())
+	// 0.5초 후에 사운드2 재생 (시퀀스 타이밍에 맞춰)
+	GetWorldTimerManager().SetTimer( SpawnTimerHandle, [this]()
 	{
-		SequenceComp->GetSequencePlayer()->Play();
-	}
-	
-	GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &ABinSpawnerActor::Multicast_PlaySequence2, 0.5f, false);
-}
-
-void ABinSpawnerActor::Multicast_PlaySequence2_Implementation()
-{
-	if (SpawnSound2)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, SpawnSound2, GetActorLocation()); 
-	}
-	
-	// 시퀀스 재생
-	UActorSequenceComponent* SequenceComp = FindComponentByTag<UActorSequenceComponent>(FName("Sequence2"));
-	if (SequenceComp && SequenceComp->GetSequencePlayer())
-	{
-		SequenceComp->GetSequencePlayer()->Play();
-	}
-	
-	GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &ABinSpawnerActor::ExecuteSpawning, 0.5f, false);
+		if (SpawnSound2) UGameplayStatics::PlaySoundAtLocation(this, SpawnSound2, GetActorLocation());
+	}, 0.5f, false );
 }
