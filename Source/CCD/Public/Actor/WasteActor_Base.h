@@ -31,6 +31,26 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UBurnableComponent* BurnableComp;	
 	
+	
+	/** --- 사운드 관련 --- */
+	UPROPERTY(EditAnywhere, Category = "Design | Sound")
+	TObjectPtr<USoundBase> HitSound;
+
+	// 소리 발생 최소 충격량
+	UPROPERTY(EditAnywhere, Category = "Design | Sound")
+	float HitSoundThreshold = 100.0f;
+	
+	UPROPERTY(EditAnywhere, Category = "Design | Sound")
+	float HitSoundCoolDown = 0.25f;
+
+	// 사운드 중첩 방지용
+	float LastSoundTime = 0.0f;
+
+	// 충돌 이벤트 함수
+	UFUNCTION()
+	void OnMeshHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, 
+		UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	
 public:
 	
 	UFUNCTION()
