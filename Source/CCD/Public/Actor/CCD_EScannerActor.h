@@ -14,15 +14,19 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void ExecuteAction() override;
 	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_UpdateScannerUI();
+	
 protected:
 	// 서버에서 계산한 거리를 클라이언트에 전달
-	UPROPERTY(ReplicatedUsing = OnRep_ScannerDistance)
+	UPROPERTY(Replicated)
 	float ScannerDistance = -1.0f;
 
-	UFUNCTION()
-	void OnRep_ScannerDistance();
-
 	void UpdateScannerUI(); 
+	
+	// --- VFX/SFX ---
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	TObjectPtr<USoundBase> ScannerSound; 
 	
 private:
 	float GetScanActorDistance() const;
