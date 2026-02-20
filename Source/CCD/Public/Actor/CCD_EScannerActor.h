@@ -24,6 +24,10 @@ protected:
 
 	void UpdateScannerUI(); 
 	
+	// --- VFX/SFX ---
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	TObjectPtr<USoundBase> ScannerSound; 
+	
 private:
 	float GetScanActorDistance() const;
 	const float MaxScanDistance = 1000.f; // 탐지 최대 거리

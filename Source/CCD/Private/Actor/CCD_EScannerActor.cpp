@@ -7,6 +7,7 @@
 
 #include "Component/ProgressComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Widget/ScannerWidget.h"
 
 ACCD_EScannerActor::ACCD_EScannerActor()
@@ -45,6 +46,13 @@ void ACCD_EScannerActor::Multicast_UpdateScannerUI_Implementation()
 
 void ACCD_EScannerActor::UpdateScannerUI()
 {
+	if (ScannerSound && ScannerDistance >= 0.f) // 유효한 거리 값이 있을 때만 사운드 재생
+	{
+		float ClampedDistance = FMath::Clamp(ScannerDistance, 0.f, MaxScanDistance);
+		float VolumeRate =  1.0 - (ClampedDistance / MaxScanDistance); // 거리에 따라 볼륨 조절
+		UGameplayStatics::PlaySoundAtLocation(this, ScannerSound, GetActorLocation(), VolumeRate); 
+	}
+	
 	if (!ScannerWidget && ScannerWidgetComp)
 	{
 		ScannerWidget = Cast<UScannerWidget>(ScannerWidgetComp->GetUserWidgetObject());
@@ -78,5 +86,6 @@ float ACCD_EScannerActor::GetScanActorDistance() const
 			bFound = true;
 		}
 	}
+	
 	return bFound ? ClosestDistance : -1.f;
 }
