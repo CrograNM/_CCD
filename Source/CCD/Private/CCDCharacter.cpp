@@ -1,9 +1,7 @@
 
 #include "CCDCharacter.h"
 
-#include "Actor/WaterBucketActor.h"
 #include "Camera/CameraComponent.h"
-#include "Component/WashableComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
@@ -80,20 +78,11 @@ void ACCDCharacter::PerformInteract()
 	}
 }
 
-/** --- 장비 전환 및 뷰 모드 --- */ // 장비 로직 분리하기
-void ACCDCharacter::SwitchToHands()
+/** --- 장비 및 뷰 모드 --- */
+void ACCDCharacter::SwitchEquipment(const ECCD_EquipmentState NewState)
 {
-	if (EquipmentComp) EquipmentComp->SwitchEquipment(ECCD_EquipmentState::EES_Hands);
+	if (EquipmentComp) EquipmentComp->SwitchEquipment(NewState);
 }
-void ACCDCharacter::SwitchToMop()
-{
-	if (EquipmentComp) EquipmentComp->SwitchEquipment(ECCD_EquipmentState::EES_Mop);
-}
-void ACCDCharacter::SwitchToScanner()
-{
-	if (EquipmentComp) EquipmentComp->SwitchEquipment(ECCD_EquipmentState::EES_Scanner);
-}
-
 void ACCDCharacter::ToggleView()
 {
 	if (ViewComp)
@@ -158,7 +147,6 @@ void ACCDCharacter::Multicast_StopMontage_Implementation()
 		AnimInstance->Montage_Stop(0.2f, EquipMontage);
 	}
 }
-
 void ACCDCharacter::OnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	if (!HasAuthority()) return;

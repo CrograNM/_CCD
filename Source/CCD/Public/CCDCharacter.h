@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Component/CCD_EquipmentComponent.h"
 #include "GameFramework/Character.h"
 #include "CCDCharacter.generated.h"
 
@@ -9,7 +10,6 @@ class UCameraComponent;
 class USpringArmComponent;
 class UPhysicsHandleComponent;
 class UAnimMontage;
-class UCCD_EquipmentComponent;
 class UCCD_InteractionComponent;
 class UCCD_ViewComponent;
 
@@ -33,13 +33,7 @@ public:
     void ToggleView();
 
     UFUNCTION(BlueprintCallable, Category = "Equipment")
-    void SwitchToHands();
-
-    UFUNCTION(BlueprintCallable, Category = "Equipment")
-    void SwitchToMop();
-
-    UFUNCTION(BlueprintCallable, Category = "Equipment")
-    void SwitchToScanner();
+    void SwitchEquipment(const ECCD_EquipmentState NewState);
     
     UFUNCTION(BlueprintCallable, Category = "Equipment")
     void UseEquipment();

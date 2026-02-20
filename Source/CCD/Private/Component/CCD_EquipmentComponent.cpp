@@ -38,7 +38,7 @@ void UCCD_EquipmentComponent::Server_SetEquipmentState_Implementation(ECCD_Equip
 		
 		FName Section = (EquipmentState == ECCD_EquipmentState::EES_Mop) ? TEXT("DrawMop") : TEXT("DrawScanner");
 		OwnerCharacter->SetIsActionInProgress(true);	
-		OwnerCharacter->Multicast_PlayEquipMontage(Section, -1.2f);
+		OwnerCharacter->Multicast_PlayEquipMontage(Section, -1.5f);
 		OwnerCharacter->BindMontageEndedDelegate();
 	}
 	else
@@ -82,7 +82,6 @@ void UCCD_EquipmentComponent::HandleEquipmentEffects(ECCD_EquipmentState NewStat
 	}
 }
 
-
 void UCCD_EquipmentComponent::ProceedToEquip(ECCD_EquipmentState NewState)
 {
 	if (!OwnerCharacter) return;
@@ -97,7 +96,7 @@ void UCCD_EquipmentComponent::ProceedToEquip(ECCD_EquipmentState NewState)
 
 	FName Section = (NewState == ECCD_EquipmentState::EES_Mop) ? TEXT("DrawMop") : TEXT("DrawScanner");
 	OwnerCharacter->SetIsActionInProgress(true);
-	OwnerCharacter->Multicast_PlayEquipMontage(Section, 1.0f);
+	OwnerCharacter->Multicast_PlayEquipMontage(Section, 1.5f);
 	OwnerCharacter->BindMontageEndedDelegate();
 	HandleEquipmentEffects(NewState);
 }
