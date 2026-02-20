@@ -34,15 +34,12 @@ void ACCD_EScannerActor::ExecuteAction()
 	if (HasAuthority())
 	{
 		ScannerDistance = GetScanActorDistance();
-        
-		// 서버 자기 자신도 UI를 업데이트해야 하므로 직접 호출합니다.
-		OnRep_ScannerDistance();
+		Multicast_UpdateScannerUI();
 	}
 }
 
-void ACCD_EScannerActor::OnRep_ScannerDistance()
+void ACCD_EScannerActor::Multicast_UpdateScannerUI_Implementation()
 {
-	// 값이 복제되어 오면 클라이언트에서 UI를 갱신합니다.
 	UpdateScannerUI();
 }
 
