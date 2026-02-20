@@ -60,10 +60,10 @@ void AWasteActor_Base::OnMeshHit(UPrimitiveComponent* HitComponent, AActor* Othe
 	if (GetWorld()->GetTimeSeconds() - LastSoundTime < HitSoundCoolDown) return;
 
 	// 충격 강도에 따라 볼륨 조절 - 0.2 ~ 1.0 사이의 볼륨으로 클램프
-	float TargetVolume = FMath::GetMappedRangeValueClamped(FVector2D(100.f, 2000.f), FVector2D(0.2f, 1.0f), ImpulseSize);
+	float TargetVolume = FMath::GetMappedRangeValueClamped(FVector2D(HitSoundThreshold, HitSoundThreshold + 2000.f), FVector2D(0.2f, 0.8f), ImpulseSize);
 
 	// 충돌 지점에서 소리 재생
-	UGameplayStatics::PlaySoundAtLocation(this, HitSound, Hit.ImpactPoint, TargetVolume);
+	UGameplayStatics::PlaySoundAtLocation(this, HitSound, Hit.ImpactPoint, TargetVolume, 1, 0, HitAttenuation);
 	
 	LastSoundTime = GetWorld()->GetTimeSeconds();
 }

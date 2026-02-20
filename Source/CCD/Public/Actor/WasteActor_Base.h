@@ -42,6 +42,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Design | Sound")
 	float HitSoundCoolDown = 0.25f;
+	
+	UPROPERTY(EditAnywhere, Category = "Design | Sound")
+	TObjectPtr<USoundAttenuation> HitAttenuation;
 
 	// 사운드 중첩 방지용
 	float LastSoundTime = 0.0f;
