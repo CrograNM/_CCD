@@ -36,7 +36,11 @@ protected:
 	UPROPERTY()
 	UMaterialInstanceDynamic* WaterMaterial; // 시각적 업데이트를 위한 머티리얼 인스턴스
 
+	UPROPERTY(ReplicatedUsing = OnRep_IsWaterSpilled)
 	bool bIsWaterSpilled {false};
+	
+	UFUNCTION()
+	void OnRep_IsWaterSpilled(); // 물이 쏟아졌을 때 호출
 	
 	// 오염도: 0.0f ~ 1.0f (피, 배설물)
 	UPROPERTY(ReplicatedUsing = OnRep_Pollution, VisibleAnywhere, BlueprintReadOnly, Category="Pollution")
@@ -52,4 +56,11 @@ protected:
 	void UpdateWaterColor(); // 물 색상 업데이트
 	
 	void SpillWater();
+	
+	// --- VFX/SFX ---
+	UPROPERTY(EditAnywhere, Category = "Design | Sound")
+	TObjectPtr<USoundBase> SpillSound;
+
+	UPROPERTY(EditAnywhere, Category = "Design | Effects")
+	TObjectPtr<class UNiagaraSystem> SpillEffect;
 };

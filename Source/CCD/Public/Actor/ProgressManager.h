@@ -18,14 +18,22 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(ReplicatedUsing = OnRep_Progress, VisibleAnywhere, Category = "Progress")
+	float LastProgress = 0.0f;
+	
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentProgress, VisibleAnywhere, Category = "Progress")
 	float CurrentProgress = 0.0f;
 
-	UPROPERTY(ReplicatedUsing = OnRep_Progress, VisibleAnywhere, Category = "Progress")
+	UPROPERTY(ReplicatedUsing = OnRep_MaxProgress, VisibleAnywhere, Category = "Progress")
 	float MaxProgress = 0.0f;
 
 	UFUNCTION()
-	void OnRep_Progress();
+	void OnRep_CurrentProgress();
+	
+	UFUNCTION()
+	void OnRep_MaxProgress();
+	
+	UPROPERTY(EditAnywhere, Category = "Design | Sound")
+	TObjectPtr<USoundBase> ProgressSound;
 	
 public:
 	// 진행도 비율 반환

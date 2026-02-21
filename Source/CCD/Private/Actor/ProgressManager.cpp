@@ -34,7 +34,19 @@ void AProgressManager::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty
 	DOREPLIFETIME(AProgressManager, MaxProgress);
 }
 
-void AProgressManager::OnRep_Progress()
+void AProgressManager::OnRep_CurrentProgress()
+{
+	UpdateUI();
+	
+	if (ProgressSound && CurrentProgress > LastProgress) // 진행도가 증가할 때만 사운드 재생
+	{
+		UGameplayStatics::PlaySound2D(GetWorld(), ProgressSound);
+	}
+	
+	LastProgress = CurrentProgress;
+}
+
+void AProgressManager::OnRep_MaxProgress()
 {
 	UpdateUI();
 }
@@ -43,19 +55,18 @@ void AProgressManager::AddMaxProgress(float Value)
 {
 	if (!HasAuthority()) return; // 서버에서만 수정
 	MaxProgress += Value; 
-	UpdateUI(); // 서버 화면 갱신
+	OnRep_MaxProgress();
 }
 
 void AProgressManager::AddCurrentProgress(float Value)
 {
 	if (!HasAuthority()) return; // 서버에서만 수정
 	CurrentProgress += Value; 
-	UpdateUI(); // 서버 화면 갱신
+	OnRep_CurrentProgress();
 }
 
 void AProgressManager::UpdateUI()
 {
-	// 데디케이티드 서버에서는 UI 갱신하지 않음 -> 현재 작품은 리슨 서버 이므로 생략
 	
 	// 로컬 플레이어 컨트롤러 가져오기
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);

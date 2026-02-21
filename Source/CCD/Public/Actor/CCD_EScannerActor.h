@@ -25,7 +25,7 @@ protected:
 	void UpdateScannerUI(); 
 	
 	// --- VFX/SFX ---
-	UPROPERTY(EditAnywhere, Category = "Effects")
+	UPROPERTY(EditAnywhere, Category = "Design | Sound")
 	TObjectPtr<USoundBase> ScannerSound; 
 	
 private:

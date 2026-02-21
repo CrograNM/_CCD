@@ -92,7 +92,7 @@ void ABinSpawnerActor::Multicast_PlaySequence2_Implementation()
 	GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &ABinSpawnerActor::ExecuteSpawning, 1.4f, false);
 }
 
-void ABinSpawnerActor:: PlaySpawnSound() 
+void ABinSpawnerActor::PlaySpawnSound() 
 {
 	if (SpawnSound1)
 	{
@@ -105,8 +105,13 @@ void ABinSpawnerActor:: PlaySpawnSound()
 	}
 	
 	// 0.5초 후에 사운드2 재생 (시퀀스 타이밍에 맞춰)
-	GetWorldTimerManager().SetTimer( SpawnTimerHandle, [this]()
+	GetWorldTimerManager().SetTimer( SpawnTimerHandle, this, &ABinSpawnerActor::PlaySpawnSound2, 0.5f, false);
+}
+
+void ABinSpawnerActor::PlaySpawnSound2()
+{
+	if (SpawnSound2)
 	{
-		if (SpawnSound2) UGameplayStatics::PlaySoundAtLocation(this, SpawnSound2, GetActorLocation());
-	}, 0.5f, false );
+		UGameplayStatics::PlaySoundAtLocation(this, SpawnSound2, GetActorLocation()); 
+	}
 }
