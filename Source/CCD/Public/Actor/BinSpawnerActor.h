@@ -17,7 +17,8 @@ protected:
 	virtual void BeginPlay() override;
 	
 	void PlaySpawnSound();
-	
+	void PlaySpawnSound2();
+
 	// --- 멀티캐스트 함수 ---
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlaySequence1(); // 모든 클라이언트에서 시퀀스를 정방향으로 재생

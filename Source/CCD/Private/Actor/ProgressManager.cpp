@@ -34,7 +34,19 @@ void AProgressManager::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty
 	DOREPLIFETIME(AProgressManager, MaxProgress);
 }
 
-void AProgressManager::OnRep_Progress()
+void AProgressManager::OnRep_CurrentProgress()
+{
+	UpdateUI();
+	
+	if (ProgressSound && CurrentProgress > LastProgress) // 진행도가 증가할 때만 사운드 재생
+	{
+		UGameplayStatics::PlaySound2D(GetWorld(), ProgressSound);
+	}
+	
+	LastProgress = CurrentProgress;
+}
+
+void AProgressManager::OnRep_MaxProgress()
 {
 	UpdateUI();
 }
@@ -43,20 +55,14 @@ void AProgressManager::AddMaxProgress(float Value)
 {
 	if (!HasAuthority()) return; // 서버에서만 수정
 	MaxProgress += Value; 
-	UpdateUI(); // 서버 화면 갱신
+	OnRep_MaxProgress();
 }
 
 void AProgressManager::AddCurrentProgress(float Value)
 {
 	if (!HasAuthority()) return; // 서버에서만 수정
 	CurrentProgress += Value; 
-	
-	if (ProgressSound || Value > 0.0f)
-	{
-		UGameplayStatics::PlaySound2D(GetWorld(), ProgressSound);
-	}
-	
-	UpdateUI(); // 서버 화면 갱신
+	OnRep_CurrentProgress();
 }
 
 void AProgressManager::UpdateUI()

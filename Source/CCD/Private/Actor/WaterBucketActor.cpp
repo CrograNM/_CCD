@@ -1,10 +1,12 @@
 
 #include "Actor/WaterBucketActor.h"
 
+#include "NiagaraFunctionLibrary.h"
 #include "Actor/Decal_StainActor_Base.h"
 #include "Component/ProgressComponent.h"
 #include "Component/WashableComponent.h"
 #include "Components/DecalComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -56,7 +58,7 @@ void AWaterBucketActor::GetLifetimeReplicatedProps(TArray<class FLifetimePropert
 bool AWaterBucketActor::WashMop(float& InBloodAmount, float& InExcrementAmount)
 {
 	// 물양동이 오염도가 1.0을 넘으면 더 이상 씻을 수 없음
-	if (Pollution_Blood + Pollution_Excrement >= 1.0f)
+	if (Pollution_Blood + Pollution_Excrement >= 1.0f || bIsWaterSpilled)
 	{
 		return false; 
 	}
@@ -82,6 +84,20 @@ bool AWaterBucketActor::WashMop(float& InBloodAmount, float& InExcrementAmount)
 	OnRep_Pollution();
 
 	return true;
+}
+
+void AWaterBucketActor::OnRep_IsWaterSpilled()
+{
+	if (SpillSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, SpillSound, 
+			WaterMeshComp->GetComponentLocation()); 
+	}
+	if (SpillEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), SpillEffect, 
+			WaterMeshComp->GetComponentLocation());
+	}
 }
 
 void AWaterBucketActor::OnRep_Pollution()
@@ -158,4 +174,5 @@ void AWaterBucketActor::SpillWater()
 	WaterMeshComp->SetVisibility(false);
 	WaterMaterial = nullptr;
 	bIsWaterSpilled = true;
+	OnRep_IsWaterSpilled();
 }
