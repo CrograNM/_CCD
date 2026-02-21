@@ -16,6 +16,8 @@ ACCD_EMopActor::ACCD_EMopActor()
 
 void ACCD_EMopActor::ExecuteAction()
 {
+	if (OwnerCharacter->GetIsActionInProgress()) return;
+	
 	// 서버에서만 세척 판정 수행
 	if (OwnerCharacter) 
 		OwnerCharacter->Server_PlayActionOfMop();
@@ -76,7 +78,7 @@ void ACCD_EMopActor::PerformMopTrace()
 		{
 			if (MopPollution_Blood + MopPollution_Excrement >= 1.0f) return;
 
-			WashComp->TakeWashDamage(25.f);
+			WashComp->TakeWashDamage(50.f);
 			if (WashComp->GetWashableType() == ECCD_WashableType::EWT_Blood) MopPollution_Blood += 0.2f;
 			else MopPollution_Excrement += 0.2f;
 			
