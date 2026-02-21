@@ -50,12 +50,17 @@ void AProgressManager::AddCurrentProgress(float Value)
 {
 	if (!HasAuthority()) return; // 서버에서만 수정
 	CurrentProgress += Value; 
+	
+	if (ProgressSound || Value > 0.0f)
+	{
+		UGameplayStatics::PlaySound2D(GetWorld(), ProgressSound);
+	}
+	
 	UpdateUI(); // 서버 화면 갱신
 }
 
 void AProgressManager::UpdateUI()
 {
-	// 데디케이티드 서버에서는 UI 갱신하지 않음 -> 현재 작품은 리슨 서버 이므로 생략
 	
 	// 로컬 플레이어 컨트롤러 가져오기
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);

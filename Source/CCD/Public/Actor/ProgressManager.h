@@ -27,6 +27,9 @@ protected:
 	UFUNCTION()
 	void OnRep_Progress();
 	
+	UPROPERTY(EditAnywhere, Category = "Design | Sound")
+	TObjectPtr<USoundBase> ProgressSound;
+	
 public:
 	// 진행도 비율 반환
 	UFUNCTION(BlueprintCallable, Category = "Progress")

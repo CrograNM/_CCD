@@ -67,13 +67,13 @@ protected:
 	virtual void Multicast_PlayReverseSequence(); // 모든 클라이언트에서 시퀀스를 역방향으로 재생
 	
 	// --- VFX/SFX ---
-	UPROPERTY(EditAnywhere, Category = "Effects")
+	UPROPERTY(EditAnywhere, Category = "Design | Sound")
 	TObjectPtr<USoundBase> SpawnSound1; // 정방향 애니메이션 재생 시
 	
-	UPROPERTY(EditAnywhere, Category = "Effects")
+	UPROPERTY(EditAnywhere, Category = "Design | Sound")
 	TObjectPtr<USoundBase> SpawnSound2; // 역방향 애니메이션 재생 시
 
-	UPROPERTY(EditAnywhere, Category = "Effects")
+	UPROPERTY(EditAnywhere, Category = "Design | Effects")
 	TObjectPtr<class UNiagaraSystem> SpawnEffect; // 니아가라 파티클 시스템
 	
 public:
