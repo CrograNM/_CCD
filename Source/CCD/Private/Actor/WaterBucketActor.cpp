@@ -57,10 +57,14 @@ void AWaterBucketActor::GetLifetimeReplicatedProps(TArray<class FLifetimePropert
 
 bool AWaterBucketActor::WashMop(float& InBloodAmount, float& InExcrementAmount)
 {
-	// 물양동이 오염도가 1.0을 넘으면 더 이상 씻을 수 없음
-	if (Pollution_Blood + Pollution_Excrement >= 1.0f || bIsWaterSpilled)
+	if (bIsWaterSpilled) return false;
+	if (HasAuthority())
 	{
-		return false; 
+		Multicast_PlayWashSoundEffect();
+	} else return false;
+	if (Pollution_Blood + Pollution_Excrement >= 1.0f)
+	{
+		return false;
 	}
 
 	// 물양동이에 오염물질 전이
@@ -175,4 +179,16 @@ void AWaterBucketActor::SpillWater()
 	WaterMaterial = nullptr;
 	bIsWaterSpilled = true;
 	OnRep_IsWaterSpilled();
+}
+
+void AWaterBucketActor::Multicast_PlayWashSoundEffect_Implementation()
+{
+	if (WashSplashSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, WashSplashSound, WaterMeshComp->GetComponentLocation());
+	}
+	if (WashSplashEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), WashSplashEffect, WaterMeshComp->GetComponentLocation());
+	}
 }

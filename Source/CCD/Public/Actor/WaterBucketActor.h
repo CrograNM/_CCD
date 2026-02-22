@@ -63,4 +63,14 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Design | Effects")
 	TObjectPtr<class UNiagaraSystem> SpillEffect;
+	
+	UPROPERTY(EditAnywhere, Category = "Design | Sound")
+	TObjectPtr<USoundBase> WashSplashSound;
+	
+	UPROPERTY(EditAnywhere, Category = "Design | Effects")
+	TObjectPtr<class UNiagaraSystem> WashSplashEffect;
+	
+	// 모든 클라이언트에서 소리를 재생하기 위한 RPC
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayWashSoundEffect();
 };

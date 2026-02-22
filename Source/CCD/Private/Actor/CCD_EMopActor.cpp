@@ -40,6 +40,7 @@ void ACCD_EMopActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 void ACCD_EMopActor::PerformMopTrace()
 {
+	if (!HasAuthority()) return;
 	if (!OwnerCharacter) return;
 
 	// 카메라 위치와 방향 가져오기
