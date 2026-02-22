@@ -34,7 +34,6 @@ void ACCD_EScannerActor::ExecuteAction()
 	// 서버에서 거리를 계산하여 변수에 담습니다.
 	if (HasAuthority())
 	{
-		ScannerDistance = GetScanActorDistance();
 		Multicast_UpdateScannerUI();
 	}
 }
@@ -46,6 +45,8 @@ void ACCD_EScannerActor::Multicast_UpdateScannerUI_Implementation()
 
 void ACCD_EScannerActor::UpdateScannerUI()
 {
+	ScannerDistance = GetScanActorDistance();
+	
 	if (ScannerSound && ScannerDistance >= 0.f) // 유효한 거리 값이 있을 때만 사운드 재생
 	{
 		float ClampedDistance = FMath::Clamp(ScannerDistance, 0.f, MaxScanDistance);
