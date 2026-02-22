@@ -40,6 +40,8 @@ public:
 	ECCD_EquipmentState GetEquipmentState() const { return EquipmentState; }
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	ECCD_EquipmentState GetPendingEquipmentState() const { return PendingEquipmentState; }
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	ACCD_EquipActor_Base* GetCurrentEquipmentActor() const { return SpawnedToolMap.Contains(EquipmentState) ? SpawnedToolMap[EquipmentState] : nullptr; }
 	
 	// Use Equipment
 	void ExecuteActiveEquipment() const;

@@ -13,9 +13,9 @@ public:
 	ACCD_EMopActor();
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void ExecuteAction() override;
-
-	// 물양동이 등에서 호출할 세척 기능
-	bool WashMop(float& OutBlood, float& OutExcrement);
+	
+	UFUNCTION(BlueprintCallable, Category = "Mop")
+	void PerformMopTrace();
 
 protected:
 	virtual void BeginPlay() override;
@@ -33,8 +33,6 @@ protected:
 	void UpdateMopMaterial();
 	
 private:
-	// 내부 트레이스 로직 (기존 캐릭터 로직 이관)
-	void PerformMopTrace();
 
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> DynamicMopMaterial;

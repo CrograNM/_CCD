@@ -16,16 +16,9 @@ ACCD_EMopActor::ACCD_EMopActor()
 
 void ACCD_EMopActor::ExecuteAction()
 {
-	if (OwnerCharacter->GetIsActionInProgress()) return;
-	
 	// 서버에서만 세척 판정 수행
 	if (OwnerCharacter) 
 		OwnerCharacter->Server_PlayActionOfMop();
-	
-	if (HasAuthority())
-	{
-		PerformMopTrace();
-	}
 }
 
 void ACCD_EMopActor::BeginPlay()
