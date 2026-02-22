@@ -5,8 +5,10 @@
 #include <Net/UnrealNetwork.h>
 
 #include "CCDCharacter.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Actor/WaterBucketActor.h"
 #include "Component/WashableComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 ACCD_EMopActor::ACCD_EMopActor()
 {
@@ -16,9 +18,10 @@ ACCD_EMopActor::ACCD_EMopActor()
 
 void ACCD_EMopActor::ExecuteAction()
 {
-	// 서버에서만 세척 판정 수행
-	if (OwnerCharacter) 
-		OwnerCharacter->Server_PlayActionOfMop();
+	if (!HasAuthority()) return;
+	if (OwnerCharacter) OwnerCharacter->Server_PlayActionOfMop();
+	
+	Multicast_PlayMopSwingSound();
 }
 
 void ACCD_EMopActor::BeginPlay()
@@ -57,7 +60,7 @@ void ACCD_EMopActor::PerformMopTrace()
 		AActor* HitActor = HitResult.GetActor();
 		if (!HitActor) return;
 
-		// 1. 물양동이 처리
+		// 물양동이 처리
 		if (AWaterBucketActor* Bucket = Cast<AWaterBucketActor>(HitActor))
 		{
 			if (Bucket->WashMop(MopPollution_Blood, MopPollution_Excrement))
@@ -67,7 +70,7 @@ void ACCD_EMopActor::PerformMopTrace()
 			return;
 		}
 
-		// 2. 세척 가능 컴포넌트 처리 (데칼 등)
+		// 데칼 세척 처리
 		if (UWashableComponent* WashComp = HitActor->FindComponentByClass<UWashableComponent>())
 		{
 			if (MopPollution_Blood + MopPollution_Excrement >= 1.0f) return;
@@ -77,6 +80,9 @@ void ACCD_EMopActor::PerformMopTrace()
 			else MopPollution_Excrement += 0.2f;
 			
 			UpdateMopMaterial();
+			
+			// 세척 효과 재생 (모든 클라이언트에서)
+			Multicast_PlayWashEffect(HitResult.ImpactPoint);
 		}
 	}
 }
@@ -100,3 +106,23 @@ void ACCD_EMopActor::UpdateMopMaterial()
 }
 
 void ACCD_EMopActor::OnRep_Pollution() { UpdateMopMaterial(); }
+
+void ACCD_EMopActor::Multicast_PlayWashEffect_Implementation(const FVector_NetQuantize& ImpactPoint)
+{
+	if (MopWashSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, MopWashSound, ImpactPoint);
+	}
+	if (MopWashEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), MopWashEffect, ImpactPoint);
+	}
+}
+
+void ACCD_EMopActor::Multicast_PlayMopSwingSound_Implementation()
+{
+	if (MopSwingSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, MopSwingSound, GetActorLocation());
+	}
+}

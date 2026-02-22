@@ -13,7 +13,7 @@ public:
 	ACCD_EMopActor();
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void ExecuteAction() override;
-	
+
 	UFUNCTION(BlueprintCallable, Category = "Mop")
 	void PerformMopTrace();
 
@@ -32,8 +32,22 @@ protected:
 
 	void UpdateMopMaterial();
 	
+	UPROPERTY(EditAnywhere, Category = "Design | Sound")
+	TObjectPtr<USoundBase> MopSwingSound;
+	
+	UPROPERTY(EditAnywhere, Category = "Design | Sound")
+	TObjectPtr<USoundBase> MopWashSound;
+	
+	UPROPERTY(EditAnywhere, Category = "Design | Effects")
+	TObjectPtr<class UNiagaraSystem> MopWashEffect;
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayWashEffect(const FVector_NetQuantize& ImpactPoint);
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayMopSwingSound();
+	
 private:
-
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> DynamicMopMaterial;
 };
