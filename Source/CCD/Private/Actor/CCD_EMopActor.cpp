@@ -19,8 +19,10 @@ ACCD_EMopActor::ACCD_EMopActor()
 void ACCD_EMopActor::ExecuteAction()
 {
 	if (!HasAuthority()) return;
-	if (OwnerCharacter) OwnerCharacter->Server_PlayActionOfMop();
+	if (!OwnerCharacter) return;
+	if (OwnerCharacter->GetIsActionInProgress()) return;
 	
+	OwnerCharacter->Server_PlayActionOfMop();
 	Multicast_PlayMopSwingSound();
 }
 
