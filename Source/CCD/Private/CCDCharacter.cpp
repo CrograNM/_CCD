@@ -1,6 +1,7 @@
 
 #include "CCDCharacter.h"
 
+#include "CCDPlayerController.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -94,6 +95,12 @@ void ACCDCharacter::UseEquipment()
 {
 	Server_UseEquipment();
 }
+
+void ACCDCharacter::Die()
+{
+	GetController<ACCDPlayerController>()->StartDeathSpectating(); // 사망 시 스펙테이팅 모드로 전환
+}
+
 void ACCDCharacter::Server_UseEquipment_Implementation()
 {
 	if (EquipmentComp)

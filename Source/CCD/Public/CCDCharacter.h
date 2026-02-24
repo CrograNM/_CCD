@@ -37,6 +37,9 @@ public:
     
     UFUNCTION(BlueprintCallable, Category = "Equipment")
     void UseEquipment();
+    
+    UFUNCTION(BlueprintCallable, Category = "Status")
+    void Die();
 
     /** --- 3. 애니메이션 및 동기화 --- */
     UFUNCTION(NetMulticast, Reliable, Category = "Animation")

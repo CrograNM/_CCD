@@ -12,6 +12,7 @@ class CCD_API ACCDPlayerController : public APlayerController
 	
 public:
 	ACCDPlayerController();
+	void StartDeathSpectating();
 	
 protected:
 	virtual void BeginPlay() override;
