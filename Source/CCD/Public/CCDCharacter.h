@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Component/CCD_EquipmentComponent.h"
 #include "GameFramework/Character.h"
 #include "CCDCharacter.generated.h"
 
@@ -12,6 +11,8 @@ class UPhysicsHandleComponent;
 class UAnimMontage;
 class UCCD_InteractionComponent;
 class UCCD_ViewComponent;
+class UCCD_EquipmentComponent;
+class UCCD_DeathComponent;
 
 UCLASS()
 class CCD_API ACCDCharacter : public ACharacter
@@ -75,6 +76,8 @@ public:
     FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
     FORCEINLINE void SetRemoteControlRotation(FRotator NewRotation) { RemoteControlRotation = NewRotation;}
     
+    FORCEINLINE UCCD_ViewComponent* GetViewComp() const { return ViewComp; }
+    
 protected:
     /** --- 5. 라이프 사이클 내부 로직 --- */
     virtual void BeginPlay() override;
@@ -105,6 +108,9 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     TObjectPtr<UCCD_EquipmentComponent> EquipmentComp;
     
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    TObjectPtr<UCCD_DeathComponent> DeathComp;
+    
     /** --- 8. 상태 변수 및 복제 데이터 --- */
     UPROPERTY(Replicated)
     FRotator RemoteControlRotation;
@@ -114,6 +120,12 @@ protected:
     /** --- 9. 내부 헬퍼 함수 --- */
     UFUNCTION(BlueprintCallable, Category = "Movement")
     void SetRunning(float NewSpeed);
+    
+    UFUNCTION(Category = "Death")
+    void OnDeathHandle(AController* Killer);
+    
+    //UFUNCTION(Category = "Death")
+    //void OnRespawnHandle();
 
     UPROPERTY(EditAnywhere, Category = "Animation")
     TObjectPtr<UAnimMontage> EquipMontage;

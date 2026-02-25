@@ -4,6 +4,9 @@
 #include "CCDCharacter.h"
 #include "CCDPlayerCameraManager.h"
 #include "Blueprint/UserWidget.h"
+#include "Camera/CameraComponent.h"
+#include "Component/CCD_DeathComponent.h"
+#include "Component/CCD_ViewComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 ACCDPlayerController::ACCDPlayerController()
@@ -24,30 +27,77 @@ void ACCDPlayerController::BeginPlay()
 			HUDWidgetInstance->AddToViewport();
 		}
 	}
+	
+	
 }
 
-void ACCDPlayerController::StartDeathSpectating()
+void ACCDPlayerController::StartDeath()
 {
-	// 1. 월드 내의 모든 캐릭터 찾기
-	TArray<AActor*> AllCharacters;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACCDCharacter::StaticClass(), AllCharacters);
+	UE_LOG(LogTemp, Warning, TEXT("[PlayerController] StartDeath"));
+	HandleTargetDeath(nullptr);
+}
 
-	AActor* BestTarget = nullptr;
-
-	for (AActor* Char : AllCharacters)
+void ACCDPlayerController::UpdateDeathVisuals()
+{
+	PostProcessAlpha = FMath::Clamp(PostProcessAlpha + 0.01f, 0.0f, 1.0f);
+	
+	// 카메라의 포스트 프로세스 설정을 실시간으로 업데이트
+	if (ACCDCharacter* MyChar = Cast<ACCDCharacter>(GetPawn())) 
 	{
-		// 자기 자신(사망한 본인)이 아니고, 유효한 캐릭터라면 타겟으로 선정
-		if (Char != GetPawn() && Char != nullptr)
+		FPostProcessSettings& PPS = MyChar->GetFirstPersonCamera()->PostProcessSettings;
+		PPS.bOverride_ColorSaturation = true;
+		PPS.ColorSaturation = FVector4(1.0f - PostProcessAlpha, 1.0f - PostProcessAlpha, 1.0f - PostProcessAlpha, 1.0f);
+		
+		FPostProcessSettings& PPS3rd = MyChar->GetFollowCamera()->PostProcessSettings;
+		PPS3rd.bOverride_ColorSaturation = true;
+		PPS3rd.ColorSaturation = FVector4(1.0f - PostProcessAlpha, 1.0f - PostProcessAlpha, 1.0f - PostProcessAlpha, 1.0f);
+	}
+
+	if (PostProcessAlpha >= 1.0f) GetWorldTimerManager().ClearTimer(PostProcessTimer);
+}
+
+void ACCDPlayerController::SpectateNextPlayer()
+{
+	// 월드의 살아있는 캐릭터들을 순회하며 다음 타겟 선정
+	TArray<AActor*> Players;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACCDCharacter::StaticClass(), Players);
+
+	for (AActor* P : Players)
+	{
+		if (P == GetPawn()) continue; // 본인 제외
+		
+		UCCD_DeathComponent* DeathComp = P->FindComponentByClass<UCCD_DeathComponent>();
+		if (DeathComp && !DeathComp->IsDead())
 		{
-			BestTarget = Char;
-			break; // 우선 첫 번째로 발견된 캐릭터를 선택
+			CurrentSpectateTarget = P;
+			// 시점 전환 블렌딩
+			SetViewTargetWithBlend(P, 0.5f); 
+			
+			// 대상이 죽었을 때 다시 타겟을 바꾸기 위해 이벤트 구독
+			DeathComp->OnDeath.AddDynamic(this, &ACCDPlayerController::HandleTargetDeath);
+			break;
 		}
 	}
+}
 
-	// 2. 카메라 시점 전환
-	if (BestTarget)
+void ACCDPlayerController::HandleTargetDeath(AController* Killer)
+{
+	// 3인칭 전환 및 관전 시작
+	ACCDCharacter* MyChar = Cast<ACCDCharacter>(GetPawn());
+	if (MyChar)
 	{
-		// 2초 동안 부드럽게 타겟 캐릭터의 카메라로 이동
-		this->SetViewTargetWithBlend(BestTarget, 2.0f, EViewTargetBlendFunction::VTBlend_Cubic);
+		if (MyChar->GetViewComp()->GetIsFirstPerson())
+		{
+			MyChar->ToggleView(); // 강제 3인칭
+		}
+		
+		// 추후 Chaos Destruction 연출 추가 예정
+		// MyChar->SetLifeSpan(2.0f);
 	}
+
+	// 2초 동안 포스트 프로세스 주입 (타이머)
+	GetWorldTimerManager().SetTimer(PostProcessTimer, this, &ACCDPlayerController::UpdateDeathVisuals, 0.02f, true);
+	
+	// 최초 관전 대상 탐색
+	SpectateNextPlayer();
 }
