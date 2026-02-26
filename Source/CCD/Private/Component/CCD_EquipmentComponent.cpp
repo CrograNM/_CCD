@@ -150,6 +150,20 @@ void UCCD_EquipmentComponent::ExecuteActiveEquipment() const
 	}
 }
 
+void UCCD_EquipmentComponent::DestroyAllEquipment()
+{
+	if (!GetOwner()->HasAuthority()) return;
+	for (auto& Elem : SpawnedToolMap)
+	{
+		if (Elem.Value)
+		{
+			Elem.Value->Destroy(); // 월드에서 장비 액터 삭제
+		}
+	}
+	SpawnedToolMap.Empty();
+	EquipmentState = ECCD_EquipmentState::EES_Hands;
+}
+
 void UCCD_EquipmentComponent::InitializeEquipment()
 {
 	if (!GetWorld() || !OwnerCharacter) return;

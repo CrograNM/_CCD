@@ -21,7 +21,7 @@ public:
 	// 캐릭터가 호출할 인터페이스
 	void PerformInteract();
 	
-	// 강제로 물체 놓기 (예: 사망 시)
+	// Death - 강제로 물체 놓기 
 	void ForceRelease(); 
 	
 protected:

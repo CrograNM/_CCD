@@ -46,6 +46,9 @@ public:
 	// Use Equipment
 	void ExecuteActiveEquipment() const;
 	
+	// Death - 장비 제거
+	void DestroyAllEquipment();
+	
 protected:
 	virtual void BeginPlay() override;
 	

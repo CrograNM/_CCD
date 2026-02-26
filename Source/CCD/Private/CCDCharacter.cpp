@@ -75,25 +75,22 @@ void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 /** --- 입력 바인딩 : 상호작용, 1-3인칭 전환, 장비 전환 및 사용 --- */
 void ACCDCharacter::PerformInteract()
 {
-	// 이제 모든 복잡한 트레이스/잡기 로직은 컴포넌트가 알아서 합니다.
-	if (InteractionComp)
-	{
-		InteractionComp->PerformInteract();
-	}
+	if (bIsDead) return;
+	if (InteractionComp) InteractionComp->PerformInteract();
 }
 void ACCDCharacter::SwitchEquipment(const ECCD_EquipmentState NewState)
 {
+	if (bIsDead) return;
 	if (EquipmentComp) EquipmentComp->SwitchEquipment(NewState);
 }
 void ACCDCharacter::ToggleView()
 {
-	if (ViewComp)
-	{
-		ViewComp->ToggleView(); // 복잡한 동기화는 컴포넌트가 처리
-	}
+	if (bIsDead) return;
+	if (ViewComp) ViewComp->ToggleView(); 
 }
 void ACCDCharacter::UseEquipment()
 {
+	if (bIsDead) return;
 	Server_UseEquipment();
 }
 void ACCDCharacter::Server_UseEquipment_Implementation()
@@ -126,7 +123,7 @@ void ACCDCharacter::Server_Die_Implementation()
 	// 장비 정리 (장비 액터 파괴)
 	if (EquipmentComp)
 	{
-		// EquipmentComp->DestroyAllEquipment();
+		EquipmentComp->DestroyAllEquipment();
 	}
 
 	// 이동 능력 상실
