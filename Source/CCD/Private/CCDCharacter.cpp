@@ -203,10 +203,13 @@ void ACCDCharacter::SetRunning(float NewSpeed)
 
 void ACCDCharacter::OnRep_IsDead()
 {
-	// 캐릭터 메쉬 숨기기
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
+	
+	// 캐릭터 메쉬 숨김 및 충돌 비활성화
 	if (GetMesh())
 	{
 		GetMesh()->SetHiddenInGame(true);
+		GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
 	}
 
 	// 3인칭 시점으로 강제 전환 및 고정
@@ -228,8 +231,13 @@ void ACCDCharacter::OnRep_IsDead()
 void ACCDCharacter::HandleDeath()
 {
 	// 충돌 비활성화
-	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
+	GetCapsuleComponent()->SetCanEverAffectNavigation(false); // 길 찾기 방해 금지
+	
+	if (GetMesh())
+	{
+		GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
+	}
 	
 	// 물리 상호작용 정리 (잡고 있던 물체 투하)
 	if (InteractionComp) InteractionComp->ForceRelease();
@@ -242,6 +250,7 @@ void ACCDCharacter::HandleDeath()
 	{
 		GetCharacterMovement()->StopMovementImmediately();
 		GetCharacterMovement()->DisableMovement();
+		GetCharacterMovement()->SetComponentTickEnabled(false);
 	}
 	
 	// ------------------------------------

@@ -10,6 +10,7 @@ class UInputMappingContext;
 class UInputAction;
 class UUserWidget;
 class ACCDCharacter;
+class ACCDSpectator;
 
 UCLASS()
 class CCD_API ACCDPlayerController : public APlayerController
@@ -18,6 +19,7 @@ class CCD_API ACCDPlayerController : public APlayerController
 	
 public:
 	ACCDPlayerController();
+	virtual void UpdateRotation(float DeltaTime) override;
 	
 	/** --- Death --- */
 	UFUNCTION(Client, Reliable)
@@ -37,9 +39,9 @@ protected:
 	TObjectPtr<UInputAction> MoveAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> LookAction;
-	UPROPERTY(EditAnywhere, Category = "Input | Spectate")
+	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> ChangeTargetLeftAction;
-	UPROPERTY(EditAnywhere, Category = "Input | Spectate")
+	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> ChangeTargetRightAction;
 	
 	void Input_Move(const FInputActionValue& Value);
@@ -51,6 +53,12 @@ protected:
 	void SpectateNextPlayer(bool bForward = true);
 	UPROPERTY() TArray<ACCDCharacter*> SpectateCandidates;
 	int32 CurrentSpectateIndex = -1;
+	
+	/** --- Spectator --- */
+	UPROPERTY(EditAnywhere, Category = "Spectate")
+	TSubclassOf<ACCDSpectator> SpectatorClass;
+	UPROPERTY()
+	TObjectPtr<ACCDSpectator> SpectatorInstance;
 	
 	/** --- UI --- */
 	UPROPERTY(EditAnywhere, Category = "UI")

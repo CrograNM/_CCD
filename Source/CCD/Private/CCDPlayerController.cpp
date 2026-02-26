@@ -3,6 +3,7 @@
 
 #include "CCDCharacter.h"
 #include "CCDPlayerCameraManager.h"
+#include "CCDSpectator.h"
 #include "EngineUtils.h"
 #include "Blueprint/UserWidget.h"
 #include "EnhancedInputComponent.h"
@@ -12,6 +13,18 @@ ACCDPlayerController::ACCDPlayerController()
 {
 	PlayerCameraManagerClass = ACCDPlayerCameraManager::StaticClass();
 }
+
+void ACCDPlayerController::UpdateRotation(float DeltaTime)
+{
+	Super::UpdateRotation(DeltaTime);
+	
+	// 마우스 회전값을 관전자 액터에게 전달
+	if (SpectatorInstance)
+	{
+		SpectatorInstance->UpdateCameraRotation(GetControlRotation());
+	}
+}
+
 void ACCDPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -90,9 +103,21 @@ void ACCDPlayerController::Input_ChangeTargetRight(const FInputActionValue& Valu
 	}
 }
 
+/** --- Spectate --- */
+ACCDCharacter* ACCDPlayerController::GetCurrentSpectateTarget() const
+{
+	return SpectateCandidates.IsValidIndex(CurrentSpectateIndex) 
+			? SpectateCandidates[CurrentSpectateIndex] : nullptr;
+}
 void ACCDPlayerController::SpectateNextPlayer(bool bForward)
 {
-	UE_LOG(LogTemp, Warning, TEXT("관전 대상 변경 요청 (방향: %s)"), bForward ? TEXT("다음") : TEXT("이전"));
+	// 1. 인스턴스가 없다면 생성 (최초 1회)
+	if (!SpectatorInstance && SpectatorClass)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = this;
+		SpectatorInstance = GetWorld()->SpawnActor<ACCDSpectator>(SpectatorClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	}
 	
 	// 월드의 모든 캐릭터를 찾아 후보 리스트 갱신
 	SpectateCandidates.Empty();
@@ -103,29 +128,24 @@ void ACCDPlayerController::SpectateNextPlayer(bool bForward)
 	if (SpectateCandidates.Num() == 0) return;
 	
 	// 방향에 따라 인덱스 조정
-	if (bForward) 
-	{
-		CurrentSpectateIndex = (CurrentSpectateIndex + 1) % SpectateCandidates.Num();
-	}
-	else
-	{
-		CurrentSpectateIndex = (CurrentSpectateIndex - 1 + SpectateCandidates.Num()) % SpectateCandidates.Num();
-	}
+	if (bForward) CurrentSpectateIndex = (CurrentSpectateIndex + 1) % SpectateCandidates.Num();
+	else CurrentSpectateIndex = (CurrentSpectateIndex - 1 + SpectateCandidates.Num()) % SpectateCandidates.Num();
 	
+	// 리스트 순회 후
 	if (ACCDCharacter* Target = SpectateCandidates[CurrentSpectateIndex])
 	{
-		// 시점 전환
-		SetViewTargetWithBlend(Target, 0.3f);
-
-		// 로그로 상태 표시 (나중에 UI로 대체)
-		FString Status = Target->IsDead() ? TEXT("사망") : TEXT("생존");
-		UE_LOG(LogTemp, Warning, TEXT("관전 대상 : %s [상태: %s]"), *Target->GetName(), *Status);
+		if (SpectatorInstance)
+		{
+			SpectatorInstance->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+			SpectatorInstance->FollowTarget(Target);
+			
+			// 시점 전환
+			SetViewTarget(SpectatorInstance);
+			
+			const FString Status = Target->IsDead() ? TEXT("사망") : TEXT("생존");
+			UE_LOG(LogTemp, Warning, TEXT("관전 대상 : %s [상태: %s]"), *Target->GetName(), *Status);
+		}
 	}
-}
-ACCDCharacter* ACCDPlayerController::GetCurrentSpectateTarget() const
-{
-	return SpectateCandidates.IsValidIndex(CurrentSpectateIndex) 
-			? SpectateCandidates[CurrentSpectateIndex] : nullptr;
 }
 
 /** --- Death --- */
