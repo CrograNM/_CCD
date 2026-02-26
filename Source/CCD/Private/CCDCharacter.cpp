@@ -113,28 +113,10 @@ void ACCDCharacter::Server_Die_Implementation()
 	UE_LOG(LogTemp, Warning, TEXT("[ACCDCharacter] Die called"));
 	
 	bIsDead = true;
-	
-	// 물리 상호작용 정리 (잡고 있던 물체 투하)
-	if (InteractionComp)
-	{
-		InteractionComp->ForceRelease();
-	}
-
-	// 장비 정리 (장비 액터 파괴)
-	if (EquipmentComp)
-	{
-		EquipmentComp->DestroyAllEquipment();
-	}
-
-	// 이동 능력 상실
-	if (GetCharacterMovement())
-	{
-		GetCharacterMovement()->StopMovementImmediately();
-		GetCharacterMovement()->DisableMovement();
-	}
-	
-	HandleDeath();
-	OnRep_IsDead();
+	// 서버 전용 (충돌 비활성, 물체 투하, 장비 제거, 이동 불가), 이후 카오스 디스트럭션 적용 예정
+	HandleDeath();	
+	// 클라이언트 전용 (로컬 시각 효과), 서버도 명시적으로 적용
+	OnRep_IsDead(); 
 }
 
 /** --- 몽타주 제어 및 델리게이트 --- */
@@ -248,4 +230,22 @@ void ACCDCharacter::HandleDeath()
 	// 충돌 비활성화
 	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
+	// 물리 상호작용 정리 (잡고 있던 물체 투하)
+	if (InteractionComp) InteractionComp->ForceRelease();
+	
+	// 장비 정리 (장비 액터 파괴)
+	if (EquipmentComp)EquipmentComp->DestroyAllEquipment();
+	
+	// 이동 능력 상실
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->StopMovementImmediately();
+		GetCharacterMovement()->DisableMovement();
+	}
+	
+	// ------------------------------------
+	// 추후 카오스 디스트럭션 적용 예정
+	// ------------------------------------
+	
 }
