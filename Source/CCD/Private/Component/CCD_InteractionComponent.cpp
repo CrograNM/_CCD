@@ -71,6 +71,20 @@ void UCCD_InteractionComponent::PerformInteract()
 {
 	Server_PerformInteract();
 }
+
+void UCCD_InteractionComponent::ForceRelease()
+{
+	// 서버에서 실행 중이라면 멀티캐스트로 모두에게 알림
+	if (GetOwner()->HasAuthority())
+	{
+		Multicast_ReleaseObject();
+	}
+	else
+	{
+		ReleaseObject_Impl();
+	}
+}
+
 void UCCD_InteractionComponent::Server_PerformInteract_Implementation()
 {
 	if (!OwnerCharacter) return;

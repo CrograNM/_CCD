@@ -37,11 +37,14 @@ public:
     
     UFUNCTION(BlueprintCallable, Category = "Equipment")
     void UseEquipment();
+    UFUNCTION(Server, Reliable, Category = "Equipment")
+    void Server_UseEquipment();
     
     // 사망 처리
-    UFUNCTION(BlueprintCallable, Category = "Status")
+    UFUNCTION(BlueprintCallable, Category = "Death")
     void Die();
-    FORCEINLINE bool IsDead() const { return bIsDead; }
+    UFUNCTION(Server, Reliable, Category = "Death")
+    void Server_Die();
     
     /** --- 애니메이션 및 동기화 --- */
     UFUNCTION(NetMulticast, Reliable, Category = "Animation")
@@ -55,9 +58,6 @@ public:
     
     UFUNCTION(Server, Reliable, Category = "Movement")
     void Server_SetMaxWalkSpeed(float NewSpeed);
-    
-    UFUNCTION(Server, Reliable, Category = "Equipment")
-    void Server_UseEquipment();
     
     UFUNCTION()
     void OnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted);
@@ -78,6 +78,8 @@ public:
     FORCEINLINE void SetRemoteControlRotation(FRotator NewRotation) { RemoteControlRotation = NewRotation;}
     
     FORCEINLINE UCCD_ViewComponent* GetViewComp() const { return ViewComp; }
+    
+    FORCEINLINE bool IsDead() const { return bIsDead; }
     
 protected:
     virtual void BeginPlay() override;

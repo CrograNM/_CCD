@@ -106,13 +106,38 @@ void ACCDCharacter::Server_UseEquipment_Implementation()
 
 /** --- 사망 처리 --- */
 void ACCDCharacter::Die()
-{
-	if (!HasAuthority() || bIsDead) return; 
+{	
+	Server_Die();
+}
+
+void ACCDCharacter::Server_Die_Implementation()
+{	
+	if (bIsDead) return; // 이미 사망한 경우 중복 처리 방지
+	UE_LOG(LogTemp, Warning, TEXT("[ACCDCharacter] Die called"));
+	
 	bIsDead = true;
+	
+	// 물리 상호작용 정리 (잡고 있던 물체 투하)
+	if (InteractionComp)
+	{
+		InteractionComp->ForceRelease();
+	}
+
+	// 장비 정리 (장비 액터 파괴)
+	if (EquipmentComp)
+	{
+		// EquipmentComp->DestroyAllEquipment();
+	}
+
+	// 이동 능력 상실
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->StopMovementImmediately();
+		GetCharacterMovement()->DisableMovement();
+	}
+	
 	HandleDeath();
 	OnRep_IsDead();
-	
-	UE_LOG(LogTemp, Warning, TEXT("[ACCDCharacter] Die called"));
 }
 
 /** --- 몽타주 제어 및 델리게이트 --- */
