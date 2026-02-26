@@ -12,7 +12,6 @@ class UAnimMontage;
 class UCCD_InteractionComponent;
 class UCCD_ViewComponent;
 class UCCD_EquipmentComponent;
-class UCCD_DeathComponent;
 
 UCLASS()
 class CCD_API ACCDCharacter : public ACharacter
@@ -108,9 +107,6 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     TObjectPtr<UCCD_EquipmentComponent> EquipmentComp;
     
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-    TObjectPtr<UCCD_DeathComponent> DeathComp;
-    
     /** --- 8. 상태 변수 및 복제 데이터 --- */
     UPROPERTY(Replicated)
     FRotator RemoteControlRotation;
@@ -120,12 +116,6 @@ protected:
     /** --- 9. 내부 헬퍼 함수 --- */
     UFUNCTION(BlueprintCallable, Category = "Movement")
     void SetRunning(float NewSpeed);
-    
-    UFUNCTION(Category = "Death")
-    void OnDeathHandle(AController* Killer);
-    
-    //UFUNCTION(Category = "Death")
-    //void OnRespawnHandle();
 
     UPROPERTY(EditAnywhere, Category = "Animation")
     TObjectPtr<UAnimMontage> EquipMontage;

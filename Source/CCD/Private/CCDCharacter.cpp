@@ -9,7 +9,6 @@
 #include "Component/CCD_EquipmentComponent.h"
 #include "Component/CCD_InteractionComponent.h"
 #include "Component/CCD_ViewComponent.h"
-#include "Component/CCD_DeathComponent.h"
 #include "Net/UnrealNetwork.h"
 
 /** --- 생성자 및 기본 함수 --- */
@@ -21,7 +20,6 @@ ACCDCharacter::ACCDCharacter()
 	ViewComp = CreateDefaultSubobject<UCCD_ViewComponent>(TEXT("ViewComp"));
 	InteractionComp = CreateDefaultSubobject<UCCD_InteractionComponent>(TEXT("InteractionComp"));
 	EquipmentComp = CreateDefaultSubobject<UCCD_EquipmentComponent>(TEXT("EquipmentComp"));
-	DeathComp = CreateDefaultSubobject<UCCD_DeathComponent>(TEXT("DeathComp"));
 	
 	// --- 카메라 설정 ---
 	// 3인칭 카메라
@@ -55,11 +53,6 @@ ACCDCharacter::ACCDCharacter()
 void ACCDCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	if (DeathComp)
-	{
-		DeathComp->OnDeath.AddDynamic(this, &ACCDCharacter::OnDeathHandle);
-	}
 }
 
 void ACCDCharacter::Tick(float DeltaTime)
@@ -106,10 +99,7 @@ void ACCDCharacter::UseEquipment()
 
 void ACCDCharacter::Die()
 {
-	if (DeathComp)
-	{
-		DeathComp->ProcessDamage(DeathComp->GetHealth(), nullptr); // 즉시 사망 처리
-	}
+	UE_LOG(LogTemp, Warning, TEXT("[ACCDCharacter] Die called"));
 }
 
 void ACCDCharacter::Server_UseEquipment_Implementation()
@@ -200,23 +190,4 @@ void ACCDCharacter::SetRunning(float NewSpeed)
 void ACCDCharacter::Server_SetMaxWalkSpeed_Implementation(float NewSpeed)
 {
 	GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
-}
-
-// 사망 및 리스폰 핸들러
-void ACCDCharacter::OnDeathHandle(AController* Killer)
-{
-	UE_LOG(LogTemp, Warning, TEXT("[ACCDCharacter] OnDeathHandle"));
-	// 사망 연출
-	if (ACCDPlayerController* MyPC = Cast<ACCDPlayerController>(GetController()))
-	{
-		MyPC->StartDeath();
-	}
-	// GetMesh()->SetSimulatePhysics(true);
-	// GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
-
-	// 장비 숨기기
-	// if (EquipmentComp)
-	// {
-		// EquipmentComp->HandleEquipNotify(); // Hands 상태로 강제 전환 로직 활용
-	// }
 }
