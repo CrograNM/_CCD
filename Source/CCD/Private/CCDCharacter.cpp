@@ -203,7 +203,10 @@ void ACCDCharacter::SetRunning(float NewSpeed)
 
 void ACCDCharacter::OnRep_IsDead()
 {
-	GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
+	if (UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(GetRootComponent()))
+	{
+		RootPrim->SetCollisionProfileName(TEXT("NoCollision"));
+	}
 	
 	// 캐릭터 메쉬 숨김 및 충돌 비활성화
 	if (GetMesh())
@@ -230,9 +233,12 @@ void ACCDCharacter::OnRep_IsDead()
 
 void ACCDCharacter::HandleDeath()
 {
-	// 충돌 비활성화
-	GetCapsuleComponent()->SetCollisionProfileName(TEXT("NoCollision"));
-	GetCapsuleComponent()->SetCanEverAffectNavigation(false); // 길 찾기 방해 금지
+	// 캡슐 컴포넌트 충돌 비활성화
+	if (UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(GetRootComponent()))
+	{
+		RootPrim->SetCollisionProfileName(TEXT("NoCollision"));
+		RootPrim->SetCanEverAffectNavigation(false); // 길 찾기 방해 금지
+	}
 	
 	if (GetMesh())
 	{
