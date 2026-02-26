@@ -70,6 +70,7 @@ void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(ACCDCharacter, RemoteControlRotation);
 }
 
+/** --- 입력 바인딩 : 상호작용, 1-3인칭 전환, 장비 전환 및 사용 --- */
 void ACCDCharacter::PerformInteract()
 {
 	// 이제 모든 복잡한 트레이스/잡기 로직은 컴포넌트가 알아서 합니다.
@@ -78,8 +79,6 @@ void ACCDCharacter::PerformInteract()
 		InteractionComp->PerformInteract();
 	}
 }
-
-/** --- 장비 및 뷰 모드 --- */
 void ACCDCharacter::SwitchEquipment(const ECCD_EquipmentState NewState)
 {
 	if (EquipmentComp) EquipmentComp->SwitchEquipment(NewState);
@@ -95,18 +94,18 @@ void ACCDCharacter::UseEquipment()
 {
 	Server_UseEquipment();
 }
-
-void ACCDCharacter::Die()
-{
-	UE_LOG(LogTemp, Warning, TEXT("[ACCDCharacter] Die called"));
-}
-
 void ACCDCharacter::Server_UseEquipment_Implementation()
 {
 	if (EquipmentComp)
 	{
 		EquipmentComp->ExecuteActiveEquipment();
 	}
+}
+
+/** --- 사망 처리 --- */
+void ACCDCharacter::Die()
+{
+	UE_LOG(LogTemp, Warning, TEXT("[ACCDCharacter] Die called"));
 }
 
 /** --- 몽타주 제어 및 델리게이트 --- */
@@ -178,6 +177,10 @@ void ACCDCharacter::BindMontageEndedDelegate()
 }
 
 /** --- 이동 속도 변경 --- */
+void ACCDCharacter::Server_SetMaxWalkSpeed_Implementation(float NewSpeed)
+{
+	GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
+}
 void ACCDCharacter::SetRunning(float NewSpeed)
 {
 	// 1. 로컬 속도를 즉시 변경 (클라이언트 예측을 위해)
@@ -186,7 +189,11 @@ void ACCDCharacter::SetRunning(float NewSpeed)
 	// 2. 서버에게도 속도 변경을 요청
 	Server_SetMaxWalkSpeed(NewSpeed);
 }
-void ACCDCharacter::Server_SetMaxWalkSpeed_Implementation(float NewSpeed)
+
+void ACCDCharacter::OnRep_IsDead()
 {
-	GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
+}
+
+void ACCDCharacter::HandleDeath()
+{
 }

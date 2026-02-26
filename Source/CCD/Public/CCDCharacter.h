@@ -19,13 +19,13 @@ class CCD_API ACCDCharacter : public ACharacter
     GENERATED_BODY()
 
 public:
-    /** --- 1. 라이프 사이클 및 엔진 오버라이드 --- */
+    /** --- 라이프 사이클 및 엔진 오버라이드 --- */
     ACCDCharacter();
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-    /** --- 2. 입력 인터페이스 (입력 바인딩용) --- */
+    /** --- 입력 바인딩 함수 --- */
     UFUNCTION(BlueprintCallable, Category = "Interact")
     void PerformInteract();
     
@@ -38,10 +38,12 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Equipment")
     void UseEquipment();
     
+    // 사망 처리
     UFUNCTION(BlueprintCallable, Category = "Status")
     void Die();
-
-    /** --- 3. 애니메이션 및 동기화 --- */
+    FORCEINLINE bool IsDead() const { return bIsDead; }
+    
+    /** --- 애니메이션 및 동기화 --- */
     UFUNCTION(NetMulticast, Reliable, Category = "Animation")
     void Multicast_PlayEquipMontage(FName SectionName, float PlayRate);
 
@@ -61,7 +63,7 @@ public:
     void OnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted);
     void BindMontageEndedDelegate();
     
-    /** --- 4. Getter / Setter --- */
+    /** --- Getter / Setter --- */
     FORCEINLINE TObjectPtr<UAnimMontage> GetEquipMontage() const { return EquipMontage; }
     
     FORCEINLINE bool GetIsUnequipping() const { return bIsUnequipping; }
@@ -78,10 +80,9 @@ public:
     FORCEINLINE UCCD_ViewComponent* GetViewComp() const { return ViewComp; }
     
 protected:
-    /** --- 5. 라이프 사이클 내부 로직 --- */
     virtual void BeginPlay() override;
     
-    /** --- 6. 컴포넌트 --- */
+    /** --- 컴포넌트 --- */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
     TObjectPtr<USceneComponent> CameraRoot;
     
@@ -97,7 +98,7 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Physics")
     TObjectPtr<UPhysicsHandleComponent> PhysicsHandle;
 
-    /** --- 7. 캐릭터 기능성 컴포넌트 --- */
+    /** --- 캐릭터 기능성 컴포넌트 --- */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     TObjectPtr<UCCD_ViewComponent> ViewComp;
     
@@ -107,19 +108,26 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     TObjectPtr<UCCD_EquipmentComponent> EquipmentComp;
     
-    /** --- 8. 상태 변수 및 복제 데이터 --- */
+    /** --- 기타 --- */
     UPROPERTY(Replicated)
     FRotator RemoteControlRotation;
     bool bIsUnequipping = false;
     bool bIsActionInProgress = false;
-
-    /** --- 9. 내부 헬퍼 함수 --- */
-    UFUNCTION(BlueprintCallable, Category = "Movement")
-    void SetRunning(float NewSpeed);
 
     UPROPERTY(EditAnywhere, Category = "Animation")
     TObjectPtr<UAnimMontage> EquipMontage;
 
     UPROPERTY(EditAnywhere, Category = "Design")
     float InteractRange = 300.f;
+    
+    UFUNCTION(BlueprintCallable, Category = "Movement")
+    void SetRunning(float NewSpeed);
+    
+    /** --- 사망 상태 관리 --- */
+    UPROPERTY(ReplicatedUsing = OnRep_IsDead)
+    bool bIsDead = false;
+
+    UFUNCTION()
+    void OnRep_IsDead();
+    void HandleDeath(); // 서버에서 사망 시 호출될 실제 로직
 };
