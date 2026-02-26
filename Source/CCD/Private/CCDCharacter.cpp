@@ -1,6 +1,7 @@
 
 #include "CCDCharacter.h"
 
+#include "CCDPlayerController.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -8,6 +9,7 @@
 #include "Component/CCD_EquipmentComponent.h"
 #include "Component/CCD_InteractionComponent.h"
 #include "Component/CCD_ViewComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Net/UnrealNetwork.h"
 
 /** --- 생성자 및 기본 함수 --- */
@@ -105,6 +107,11 @@ void ACCDCharacter::Server_UseEquipment_Implementation()
 /** --- 사망 처리 --- */
 void ACCDCharacter::Die()
 {
+	if (!HasAuthority() || bIsDead) return; 
+	bIsDead = true;
+	HandleDeath();
+	OnRep_IsDead();
+	
 	UE_LOG(LogTemp, Warning, TEXT("[ACCDCharacter] Die called"));
 }
 
@@ -192,8 +199,31 @@ void ACCDCharacter::SetRunning(float NewSpeed)
 
 void ACCDCharacter::OnRep_IsDead()
 {
+	// 캐릭터 메쉬 숨기기
+	if (GetMesh())
+	{
+		GetMesh()->SetHiddenInGame(true);
+	}
+
+	// 3인칭 시점으로 강제 전환 및 고정
+	if (ViewComp)
+	{
+		ViewComp->ApplyViewMode(false); // false는 3인칭 (FollowCamera 활성화)
+	}
+
+	// 화면 어둡게 처리 (사망한 로컬 플레이어)
+	if (IsLocallyControlled())
+	{
+		if (ACCDPlayerController* PC = Cast<ACCDPlayerController>(GetController()))
+		{
+			PC->ApplyDeathOverlay(true);
+		}
+	}
 }
 
 void ACCDCharacter::HandleDeath()
 {
+	// 충돌 비활성화
+	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }

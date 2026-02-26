@@ -61,6 +61,9 @@ void UCCD_ViewComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 
 void UCCD_ViewComponent::ToggleView()
 {
+	if (!OwnerCharacter) return;
+	if (OwnerCharacter->IsDead()) return; // 사망 시 시점 전환 방지
+	
 	bIsFirstPerson = !bIsFirstPerson;
 	ApplyViewMode(bIsFirstPerson);
 	Server_ToggleView(bIsFirstPerson);

@@ -18,6 +18,10 @@ class CCD_API ACCDPlayerController : public APlayerController
 public:
 	ACCDPlayerController();
 	
+	/** --- Death --- */
+	UFUNCTION(Client, Reliable)
+	void ApplyDeathOverlay(bool bIsDark);	// Fade 처리
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
