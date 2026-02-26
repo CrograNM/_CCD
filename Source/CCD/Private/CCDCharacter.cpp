@@ -1,7 +1,6 @@
 
 #include "CCDCharacter.h"
 
-#include "CCDPlayerController.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"

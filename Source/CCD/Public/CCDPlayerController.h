@@ -2,8 +2,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "InputActionValue.h"
 #include "GameFramework/PlayerController.h"
 #include "CCDPlayerController.generated.h"
+
+class UInputMappingContext;
+class UInputAction;
+class UUserWidget;
 
 UCLASS()
 class CCD_API ACCDPlayerController : public APlayerController
@@ -15,10 +20,21 @@ public:
 	
 protected:
 	virtual void BeginPlay() override;
-
-	// UI(HUD) 인스턴스를 저장할 변수
+	virtual void SetupInputComponent() override;
+	
+	/** --- Input --- */
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputMappingContext> DefaultMappingContext;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> MoveAction;
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> LookAction;
+	void Input_Move(const FInputActionValue& Value);
+	void Input_Look(const FInputActionValue& Value);
+	
+	/** --- UI --- */
 	UPROPERTY(EditAnywhere, Category = "UI")
-	TSubclassOf<class UUserWidget> HUDWidgetClass;
+	TSubclassOf<UUserWidget> HUDWidgetClass;
 
 	UPROPERTY()
 	UUserWidget* HUDWidgetInstance;
