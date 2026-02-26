@@ -1,7 +1,9 @@
 
 #include "CCDPlayerController.h"
 
+#include "CCDCharacter.h"
 #include "CCDPlayerCameraManager.h"
+#include "EngineUtils.h"
 #include "Blueprint/UserWidget.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -10,7 +12,6 @@ ACCDPlayerController::ACCDPlayerController()
 {
 	PlayerCameraManagerClass = ACCDPlayerCameraManager::StaticClass();
 }
-
 void ACCDPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -41,6 +42,8 @@ void ACCDPlayerController::SetupInputComponent()
 	{
 		EnhancedInput->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ACCDPlayerController::Input_Move);
 		EnhancedInput->BindAction(LookAction, ETriggerEvent::Triggered, this, &ACCDPlayerController::Input_Look);
+		EnhancedInput->BindAction(ChangeTargetLeftAction, ETriggerEvent::Started, this, &ACCDPlayerController::Input_ChangeTargetLeft);
+		EnhancedInput->BindAction(ChangeTargetRightAction, ETriggerEvent::Started, this, &ACCDPlayerController::Input_ChangeTargetRight);
 	}
 }
 void ACCDPlayerController::Input_Move(const FInputActionValue& Value)
@@ -69,6 +72,60 @@ void ACCDPlayerController::Input_Look(const FInputActionValue& Value)
 		AddYawInput(LookAxisVector.X);
 		AddPitchInput(LookAxisVector.Y);
 	}
+}
+void ACCDPlayerController::Input_ChangeTargetLeft(const FInputActionValue& Value)
+{
+	const ACCDCharacter* MyCharacter = Cast<ACCDCharacter>(GetPawn());
+	if (MyCharacter && MyCharacter->IsDead())
+	{
+		SpectateNextPlayer(true);
+	}
+}
+void ACCDPlayerController::Input_ChangeTargetRight(const FInputActionValue& Value)
+{
+	const ACCDCharacter* MyCharacter = Cast<ACCDCharacter>(GetPawn());
+	if (MyCharacter && MyCharacter->IsDead())
+	{
+		SpectateNextPlayer(false);
+	}
+}
+
+void ACCDPlayerController::SpectateNextPlayer(bool bForward)
+{
+	UE_LOG(LogTemp, Warning, TEXT("관전 대상 변경 요청 (방향: %s)"), bForward ? TEXT("다음") : TEXT("이전"));
+	
+	// 월드의 모든 캐릭터를 찾아 후보 리스트 갱신
+	SpectateCandidates.Empty();
+	for (TActorIterator<ACCDCharacter> It(GetWorld()); It; ++It)
+	{
+		SpectateCandidates.Add(*It);
+	}
+	if (SpectateCandidates.Num() == 0) return;
+	
+	// 방향에 따라 인덱스 조정
+	if (bForward) 
+	{
+		CurrentSpectateIndex = (CurrentSpectateIndex + 1) % SpectateCandidates.Num();
+	}
+	else
+	{
+		CurrentSpectateIndex = (CurrentSpectateIndex - 1 + SpectateCandidates.Num()) % SpectateCandidates.Num();
+	}
+	
+	if (ACCDCharacter* Target = SpectateCandidates[CurrentSpectateIndex])
+	{
+		// 시점 전환
+		SetViewTargetWithBlend(Target, 0.3f);
+
+		// 로그로 상태 표시 (나중에 UI로 대체)
+		FString Status = Target->IsDead() ? TEXT("사망") : TEXT("생존");
+		UE_LOG(LogTemp, Warning, TEXT("관전 대상 : %s [상태: %s]"), *Target->GetName(), *Status);
+	}
+}
+ACCDCharacter* ACCDPlayerController::GetCurrentSpectateTarget() const
+{
+	return SpectateCandidates.IsValidIndex(CurrentSpectateIndex) 
+			? SpectateCandidates[CurrentSpectateIndex] : nullptr;
 }
 
 /** --- Death --- */
