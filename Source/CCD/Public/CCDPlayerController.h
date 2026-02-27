@@ -27,12 +27,13 @@ public:
 	void ApplyDeath(bool bIsDead);	// Fade 처리
 	void UpdateSpectatorWidget(TObjectPtr<ACCDCharacter> Target);
 	
-	// 관전 대상 반환 -> UI에서 사용 예정
-	ACCDCharacter* GetCurrentSpectateTarget() const;
+	UFUNCTION(Server, Reliable)
+	void Server_RequestRespawn();
 	
 	/* --- UI --- */
 	void SwitchToSpectatorUI(); // UI 교체 
 	void SwitchToMainUI();		// UI 복구
+	ACCDCharacter* GetCurrentSpectateTarget() const;
 	
 protected:
 	virtual void BeginPlay() override;

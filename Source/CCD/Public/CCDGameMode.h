@@ -15,7 +15,9 @@ public:
 
 	// 청소 완료 시 호출될 함수
 	void OnCleaningFinished();
-
+	
+	virtual void RestartPlayer(AController* NewPlayer) override;
+	
 protected:
 	virtual void BeginPlay() override;
 

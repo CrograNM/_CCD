@@ -2,6 +2,7 @@
 #include "CCDPlayerController.h"
 
 #include "CCDCharacter.h"
+#include "CCDGameMode.h"
 #include "CCDPlayerCameraManager.h"
 #include "CCDSpectator.h"
 #include "EngineUtils.h"
@@ -230,5 +231,15 @@ void ACCDPlayerController::UpdateSpectatorWidget(TObjectPtr<ACCDCharacter> Targe
 	{
 		UE_LOG(LogTemp, Warning, TEXT("UpdateSpectatorWidget"));
 		SpectatorWidgetInstance->UpdateSpectatorInfo(Target);
+	}
+}
+
+void ACCDPlayerController::Server_RequestRespawn_Implementation()
+{
+	// 서버에서만 실행됨
+	if (ACCDGameMode* GM = Cast<ACCDGameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		// GameMode에게 이 컨트롤러를 위한 새로운 플레이어를 생성하라고 요청합니다.
+		GM->RestartPlayer(this);
 	}
 }

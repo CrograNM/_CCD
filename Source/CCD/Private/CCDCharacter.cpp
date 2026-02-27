@@ -120,6 +120,11 @@ void ACCDCharacter::Server_Die_Implementation()
 void ACCDCharacter::Revive()
 {
 	Server_Revive();
+	
+	if (ACCDPlayerController* PC = Cast<ACCDPlayerController>(GetController()))
+	{
+		PC->Server_RequestRespawn();
+	}
 }
 void ACCDCharacter::Server_Revive_Implementation()
 {
