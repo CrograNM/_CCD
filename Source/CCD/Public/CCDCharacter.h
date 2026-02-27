@@ -79,6 +79,7 @@ public:
     
     FORCEINLINE UCCD_ViewComponent* GetViewComp() const { return ViewComp; }
     
+    UFUNCTION(BlueprintCallable)
     FORCEINLINE bool IsDead() const { return bIsDead; }
     
 protected:

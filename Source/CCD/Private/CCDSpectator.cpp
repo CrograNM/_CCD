@@ -42,9 +42,6 @@ void ACCDSpectator::FollowTarget(AActor* Target)
 	{
 		// 대상에게 부착 (상대 좌표 0,0,0)
 		AttachToActor(Target, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-		
-		// 높이 조절
-		SetActorRelativeLocation(FVector(0.f, 0.f, 60.f));
 	}
 }
 

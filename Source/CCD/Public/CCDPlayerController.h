@@ -11,6 +11,7 @@ class UInputAction;
 class UUserWidget;
 class ACCDCharacter;
 class ACCDSpectator;
+class USpectatorWidget;
 
 UCLASS()
 class CCD_API ACCDPlayerController : public APlayerController
@@ -27,6 +28,9 @@ public:
 	
 	// 관전 대상 반환 -> UI에서 사용 예정
 	ACCDCharacter* GetCurrentSpectateTarget() const;
+	
+	/* --- UI --- */
+	void SwitchToSpectatorUI(); // UI 교체 
 	
 protected:
 	virtual void BeginPlay() override;
@@ -62,8 +66,12 @@ protected:
 	
 	/** --- UI --- */
 	UPROPERTY(EditAnywhere, Category = "UI")
-	TSubclassOf<UUserWidget> HUDWidgetClass;
-
+	TSubclassOf<UUserWidget> MainWidgetClass;
 	UPROPERTY()
-	UUserWidget* HUDWidgetInstance;
+	UUserWidget* MainWidgetInstance;
+		
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<USpectatorWidget> SpectatorWidgetClass;
+	UPROPERTY()
+	TObjectPtr<USpectatorWidget> SpectatorWidgetInstance;
 };

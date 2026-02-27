@@ -8,23 +8,12 @@
 #include "Blueprint/UserWidget.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Widget/SpectatorWidget.h"
 
 ACCDPlayerController::ACCDPlayerController()
 {
 	PlayerCameraManagerClass = ACCDPlayerCameraManager::StaticClass();
 }
-
-void ACCDPlayerController::UpdateRotation(float DeltaTime)
-{
-	Super::UpdateRotation(DeltaTime);
-	
-	// 마우스 회전값을 관전자 액터에게 전달
-	if (SpectatorInstance)
-	{
-		SpectatorInstance->UpdateCameraRotation(GetControlRotation());
-	}
-}
-
 void ACCDPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -36,12 +25,12 @@ void ACCDPlayerController::BeginPlay()
 	}
 	
 	// UI
-	if (IsLocalController() && HUDWidgetClass)
+	if (IsLocalController() && MainWidgetClass)
 	{
-		HUDWidgetInstance = CreateWidget<UUserWidget>(this, HUDWidgetClass);
-		if (HUDWidgetInstance)
+		MainWidgetInstance = CreateWidget<UUserWidget>(this, MainWidgetClass);
+		if (MainWidgetInstance)
 		{
-			HUDWidgetInstance->AddToViewport();
+			MainWidgetInstance->AddToViewport();
 		}
 	}
 }
@@ -138,13 +127,24 @@ void ACCDPlayerController::SpectateNextPlayer(bool bForward)
 		{
 			SpectatorInstance->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 			SpectatorInstance->FollowTarget(Target);
+			SetViewTargetWithBlend(SpectatorInstance, 1.0f);
 			
-			// 시점 전환
-			SetViewTarget(SpectatorInstance);
+			if (SpectatorWidgetInstance) 
+				SpectatorWidgetInstance->UpdateSpectatorInfo(Target);
 			
 			const FString Status = Target->IsDead() ? TEXT("사망") : TEXT("생존");
 			UE_LOG(LogTemp, Warning, TEXT("관전 대상 : %s [상태: %s]"), *Target->GetName(), *Status);
 		}
+	}
+}
+void ACCDPlayerController::UpdateRotation(float DeltaTime)
+{
+	Super::UpdateRotation(DeltaTime);
+	
+	// 마우스 회전값을 관전자 액터에게 전달
+	if (SpectatorInstance)
+	{
+		SpectatorInstance->UpdateCameraRotation(GetControlRotation());
 	}
 }
 
@@ -155,14 +155,41 @@ void ACCDPlayerController::ApplyDeathOverlay_Implementation(bool bIsDark)
 	{
 		if (bIsDark)
 		{
-			// 현재 화면에서 검은색(0,0,0)으로 2초 동안 페이드 아웃
-			// bHoldWhenFinished = true : 계속 어두운 상태 유지
+			// 동안 페이드 아웃
 			PlayerCameraManager->StartCameraFade(0.0f, 0.8f, 2.0f, FLinearColor::Black, false, true);
+			SwitchToSpectatorUI();
+			SpectateNextPlayer(true);
 		}
 		else
 		{
-			// 다시 밝게 (부활할 때)
+			// 다시 밝게
 			PlayerCameraManager->StopCameraFade();
+		}
+	}
+}
+
+/** --- UI --- */
+void ACCDPlayerController::SwitchToSpectatorUI()
+{
+	if (!IsLocalController()) return;
+	UE_LOG(LogTemp, Warning, TEXT("Switch UI 1"));
+	
+	// 기존 일반 HUD 제거
+	if (MainWidgetInstance)
+	{
+		MainWidgetInstance->RemoveFromParent();
+		MainWidgetInstance = nullptr;
+	}
+	
+	// 관전자 전용 UI 생성 및 표시
+	if (SpectatorWidgetClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Switch UI 2"));
+		SpectatorWidgetInstance = CreateWidget<USpectatorWidget>(this, SpectatorWidgetClass);
+		if (SpectatorWidgetInstance)
+		{
+			SpectatorWidgetInstance->AddToViewport(); 
+			UE_LOG(LogTemp, Warning, TEXT("Switch UI 3"));
 		}
 	}
 }
