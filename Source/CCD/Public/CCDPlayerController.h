@@ -28,8 +28,6 @@ public:
 	void UpdateSpectatorWidget(TObjectPtr<ACCDCharacter> Target);
 	
 	/** --- Respawn --- */
-	UFUNCTION(Server, Reliable)
-	void Server_RequestRespawn();
 	void ResetPlayerController(APawn* NewPawn);
 	
 	/* --- UI --- */
@@ -73,10 +71,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<UUserWidget> MainWidgetClass;
 	UPROPERTY()
-	UUserWidget* MainWidgetInstance;
+	UUserWidget* MainWidgetInstance = nullptr;
 		
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<USpectatorWidget> SpectatorWidgetClass;
 	UPROPERTY()
-	TObjectPtr<USpectatorWidget> SpectatorWidgetInstance;
+	TObjectPtr<USpectatorWidget> SpectatorWidgetInstance = nullptr;
 };

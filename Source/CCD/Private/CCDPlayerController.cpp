@@ -133,8 +133,8 @@ void ACCDPlayerController::SpectateNextPlayer(bool bForward)
 			SpectatorInstance->FollowTarget(Target);
 			SetViewTarget(SpectatorInstance);
 			
-			if (SpectatorWidgetInstance) 
-				SpectatorWidgetInstance->UpdateSpectatorInfo(Target);
+			// 관전자 UI 업데이트
+			UpdateSpectatorWidget(Target);
 		}
 	}
 }
@@ -173,6 +173,7 @@ void ACCDPlayerController::SwitchToSpectatorUI()
 	// 기존 일반 HUD 제거
 	if (MainWidgetInstance)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("SwitchToSpectatorUI 1"));
 		MainWidgetInstance->RemoveFromParent();
 		MainWidgetInstance = nullptr;
 	}
@@ -180,10 +181,17 @@ void ACCDPlayerController::SwitchToSpectatorUI()
 	// 관전자 전용 UI 생성 및 표시
 	if (SpectatorWidgetClass)
 	{
-		SpectatorWidgetInstance = CreateWidget<USpectatorWidget>(this, SpectatorWidgetClass);
-		if (SpectatorWidgetInstance)
+		UE_LOG(LogTemp, Warning, TEXT("SwitchToSpectatorUI 2"));
+
+		// 인스턴스가 없으면 새로 생성
+		if (!SpectatorWidgetInstance || !IsValid(SpectatorWidgetInstance))
 		{
-			SpectatorWidgetInstance->AddToViewport(); 
+			SpectatorWidgetInstance = CreateWidget<USpectatorWidget>(this, SpectatorWidgetClass);
+		}
+		// 인스턴스가 있고 아직 뷰포트에 없으면 추가
+		if (SpectatorWidgetInstance && !SpectatorWidgetInstance->IsInViewport())
+		{
+			SpectatorWidgetInstance->AddToViewport();
 		}
 	}
 }
@@ -194,13 +202,15 @@ void ACCDPlayerController::SwitchToMainUI()
 	// 관전자 UI 제거
 	if (SpectatorWidgetInstance)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("SwitchToMainUI 1"));
 		SpectatorWidgetInstance->RemoveFromParent();
 		SpectatorWidgetInstance = nullptr;
 	}
 
 	// 기존 메인 HUD 복구
-	if (MainWidgetClass)
+	if (MainWidgetClass && !MainWidgetInstance)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("SwitchToMainUI 2"));
 		MainWidgetInstance = CreateWidget<UUserWidget>(this, MainWidgetClass);
 		if (MainWidgetInstance)
 		{
@@ -212,21 +222,12 @@ void ACCDPlayerController::UpdateSpectatorWidget(TObjectPtr<ACCDCharacter> Targe
 {
 	if (SpectatorWidgetInstance)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UpdateSpectatorWidget"));
+		UE_LOG(LogTemp, Warning, TEXT("%s : UpdateSpectatorWidget"), *GetPawn()->GetName());
 		SpectatorWidgetInstance->UpdateSpectatorInfo(Target);
 	}
 }
 
 /** --- Respawn --- */
-void ACCDPlayerController::Server_RequestRespawn_Implementation()
-{
-	// 서버에서만 실행됨
-	if (ACCDGameMode* GM = Cast<ACCDGameMode>(GetWorld()->GetAuthGameMode()))
-	{
-		// GameMode에게 이 컨트롤러를 위한 새로운 플레이어를 생성하라고 요청합니다.
-		GM->RestartPlayer(this);
-	}
-}
 void ACCDPlayerController::ResetPlayerController(APawn* NewPawn)
 {
 	if (!PlayerCameraManager || !NewPawn) return;

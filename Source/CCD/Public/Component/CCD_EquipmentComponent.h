@@ -49,6 +49,9 @@ public:
 	// Death - 장비 제거
 	void DestroyAllEquipment();
 	
+	// 초기화 함수
+	void InitializeEquipment(); 
+	
 protected:
 	virtual void BeginPlay() override;
 	
@@ -75,9 +78,6 @@ protected:
 	TMap<ECCD_EquipmentState, TObjectPtr<ACCD_EquipActor_Base>> SpawnedToolMap;
 
 private:
-	// 초기화 함수
-	void InitializeEquipment(); 
-	
 	UPROPERTY()
 	TObjectPtr<ACCDCharacter> OwnerCharacter;
 };
