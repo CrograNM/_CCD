@@ -132,8 +132,8 @@ void ACCDPlayerController::SpectateNextPlayer(bool bForward)
 			if (SpectatorWidgetInstance) 
 				SpectatorWidgetInstance->UpdateSpectatorInfo(Target);
 			
-			const FString Status = Target->IsDead() ? TEXT("사망") : TEXT("생존");
-			UE_LOG(LogTemp, Warning, TEXT("관전 대상 : %s [상태: %s]"), *Target->GetName(), *Status);
+			// const FString Status = Target->IsDead() ? TEXT("사망") : TEXT("생존");
+			// UE_LOG(LogTemp, Warning, TEXT("관전 대상 : %s [상태: %s]"), *Target->GetName(), *Status);
 		}
 	}
 }
@@ -153,6 +153,7 @@ void ACCDPlayerController::ApplyDeathOverlay_Implementation(bool bIsDark)
 {
 	if (PlayerCameraManager)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("ApplyDeathOverlay"));
 		if (bIsDark)
 		{
 			// 동안 페이드 아웃
@@ -172,7 +173,6 @@ void ACCDPlayerController::ApplyDeathOverlay_Implementation(bool bIsDark)
 void ACCDPlayerController::SwitchToSpectatorUI()
 {
 	if (!IsLocalController()) return;
-	UE_LOG(LogTemp, Warning, TEXT("Switch UI 1"));
 	
 	// 기존 일반 HUD 제거
 	if (MainWidgetInstance)
@@ -184,12 +184,19 @@ void ACCDPlayerController::SwitchToSpectatorUI()
 	// 관전자 전용 UI 생성 및 표시
 	if (SpectatorWidgetClass)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Switch UI 2"));
 		SpectatorWidgetInstance = CreateWidget<USpectatorWidget>(this, SpectatorWidgetClass);
 		if (SpectatorWidgetInstance)
 		{
 			SpectatorWidgetInstance->AddToViewport(); 
-			UE_LOG(LogTemp, Warning, TEXT("Switch UI 3"));
 		}
+	}
+}
+
+void ACCDPlayerController::UpdateSpectatorWidget(TObjectPtr<ACCDCharacter> Target)
+{
+	if (SpectatorWidgetInstance)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UpdateSpectatorWidget"));
+		SpectatorWidgetInstance->UpdateSpectatorInfo(Target);
 	}
 }

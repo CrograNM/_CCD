@@ -25,6 +25,7 @@ public:
 	/** --- Death --- */
 	UFUNCTION(Client, Reliable)
 	void ApplyDeathOverlay(bool bIsDark);	// Fade 처리
+	void UpdateSpectatorWidget(TObjectPtr<ACCDCharacter> Target);
 	
 	// 관전 대상 반환 -> UI에서 사용 예정
 	ACCDCharacter* GetCurrentSpectateTarget() const;

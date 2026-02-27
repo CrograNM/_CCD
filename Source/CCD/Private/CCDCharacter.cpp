@@ -221,12 +221,21 @@ void ACCDCharacter::OnRep_IsDead()
 		ViewComp->ApplyViewMode(false); // false는 3인칭 (FollowCamera 활성화)
 	}
 
-	// 화면 어둡게 처리 (사망한 로컬 플레이어)
+	// 사망자 본인 처리
 	if (IsLocallyControlled())
 	{
 		if (ACCDPlayerController* PC = Cast<ACCDPlayerController>(GetController()))
 		{
 			PC->ApplyDeathOverlay(true);
+		}
+	}
+	
+	// 관전자 처리 - 로컬 플레이어 컨트롤러가 이 캐릭터를 관전 중이라면 UI 업데이트
+	if (ACCDPlayerController* LocalPC = Cast<ACCDPlayerController>(GetWorld()->GetFirstPlayerController()))
+	{
+		if (LocalPC->GetCurrentSpectateTarget() == this)
+		{
+			LocalPC->UpdateSpectatorWidget(this);
 		}
 	}
 }
