@@ -46,6 +46,12 @@ public:
     UFUNCTION(Server, Reliable, Category = "Death")
     void Server_Die();
     
+    // 부활 처리
+    UFUNCTION(BlueprintCallable, Category = "Death")
+    void Revive();
+    UFUNCTION(Server, Reliable, Category = "Death")
+    void Server_Revive();
+    
     /** --- 애니메이션 및 동기화 --- */
     UFUNCTION(NetMulticast, Reliable, Category = "Animation")
     void Multicast_PlayEquipMontage(FName SectionName, float PlayRate);
@@ -132,5 +138,6 @@ protected:
 
     UFUNCTION()
     void OnRep_IsDead();
-    void HandleDeath(); // 서버에서 사망 시 호출될 실제 로직
+    void HandleDeath(); // 사망 시 서버에서 호출
+    void HandleRevive(); // 부활 시 서버에서 호출
 };

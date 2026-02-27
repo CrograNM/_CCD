@@ -24,7 +24,7 @@ public:
 	
 	/** --- Death --- */
 	UFUNCTION(Client, Reliable)
-	void ApplyDeathOverlay(bool bIsDark);	// Fade 처리
+	void ApplyDeath(bool bIsDead);	// Fade 처리
 	void UpdateSpectatorWidget(TObjectPtr<ACCDCharacter> Target);
 	
 	// 관전 대상 반환 -> UI에서 사용 예정
@@ -32,6 +32,7 @@ public:
 	
 	/* --- UI --- */
 	void SwitchToSpectatorUI(); // UI 교체 
+	void SwitchToMainUI();		// UI 복구
 	
 protected:
 	virtual void BeginPlay() override;

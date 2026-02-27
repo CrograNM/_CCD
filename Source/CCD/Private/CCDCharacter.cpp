@@ -101,12 +101,11 @@ void ACCDCharacter::Server_UseEquipment_Implementation()
 	}
 }
 
-/** --- 사망 처리 --- */
+/** --- 사망 및 부활 처리 --- */
 void ACCDCharacter::Die()
 {	
 	Server_Die();
 }
-
 void ACCDCharacter::Server_Die_Implementation()
 {	
 	if (bIsDead) return; // 이미 사망한 경우 중복 처리 방지
@@ -117,6 +116,19 @@ void ACCDCharacter::Server_Die_Implementation()
 	HandleDeath();	
 	// 클라이언트 전용 (로컬 시각 효과), 서버도 명시적으로 적용
 	OnRep_IsDead(); 
+}
+void ACCDCharacter::Revive()
+{
+	Server_Revive();
+}
+void ACCDCharacter::Server_Revive_Implementation()
+{
+	if (!bIsDead) return;
+	UE_LOG(LogTemp, Warning, TEXT("[ACCDCharacter] Revive called"));
+	
+	bIsDead = false;
+	HandleRevive(); // 서버 측 물리/상태 복구
+	OnRep_IsDead(); // 클라이언트 측 시각 효과 복구
 }
 
 /** --- 몽타주 제어 및 델리게이트 --- */
@@ -201,36 +213,51 @@ void ACCDCharacter::SetRunning(float NewSpeed)
 	Server_SetMaxWalkSpeed(NewSpeed);
 }
 
+/** --- 사망 상태 관리 --- */
 void ACCDCharacter::OnRep_IsDead()
 {
-	if (UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(GetRootComponent()))
+	if (bIsDead)
 	{
-		RootPrim->SetCollisionProfileName(TEXT("NoCollision"));
+		if (UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(GetRootComponent()))
+		{
+			RootPrim->SetCollisionProfileName(TEXT("NoCollision"));
+		}
+		
+		// 캐릭터 메쉬 숨김 및 충돌 비활성화
+		if (GetMesh())
+		{
+			GetMesh()->SetHiddenInGame(true);
+			GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
+		}
+
+		// 3인칭 시점으로 강제 전환 및 고정
+		if (ViewComp) ViewComp->ApplyViewMode(false);
+	}
+	else
+	{
+		// --- 부활 로직 ---
+		if (GetMesh())
+		{
+			GetMesh()->SetHiddenInGame(false);
+			GetMesh()->SetCollisionProfileName(TEXT("CharacterMesh"));
+		}
+		if (UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(GetRootComponent()))
+		{
+			RootPrim->SetCollisionProfileName(TEXT("Pawn"));
+		}
+		if (ViewComp) ViewComp->ApplyViewMode(ViewComp->GetIsFirstPerson());
 	}
 	
-	// 캐릭터 메쉬 숨김 및 충돌 비활성화
-	if (GetMesh())
-	{
-		GetMesh()->SetHiddenInGame(true);
-		GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
-	}
-
-	// 3인칭 시점으로 강제 전환 및 고정
-	if (ViewComp)
-	{
-		ViewComp->ApplyViewMode(false); // false는 3인칭 (FollowCamera 활성화)
-	}
-
-	// 사망자 본인 처리
+	// 사망자/부활자 본인 처리
 	if (IsLocallyControlled())
 	{
 		if (ACCDPlayerController* PC = Cast<ACCDPlayerController>(GetController()))
 		{
-			PC->ApplyDeathOverlay(true);
+			PC->ApplyDeath(bIsDead);
 		}
 	}
 	
-	// 관전자 처리 - 로컬 플레이어 컨트롤러가 이 캐릭터를 관전 중이라면 UI 업데이트
+	// 관전자 처리 
 	if (ACCDPlayerController* LocalPC = Cast<ACCDPlayerController>(GetWorld()->GetFirstPlayerController()))
 	{
 		if (LocalPC->GetCurrentSpectateTarget() == this)
@@ -239,7 +266,6 @@ void ACCDCharacter::OnRep_IsDead()
 		}
 	}
 }
-
 void ACCDCharacter::HandleDeath()
 {
 	// 캡슐 컴포넌트 충돌 비활성화
@@ -272,4 +298,25 @@ void ACCDCharacter::HandleDeath()
 	// 추후 카오스 디스트럭션 적용 예정
 	// ------------------------------------
 	
+}
+void ACCDCharacter::HandleRevive()
+{
+	// 충돌 활성화 -> Pawn 프로필로 복구
+	if (UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(GetRootComponent()))
+	{
+		RootPrim->SetCollisionProfileName(TEXT("Pawn"));
+		RootPrim->SetCanEverAffectNavigation(true);
+	}
+	
+	if (GetMesh())
+	{
+		GetMesh()->SetCollisionProfileName(TEXT("CharacterMesh"));
+	}
+	
+	// 이동 능력 복구
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->SetComponentTickEnabled(true);
+		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	}
 }

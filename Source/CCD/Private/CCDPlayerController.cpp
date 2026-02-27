@@ -149,12 +149,12 @@ void ACCDPlayerController::UpdateRotation(float DeltaTime)
 }
 
 /** --- Death --- */
-void ACCDPlayerController::ApplyDeathOverlay_Implementation(bool bIsDark)
+void ACCDPlayerController::ApplyDeath_Implementation(bool bIsDead)
 {
 	if (PlayerCameraManager)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("ApplyDeathOverlay"));
-		if (bIsDark)
+		if (bIsDead)
 		{
 			// 동안 페이드 아웃
 			PlayerCameraManager->StartCameraFade(0.0f, 0.8f, 2.0f, FLinearColor::Black, false, true);
@@ -165,6 +165,18 @@ void ACCDPlayerController::ApplyDeathOverlay_Implementation(bool bIsDark)
 		{
 			// 다시 밝게
 			PlayerCameraManager->StopCameraFade();
+			SwitchToMainUI();
+			SetViewTargetWithBlend(GetPawn(), 0.5f); // 플레이어 캐릭터로 시점 복귀
+			
+			// 관전자 액터 제거
+			if (SpectatorInstance)
+			{
+				SpectatorInstance->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+				SpectatorInstance->Destroy();
+				SpectatorInstance = nullptr;
+				SpectateCandidates.Empty();
+				CurrentSpectateIndex = -1;
+			}
 		}
 	}
 }
@@ -191,7 +203,27 @@ void ACCDPlayerController::SwitchToSpectatorUI()
 		}
 	}
 }
+void ACCDPlayerController::SwitchToMainUI()
+{
+	if (!IsLocalController()) return;
 
+	// 관전자 UI 제거
+	if (SpectatorWidgetInstance)
+	{
+		SpectatorWidgetInstance->RemoveFromParent();
+		SpectatorWidgetInstance = nullptr;
+	}
+
+	// 기존 메인 HUD 복구
+	if (MainWidgetClass)
+	{
+		MainWidgetInstance = CreateWidget<UUserWidget>(this, MainWidgetClass);
+		if (MainWidgetInstance)
+		{
+			MainWidgetInstance->AddToViewport();
+		}
+	}
+}
 void ACCDPlayerController::UpdateSpectatorWidget(TObjectPtr<ACCDCharacter> Target)
 {
 	if (SpectatorWidgetInstance)
