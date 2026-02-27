@@ -113,7 +113,8 @@ void ACCDPlayerController::SpectateNextPlayer(bool bForward)
 	SpectateCandidates.Empty();
 	for (TActorIterator<ACCDCharacter> It(GetWorld()); It; ++It)
 	{
-		SpectateCandidates.Add(*It);
+		if (*It == GetPawn()) SpectateCandidates.Insert(*It, 0);
+		else SpectateCandidates.Add(*It);
 	}
 	if (SpectateCandidates.Num() == 0) return;
 	
@@ -121,6 +122,8 @@ void ACCDPlayerController::SpectateNextPlayer(bool bForward)
 	if (bForward) CurrentSpectateIndex = (CurrentSpectateIndex + 1) % SpectateCandidates.Num();
 	else CurrentSpectateIndex = (CurrentSpectateIndex - 1 + SpectateCandidates.Num()) % SpectateCandidates.Num();
 	
+	UE_LOG(LogTemp, Warning, TEXT("SpectateNextPlayer: CurrentSpectateIndex = %d"), CurrentSpectateIndex);
+		
 	// 리스트 순회 후
 	if (ACCDCharacter* Target = SpectateCandidates[CurrentSpectateIndex])
 	{
@@ -128,13 +131,10 @@ void ACCDPlayerController::SpectateNextPlayer(bool bForward)
 		{
 			SpectatorInstance->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 			SpectatorInstance->FollowTarget(Target);
-			SetViewTargetWithBlend(SpectatorInstance, 1.0f);
+			SetViewTarget(SpectatorInstance);
 			
 			if (SpectatorWidgetInstance) 
 				SpectatorWidgetInstance->UpdateSpectatorInfo(Target);
-			
-			// const FString Status = Target->IsDead() ? TEXT("사망") : TEXT("생존");
-			// UE_LOG(LogTemp, Warning, TEXT("관전 대상 : %s [상태: %s]"), *Target->GetName(), *Status);
 		}
 	}
 }
@@ -161,23 +161,6 @@ void ACCDPlayerController::ApplyDeath_Implementation(bool bIsDead)
 			PlayerCameraManager->StartCameraFade(0.0f, 0.8f, 2.0f, FLinearColor::Black, false, true);
 			SwitchToSpectatorUI();
 			SpectateNextPlayer(true);
-		}
-		else
-		{
-			// 다시 밝게
-			PlayerCameraManager->StopCameraFade();
-			SwitchToMainUI();
-			SetViewTargetWithBlend(GetPawn(), 0.5f); // 플레이어 캐릭터로 시점 복귀
-			
-			// 관전자 액터 제거
-			if (SpectatorInstance)
-			{
-				SpectatorInstance->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-				SpectatorInstance->Destroy();
-				SpectatorInstance = nullptr;
-				SpectateCandidates.Empty();
-				CurrentSpectateIndex = -1;
-			}
 		}
 	}
 }
@@ -234,6 +217,7 @@ void ACCDPlayerController::UpdateSpectatorWidget(TObjectPtr<ACCDCharacter> Targe
 	}
 }
 
+/** --- Respawn --- */
 void ACCDPlayerController::Server_RequestRespawn_Implementation()
 {
 	// 서버에서만 실행됨
@@ -241,5 +225,22 @@ void ACCDPlayerController::Server_RequestRespawn_Implementation()
 	{
 		// GameMode에게 이 컨트롤러를 위한 새로운 플레이어를 생성하라고 요청합니다.
 		GM->RestartPlayer(this);
+	}
+}
+void ACCDPlayerController::ResetPlayerController(APawn* NewPawn)
+{
+	if (!PlayerCameraManager || !NewPawn) return;
+	
+	PlayerCameraManager->StopCameraFade();
+	SetViewTarget(NewPawn);
+	SwitchToMainUI();
+			
+	if (SpectatorInstance)
+	{
+		SpectatorInstance->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		SpectatorInstance->Destroy();
+		SpectatorInstance = nullptr;
+		SpectateCandidates.Empty();
+		CurrentSpectateIndex = -1;
 	}
 }

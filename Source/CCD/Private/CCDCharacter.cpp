@@ -9,7 +9,6 @@
 #include "Component/CCD_EquipmentComponent.h"
 #include "Component/CCD_InteractionComponent.h"
 #include "Component/CCD_ViewComponent.h"
-#include "Components/CapsuleComponent.h"
 #include "Net/UnrealNetwork.h"
 
 /** --- 생성자 및 기본 함수 --- */
@@ -54,6 +53,18 @@ ACCDCharacter::ACCDCharacter()
 void ACCDCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+void ACCDCharacter::Restart()
+{
+	Super::Restart();
+	if (IsLocallyControlled())
+	{
+		if (ACCDPlayerController* PC = Cast<ACCDPlayerController>(GetController()))
+		{
+			PC->ResetPlayerController(this);
+		}
+	}
 }
 
 void ACCDCharacter::Tick(float DeltaTime)
@@ -120,20 +131,17 @@ void ACCDCharacter::Server_Die_Implementation()
 void ACCDCharacter::Revive()
 {
 	Server_Revive();
-	
-	if (ACCDPlayerController* PC = Cast<ACCDPlayerController>(GetController()))
-	{
-		PC->Server_RequestRespawn();
-	}
 }
 void ACCDCharacter::Server_Revive_Implementation()
 {
 	if (!bIsDead) return;
 	UE_LOG(LogTemp, Warning, TEXT("[ACCDCharacter] Revive called"));
-	
 	bIsDead = false;
-	HandleRevive(); // 서버 측 물리/상태 복구
-	OnRep_IsDead(); // 클라이언트 측 시각 효과 복구
+	OnRep_IsDead();
+	if (ACCDPlayerController* PC = Cast<ACCDPlayerController>(GetController()))
+	{
+		PC->Server_RequestRespawn();
+	}
 }
 
 /** --- 몽타주 제어 및 델리게이트 --- */
@@ -238,22 +246,8 @@ void ACCDCharacter::OnRep_IsDead()
 		// 3인칭 시점으로 강제 전환 및 고정
 		if (ViewComp) ViewComp->ApplyViewMode(false);
 	}
-	else
-	{
-		// --- 부활 로직 ---
-		if (GetMesh())
-		{
-			GetMesh()->SetHiddenInGame(false);
-			GetMesh()->SetCollisionProfileName(TEXT("CharacterMesh"));
-		}
-		if (UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(GetRootComponent()))
-		{
-			RootPrim->SetCollisionProfileName(TEXT("Pawn"));
-		}
-		if (ViewComp) ViewComp->ApplyViewMode(ViewComp->GetIsFirstPerson());
-	}
 	
-	// 사망자/부활자 본인 처리
+	// 사망자 본인 처리
 	if (IsLocallyControlled())
 	{
 		if (ACCDPlayerController* PC = Cast<ACCDPlayerController>(GetController()))
@@ -303,25 +297,4 @@ void ACCDCharacter::HandleDeath()
 	// 추후 카오스 디스트럭션 적용 예정
 	// ------------------------------------
 	
-}
-void ACCDCharacter::HandleRevive()
-{
-	// 충돌 활성화 -> Pawn 프로필로 복구
-	if (UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(GetRootComponent()))
-	{
-		RootPrim->SetCollisionProfileName(TEXT("Pawn"));
-		RootPrim->SetCanEverAffectNavigation(true);
-	}
-	
-	if (GetMesh())
-	{
-		GetMesh()->SetCollisionProfileName(TEXT("CharacterMesh"));
-	}
-	
-	// 이동 능력 복구
-	if (GetCharacterMovement())
-	{
-		GetCharacterMovement()->SetComponentTickEnabled(true);
-		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-	}
 }

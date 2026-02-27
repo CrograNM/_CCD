@@ -24,7 +24,8 @@ public:
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
+    virtual void Restart() override;
+    
     /** --- 입력 바인딩 함수 --- */
     UFUNCTION(BlueprintCallable, Category = "Interact")
     void PerformInteract();
@@ -139,5 +140,4 @@ protected:
     UFUNCTION()
     void OnRep_IsDead();
     void HandleDeath(); // 사망 시 서버에서 호출
-    void HandleRevive(); // 부활 시 서버에서 호출
 };

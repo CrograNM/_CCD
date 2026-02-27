@@ -27,8 +27,10 @@ public:
 	void ApplyDeath(bool bIsDead);	// Fade 처리
 	void UpdateSpectatorWidget(TObjectPtr<ACCDCharacter> Target);
 	
+	/** --- Respawn --- */
 	UFUNCTION(Server, Reliable)
 	void Server_RequestRespawn();
+	void ResetPlayerController(APawn* NewPawn);
 	
 	/* --- UI --- */
 	void SwitchToSpectatorUI(); // UI 교체 
