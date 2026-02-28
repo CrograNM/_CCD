@@ -10,7 +10,7 @@
 
 AProgressManager::AProgressManager()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 	
 	bReplicates = true;
 }

@@ -6,7 +6,7 @@
 
 UBurnableComponent::UBurnableComponent()
 {
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 
 	// 네트워크 복제 설정
 	SetIsReplicatedByDefault(true);

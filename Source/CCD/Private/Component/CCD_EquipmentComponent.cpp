@@ -6,6 +6,8 @@
 
 UCCD_EquipmentComponent::UCCD_EquipmentComponent()
 {
+	PrimaryComponentTick.bCanEverTick = false;
+	
 	SetIsReplicatedByDefault(true);
 }
 

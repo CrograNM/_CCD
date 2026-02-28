@@ -56,7 +56,7 @@ protected:
 	FTimerHandle BurnTimerHandle;
 
 	// 실제로 대미지를 주는 로직을 담은 함수
-	void ApplyBurnDamage();
+	void ApplyBurnDamage(float DeltaTime);
 	
 	// --- VFX/SFX ---
 	UPROPERTY(EditAnywhere, Category = "Effects")

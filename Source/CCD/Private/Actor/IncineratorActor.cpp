@@ -10,7 +10,8 @@
 
 AIncineratorActor::AIncineratorActor()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
+	
 	bReplicates = true;
 	
 	// 메쉬 컴포넌트 설정
@@ -32,19 +33,22 @@ void AIncineratorActor::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	SetActorTickEnabled(false);
+	
 	if (HasAuthority())
 	{
 		BurnArea->OnComponentBeginOverlap.AddDynamic(this, &AIncineratorActor::OnBurnAreaBeginOverlap);
 		BurnArea->OnComponentEndOverlap.AddDynamic(this, &AIncineratorActor::OnBurnAreaEndOverlap);
-		
-		// 1초마다 ApplyBurnDamage 함수를 반복 호출하도록 설정
-		GetWorldTimerManager().SetTimer(BurnTimerHandle, this, &AIncineratorActor::ApplyBurnDamage, 1.0f, true);
 	}
 }
 
 void AIncineratorActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	UE_LOG(LogTemp, Warning, TEXT("%s - Tick : %f"), *GetName(), DeltaTime); // Tick 최적화 검증용
+	
+	ApplyBurnDamage(DeltaTime);
 }
 
 void AIncineratorActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -77,16 +81,24 @@ void AIncineratorActor::OnBurnAreaEndOverlap(UPrimitiveComponent* OverlappedComp
 	}
 }
 
-void AIncineratorActor::ApplyBurnDamage()
+void AIncineratorActor::ApplyBurnDamage(float DeltaTime)
 {
 	// 서버에서만 판정
 	if (!HasAuthority()) return;
 
 	// 문이 열려있으면 작동하지 않음
 	if (bIsDoorOpen) return;
+	
 	UE_LOG(LogTemp, Warning, TEXT("Incinerator is Burning"));
 	
+	const float Damage = DamagePerSecond * DeltaTime;
+	
 	// 소각 영역 내의 컴포넌트 순회
+	if (OverlappingBurnables.Num() == 0)
+	{
+		SetActorTickEnabled(false);
+		return;
+	}
 	for (int32 i = OverlappingBurnables.Num() - 1; i >= 0; --i)
 	{
 		UBurnableComponent* BurnComp = OverlappingBurnables[i];
@@ -94,7 +106,7 @@ void AIncineratorActor::ApplyBurnDamage()
 		// 유효성 검사 (액터가 이미 파괴되었을 수 있음)
 		if (BurnComp && BurnComp->GetOwner())
 		{
-			BurnComp->TakeBurnDamage(DamagePerSecond);
+			BurnComp->TakeBurnDamage(Damage);
 		}
 		else
 		{
@@ -111,6 +123,8 @@ void AIncineratorActor::Interact_Implementation(AActor* Interactor)
 	
 	// 문 상태 토글
 	bIsDoorOpen = !bIsDoorOpen;
+	if (bIsDoorOpen) SetActorTickEnabled(false); // 문이 열리면 대미지 판정 중지
+	else SetActorTickEnabled(true); // 문이 닫히면 대미지 판정 재개
     
 	// 서버에서도 OnRep 함수를 직접 호출하여 자신의 화면을 갱신합니다.
 	OnRep_DoorOpen();
