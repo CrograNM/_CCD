@@ -77,4 +77,7 @@ protected:
 	TSubclassOf<USpectatorWidget> SpectatorWidgetClass;
 	UPROPERTY()
 	TObjectPtr<USpectatorWidget> SpectatorWidgetInstance = nullptr;
+	
+private:
+	float PostProcessAlpha = 0.f;
 };

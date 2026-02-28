@@ -10,6 +10,8 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Widget/SpectatorWidget.h"
+#include "Camera/PlayerCameraManager.h"
+#include "Engine/Scene.h"
 
 ACCDPlayerController::ACCDPlayerController()
 {
@@ -152,13 +154,14 @@ void ACCDPlayerController::UpdateRotation(float DeltaTime)
 /** --- Death --- */
 void ACCDPlayerController::ApplyDeath_Implementation(bool bIsDead)
 {
-	if (PlayerCameraManager)
+	if (ACCDPlayerCameraManager* CCDCamManager = Cast<ACCDPlayerCameraManager>(PlayerCameraManager))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ApplyDeathOverlay"));
+		UE_LOG(LogTemp, Warning, TEXT("ApplyDeath"));
+		
 		if (bIsDead)
 		{
-			// 동안 페이드 아웃
-			PlayerCameraManager->StartCameraFade(0.0f, 0.8f, 2.0f, FLinearColor::Black, false, true);
+			CCDCamManager->SetDeathEffect(true);
+			
 			SwitchToSpectatorUI();
 			SpectateNextPlayer(true);
 		}
@@ -230,9 +233,12 @@ void ACCDPlayerController::UpdateSpectatorWidget(TObjectPtr<ACCDCharacter> Targe
 /** --- Respawn --- */
 void ACCDPlayerController::ResetPlayerController(APawn* NewPawn)
 {
-	if (!PlayerCameraManager || !NewPawn) return;
+	if (!NewPawn) return;
 	
-	PlayerCameraManager->StopCameraFade();
+	if (ACCDPlayerCameraManager* MyCamManager = Cast<ACCDPlayerCameraManager>(PlayerCameraManager))
+	{
+		MyCamManager->SetDeathEffect(false);
+	}
 	SetViewTarget(NewPawn);
 	SwitchToMainUI();
 			
