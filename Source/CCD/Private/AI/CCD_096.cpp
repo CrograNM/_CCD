@@ -8,7 +8,6 @@
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "AI/CCD_096_States.h"
 
 // Sets default values
 ACCD_096::ACCD_096()
@@ -52,15 +51,11 @@ void ACCD_096::TriggerPanic(AActor* Player)
 	{
 		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
 		{
-			// 1. 상태를 Panic으로 변경
-			BB->SetValueAsEnum(TEXT("AIState"), (uint8)E096State::Panic);
+			BB->SetValueAsEnum(TEXT("AIState"), 1); // Panic 상태로 변경
 			BB->SetValueAsObject(TEXT("TargetActor"), Player);
-
-			// 2. 비명 재생
-			if (PanicSound)
-			{
-				UGameplayStatics::PlaySoundAtLocation(this, PanicSound, GetActorLocation());
-			}
+			
+			// 즉시 이동 중지
+			AIC->StopMovement();
 		}
 	}
 }
@@ -71,8 +66,7 @@ bool ACCD_096::IsTriggered() const
 	{
 		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
 		{
-			// AIState가 Idle이 아니면 이미 트리거된 것으로 간주
-			return BB->GetValueAsEnum(TEXT("AIState")) != (uint8)E096State::Idle;
+			return BB->GetValueAsEnum(TEXT("AIState")) != 0;
 		}
 	}
 	return false;

@@ -88,6 +88,8 @@ public:
     UFUNCTION(BlueprintCallable)
     FORCEINLINE bool IsDead() const { return bIsDead; }
     
+    void CheckForSCP096();
+    
 protected:
     virtual void BeginPlay() override;
     

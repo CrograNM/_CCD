@@ -2,6 +2,9 @@
 #include "CCDCharacter.h"
 
 #include "CCDPlayerController.h"
+#include "AI/CCD_096.h"
+#include "Components/BoxComponent.h"
+#include "Camera/PlayerCameraManager.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -59,6 +62,12 @@ void ACCDCharacter::BeginPlay()
 void ACCDCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	// 살아있을 때만 시선 체크 수행
+	if (!bIsDead)
+	{
+		CheckForSCP096();
+	}
 }
 
 void ACCDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -326,5 +335,40 @@ void ACCDCharacter::HandleRevive()
 	if (EquipmentComp)
 	{
 		EquipmentComp->InitializeEquipment();
+	}
+}
+
+void ACCDCharacter::CheckForSCP096()
+{
+	// 로컬 플레이어가 조정 중일 때만 시선 체크를 수행
+	if (!IsLocallyControlled()) return;
+
+	// 현재 사용 중인 카메라 컴포넌트 가져오기 (1인칭 기준)
+	if (!FirstPersonCamera) return;
+
+	FVector Start = FirstPersonCamera->GetComponentLocation();
+	FVector ForwardVector = FirstPersonCamera->GetForwardVector();
+	FVector End = Start + (ForwardVector * 5000.0f);
+
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this); // 나 자신은 무시
+
+	// Line Trace 실행
+	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+	{
+		// 맞은 액터가 SCP-096인지 확인
+		if (ACCD_096* SCP096 = Cast<ACCD_096>(Hit.GetActor()))
+		{
+			// 맞은 컴포넌트가 096의 얼굴 트리거인지 확인
+			if (Hit.GetComponent() == SCP096->GetFaceTrigger())
+			{
+				// 이미 화가 난 상태가 아니라면 트리거 발동
+				if (!SCP096->IsTriggered())
+				{
+					SCP096->TriggerPanic(this); // 격노 시작
+				}
+			}
+		}
 	}
 }
