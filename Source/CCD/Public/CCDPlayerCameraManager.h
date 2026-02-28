@@ -20,5 +20,10 @@ protected:
 	virtual void ApplyCameraModifiers(float DeltaTime, FMinimalViewInfo& InOutPOV) override;
 
 private:
-	bool bDeathEffectEnabled = false;
+	// 보간용 변수
+	float CurrentSaturation = 1.0f; // 현재 채도 (1: 컬러, 0: 흑백)
+	float TargetSaturation = 1.0f;  // 목표 채도
+	
+	UPROPERTY(EditAnywhere, Category = "DeathEffect")
+	float InterpSpeed = 2.0f;      // 보간 속도 (높을수록 빠르게 변함)
 };
