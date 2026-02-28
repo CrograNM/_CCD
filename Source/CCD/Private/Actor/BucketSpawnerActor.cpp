@@ -10,7 +10,7 @@
 
 ABucketSpawnerActor::ABucketSpawnerActor()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 	
 	// 메쉬 컴포넌트 설정

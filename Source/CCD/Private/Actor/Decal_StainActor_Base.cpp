@@ -29,6 +29,8 @@ void ADecal_StainActor_Base::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	SetActorTickEnabled(false); // 초기에는 Tick 비활성화 -> 양동이에서 스폰 시 조건에 맞춰 활성화
+	
 	// 부모 클래스인 ADecalActor가 가진 Decal 컴포넌트를 가져옴
 	UDecalComponent* DecalComp = GetDecal();
 	if (DecalComp && WashableComp->GetWashableType() != ECCD_WashableType::EWT_Water)
@@ -47,13 +49,15 @@ void ADecal_StainActor_Base::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
+	UE_LOG(LogTemp, Warning, TEXT("%s - Tick : %f"), *GetName(), DeltaTime); // Tick 최적화 검증용
+	
 	if (WashableComp->GetWashableType() == ECCD_WashableType::EWT_Water && ProgressComp->ProgressValue <= 0.0f)
 	{
 		// 시간을 누적하여 직접 투명도 계산 (LifeSpan 의존성 제거)
 		FadeTimeAccumulator += DeltaTime;
         
-		// 5.0초 동안 서서히 투명해짐
-		const float FadeDuration = 5.0f;
+		// 서서히 투명해짐
+		const float FadeDuration = 3.0f;
 		const float Opacity = FMath::Clamp(1.0f - (FadeTimeAccumulator / FadeDuration), 0.0f, 1.0f);
         
 		UpdateDecalOpacity(Opacity);

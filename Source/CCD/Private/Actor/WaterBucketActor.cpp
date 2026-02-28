@@ -13,6 +13,7 @@
 AWaterBucketActor::AWaterBucketActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.TickInterval = 0.2f;
 	
 	// 물 양동이 액터는 초기 진행도를 0으로 설정
 	ProgressComp->ProgressValue = 0.0f;
@@ -38,6 +39,8 @@ void AWaterBucketActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
+	// UE_LOG(LogTemp, Warning, TEXT("%s - Tick : %f"), *GetName(), DeltaTime); // Tick 최적화 검증용
+	
 	// 일정 이상의 각도에 도달하면 물이 쏟아지는 효과
 	if (WaterMaterial && HasAuthority())
 	{
@@ -45,6 +48,7 @@ void AWaterBucketActor::Tick(float DeltaTime)
 		if (FMath::Abs(Rotation.Pitch) > 60.0f || FMath::Abs(Rotation.Roll) > 60.0f)
 			SpillWater();
 	}
+	if (bIsWaterSpilled) SetActorTickEnabled(false);
 }
 
 void AWaterBucketActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -169,6 +173,11 @@ void AWaterBucketActor::SpillWater()
 			{
 				// 양동이가 가지고 있던 점수를 데칼에게 그대로 전달
 				DecalProg->UpdateProgressValue(ProgressComp->ProgressValue);
+				if (ProgressComp->ProgressValue <= 0.0f)
+				{
+					SpawnedDecal->SetActorTickEnabled(true); // 진행도가 0이면 데칼이 서서히 사라지는 효과 활성화
+					SpawnedDecal->SetActorTickInterval(0.1f); // 초당 10회 제한
+				}
 			}
 			ProgressComp->UpdateProgressValue(0.0f); // 양동이의 진행도는 0으로 리셋
 		}

@@ -24,7 +24,7 @@ protected:
 	
 public:	
 	UPROPERTY(ReplicatedUsing = OnRep_ProgressValue, EditAnywhere, BlueprintReadWrite, Category = "Progress")
-	float ProgressValue = 10.0f;
+	float ProgressValue = 0.0f;
 	UFUNCTION()
 	void OnRep_ProgressValue();
 	
