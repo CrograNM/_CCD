@@ -19,6 +19,8 @@ void UCCD_InteractionComponent::BeginPlay()
 	Super::BeginPlay();
 	OwnerCharacter = Cast<ACCDCharacter>(GetOwner());
 	
+	SetComponentTickEnabled(false);
+	
 	// 소유자 캐릭터가 이미 가지고 있는 PhysicsHandle을 찾아옵니다.
 	if (OwnerCharacter)
 	{
@@ -154,6 +156,8 @@ void UCCD_InteractionComponent::GrabObject_Impl(UPrimitiveComponent* ComponentTo
 		GrabLocation,
 		GrabbedComponent->GetComponentRotation()
 	);
+	
+	SetComponentTickEnabled(true);
 }
 
 void UCCD_InteractionComponent::Multicast_ReleaseObject_Implementation()
@@ -177,4 +181,6 @@ void UCCD_InteractionComponent::ReleaseObject_Impl()
 		}
 	}
 	GrabbedComponent = nullptr;
+	
+	SetComponentTickEnabled(false);
 }
