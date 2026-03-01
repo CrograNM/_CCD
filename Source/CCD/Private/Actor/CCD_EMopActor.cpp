@@ -14,6 +14,14 @@ ACCD_EMopActor::ACCD_EMopActor()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
+	
+	// 메쉬 생성 및 루트 설정
+	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
+	RootComponent = MeshComp;
+
+	// 기본적으로 물리 연산, 콜리전 무시
+	MeshComp->SetSimulatePhysics(true);
+	MeshComp->SetCollisionProfileName(TEXT("PhysicsActor"));
 }
 
 void ACCD_EMopActor::ExecuteAction()

@@ -7,14 +7,6 @@ ACCD_EquipActor_Base::ACCD_EquipActor_Base()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true; // 멀티플레이어 대응
-
-	// 메쉬 생성 및 루트 설정
-	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
-	RootComponent = MeshComp;
-
-	// 기본적으로 물리 연산, 콜리전 무시
-	MeshComp->SetSimulatePhysics(false);
-	MeshComp->SetCollisionResponseToAllChannels(ECR_Ignore);
 }
 
 void ACCD_EquipActor_Base::BeginPlay()

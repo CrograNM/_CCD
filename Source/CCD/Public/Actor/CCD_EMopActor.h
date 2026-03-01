@@ -4,6 +4,8 @@
 #include "CCD_EquipActor_Base.h"
 #include "CCD_EMopActor.generated.h"
 
+class USkeletalMeshComponent;
+
 UCLASS()
 class CCD_API ACCD_EMopActor : public ACCD_EquipActor_Base
 {
@@ -19,6 +21,12 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	
+	
+	// 장비의 외형
+	UPROPERTY(EditAnywhere, Category = "Equipment")
+	TObjectPtr<USkeletalMeshComponent> MeshComp;
+	
 	
 	/** --- 오염 데이터 (Replicated) --- */
 	UPROPERTY(ReplicatedUsing = OnRep_Pollution)

@@ -4,7 +4,6 @@
 #include <GameFramework/Actor.h>
 #include "CCD_EquipActor_Base.generated.h"
 
-class UStaticMeshComponent;
 class ACCDCharacter;
 
 UCLASS(Abstract)
@@ -29,10 +28,6 @@ public:
 	
 protected:
 	virtual void BeginPlay() override;
-	
-	// 장비의 외형
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Equipment")
-	TObjectPtr<UStaticMeshComponent> MeshComp;
 
 	// 소유자 캐릭터 참조
 	UPROPERTY(BlueprintReadOnly, Category = "Equipment")

@@ -15,6 +15,14 @@ ACCD_EScannerActor::ACCD_EScannerActor()
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 	
+	// 메쉬 생성 및 루트 설정
+	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
+	RootComponent = MeshComp;
+
+	// 기본적으로 물리 연산, 콜리전 무시
+	MeshComp->SetSimulatePhysics(false);
+	MeshComp->SetCollisionResponseToAllChannels(ECR_Ignore);
+	
 	// 2. 3D 위젯 생성 및 자기 자신에게 부착
 	ScannerWidgetComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("ScannerWidgetComp"));
 	ScannerWidgetComp->SetupAttachment(MeshComp, TEXT("ScreenSocket")); 

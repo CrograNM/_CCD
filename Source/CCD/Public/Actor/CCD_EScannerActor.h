@@ -4,6 +4,8 @@
 #include "CCD_EquipActor_Base.h"
 #include "CCD_EScannerActor.generated.h"
 
+class UStaticMeshComponent;
+
 UCLASS()
 class CCD_API ACCD_EScannerActor : public ACCD_EquipActor_Base
 {
@@ -32,6 +34,10 @@ private:
 	float GetScanActorDistance() const;
 	const float MaxScanDistance = 1000.f; // 탐지 최대 거리
 
+	// 장비의 외형
+	UPROPERTY(VisibleAnywhere, Category = "Equipment")
+	TObjectPtr<UStaticMeshComponent> MeshComp;
+	
 	UPROPERTY(VisibleAnywhere, Category = "Scanner")
 	TObjectPtr<class UWidgetComponent> ScannerWidgetComp;
 
