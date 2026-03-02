@@ -13,6 +13,8 @@
 #include "Component/CCD_InteractionComponent.h"
 #include "Component/CCD_ViewComponent.h"
 #include "GameFramework/GameModeBase.h"
+#include "GeometryCollection/GeometryCollectionActor.h"
+#include "GeometryCollection/GeometryCollectionComponent.h"
 #include "Net/UnrealNetwork.h"
 
 /** --- 생성자 및 기본 함수 --- */
@@ -310,6 +312,29 @@ void ACCDCharacter::HandleDeath()
 	// 추후 카오스 디스트럭션 적용 예정
 	// ------------------------------------
 	
+	if (GetWorld() && DeathGeometryCollectionClass)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+        
+		// 캐릭터의 현재 위치와 회전에 맞춰 조각난 액터 생성
+		AGeometryCollectionActor* GCActor = GetWorld()->SpawnActor<AGeometryCollectionActor>(
+			DeathGeometryCollectionClass, 
+			GetActorLocation(), 
+			GetActorRotation(), 
+			SpawnParams
+		);
+
+		if (GCActor && GCActor->GetGeometryCollectionComponent())
+		{
+			// 물리적 충격 가하기 (사방으로 흩어지게)
+			UGeometryCollectionComponent* GCComp = GCActor->GetGeometryCollectionComponent();
+            
+			// 약간 위쪽 방향으로 물리적 충격을 주어 화려하게 터지게 함
+			FVector Impulse = (GetActorUpVector() + FVector(0,0,1)).GetSafeNormal() * DeathImpulseStrength;
+			GCComp->AddImpulse(Impulse);
+		}
+	}
 }
 void ACCDCharacter::HandleRevive()
 {

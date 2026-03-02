@@ -29,8 +29,7 @@ public class CCD : ModuleRules
 			"SlateCore", 
 			"Niagara",
 			"GeometryCollectionEngine",
-			"Chaos"
-			// "FieldSystemEngine"
+			"ChaosSolverEngine"
 		});
 		
 		// Uncomment if you are using online features

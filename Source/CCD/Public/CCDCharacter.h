@@ -12,6 +12,7 @@ class UAnimMontage;
 class UCCD_InteractionComponent;
 class UCCD_ViewComponent;
 class UCCD_EquipmentComponent;
+class AGeometryCollectionActor;
 
 UCLASS()
 class CCD_API ACCDCharacter : public ACharacter
@@ -137,7 +138,15 @@ protected:
     /** --- 사망 상태 관리 --- */
     UPROPERTY(ReplicatedUsing = OnRep_IsDead)
     bool bIsDead = false;
+    
+    // 사망 시 스폰할 조각
+    UPROPERTY(EditAnywhere, Category = "Death")
+    TSubclassOf<AGeometryCollectionActor> DeathGeometryCollectionClass;
 
+    // 사망 시 조각에 가할 충격의 세기
+    UPROPERTY(EditAnywhere, Category = "Death")
+    float DeathImpulseStrength = 500.0f;
+    
     UFUNCTION()
     void OnRep_IsDead();
     void HandleDeath(); // 사망 시 서버에서 호출
