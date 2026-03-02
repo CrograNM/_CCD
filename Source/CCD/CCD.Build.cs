@@ -27,7 +27,10 @@ public class CCD : ModuleRules
 			"UMG",        // UUserWidget, UButton, UEditableTextBox 등
 			"Slate",      // Slate 위젯 사용 시 필요
 			"SlateCore", 
-			"Niagara"
+			"Niagara",
+			"GeometryCollectionEngine",
+			"Chaos"
+			// "FieldSystemEngine"
 		});
 		
 		// Uncomment if you are using online features

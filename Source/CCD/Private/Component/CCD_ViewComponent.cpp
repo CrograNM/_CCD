@@ -8,7 +8,7 @@
 
 UCCD_ViewComponent::UCCD_ViewComponent()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
 	SetIsReplicatedByDefault(true);
 }
 
