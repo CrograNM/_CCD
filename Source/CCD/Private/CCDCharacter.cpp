@@ -2,6 +2,7 @@
 #include "CCDCharacter.h"
 
 #include "CCDPlayerController.h"
+#include "Actor/CCD_BodyFragment.h"
 #include "AI/CCD_096.h"
 #include "Components/BoxComponent.h"
 #include "Camera/PlayerCameraManager.h"
@@ -312,7 +313,7 @@ void ACCDCharacter::HandleDeath()
 	// 추후 카오스 디스트럭션 적용 예정
 	// ------------------------------------
 	
-	if (GetWorld() && DeathGeometryCollectionClass)
+	/*if (GetWorld() && DeathGeometryCollectionClass)
 	{
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -333,6 +334,27 @@ void ACCDCharacter::HandleDeath()
 			// 약간 위쪽 방향으로 물리적 충격을 주어 화려하게 터지게 함
 			FVector Impulse = (GetActorUpVector() + FVector(0,0,1)).GetSafeNormal() * DeathImpulseStrength;
 			GCComp->AddImpulse(Impulse);
+		}
+	}*/
+	
+	if (DeathFragmentClass && FragmentMeshList.Num() > 0)
+	{
+		for (UStaticMesh* FragmentMesh : FragmentMeshList)
+		{
+			FVector SpawnLocation = GetActorLocation() + FVector(FMath::RandRange(-20, 20), FMath::RandRange(-20, 20), 50.f);
+            
+			ACCD_BodyFragment* Fragment = GetWorld()->SpawnActor<ACCD_BodyFragment>(
+				DeathFragmentClass, 
+				SpawnLocation, 
+				FRotator(FMath::RandRange(0, 360), FMath::RandRange(0, 360), FMath::RandRange(0, 360))
+			);
+
+			if (Fragment)
+			{
+				// 랜덤한 방향으로 튀어나가게 충격 가하기
+				FVector RandomImpulse = (FVector::UpVector + FVector(FMath::RandRange(-1.f, 1.f), FMath::RandRange(-1.f, 1.f), 0.f)).GetSafeNormal() * 500.f;
+				Fragment->InitFragment(FragmentMesh, RandomImpulse);
+			}
 		}
 	}
 }

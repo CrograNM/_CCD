@@ -4,7 +4,6 @@
 #include "GameFramework/Character.h"
 #include "CCDCharacter.generated.h"
 
-// --- 전방 선언 ---
 class UCameraComponent;
 class USpringArmComponent;
 class UPhysicsHandleComponent;
@@ -13,6 +12,7 @@ class UCCD_InteractionComponent;
 class UCCD_ViewComponent;
 class UCCD_EquipmentComponent;
 class AGeometryCollectionActor;
+class ACCD_BodyFragment;
 
 UCLASS()
 class CCD_API ACCDCharacter : public ACharacter
@@ -146,6 +146,12 @@ protected:
     // 사망 시 조각에 가할 충격의 세기
     UPROPERTY(EditAnywhere, Category = "Death")
     float DeathImpulseStrength = 500.0f;
+    
+    UPROPERTY(EditAnywhere, Category = "Death")
+    TSubclassOf<ACCD_BodyFragment> DeathFragmentClass;
+
+    UPROPERTY(EditAnywhere, Category = "Death")
+    TArray<TObjectPtr<UStaticMesh>> FragmentMeshList;
     
     UFUNCTION()
     void OnRep_IsDead();
