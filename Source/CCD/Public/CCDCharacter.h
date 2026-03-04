@@ -139,10 +139,6 @@ protected:
     UPROPERTY(ReplicatedUsing = OnRep_IsDead)
     bool bIsDead = false;
     
-    // 사망 시 스폰할 조각
-    UPROPERTY(EditAnywhere, Category = "Death")
-    TSubclassOf<AGeometryCollectionActor> DeathGeometryCollectionClass;
-
     // 사망 시 조각에 가할 충격의 세기
     UPROPERTY(EditAnywhere, Category = "Death")
     float DeathImpulseStrength = 500.0f;

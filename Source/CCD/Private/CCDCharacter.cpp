@@ -314,18 +314,18 @@ void ACCDCharacter::HandleDeath()
 	{
 		for (UStaticMesh* FragmentMesh : FragmentMeshList)
 		{
-			FVector SpawnLocation = GetActorLocation() + FVector(FMath::RandRange(-20, 20), FMath::RandRange(-20, 20), 50.f);
+			FVector SpawnLocation = GetActorLocation() + FVector(0.f, 0.f, -44.f); // 캐릭터의 중심보다 약간 아래에 스폰 (피벗 조정)
             
 			ACCD_BodyFragment* Fragment = GetWorld()->SpawnActor<ACCD_BodyFragment>(
 				DeathFragmentClass, 
 				SpawnLocation, 
-				FRotator(FMath::RandRange(0, 360), FMath::RandRange(0, 360), FMath::RandRange(0, 360))
+				GetActorRotation() + FRotator(0.f, -90.f, 0.f)
 			);
 
 			if (Fragment)
 			{
 				// 랜덤한 방향으로 튀어나가게 충격 가하기
-				FVector RandomImpulse = (FVector::UpVector + FVector(FMath::RandRange(-1.f, 1.f), FMath::RandRange(-1.f, 1.f), 0.f)).GetSafeNormal() * 500.f;
+				FVector RandomImpulse = (FVector::UpVector + FVector(FMath::RandRange(-1.f, 1.f), FMath::RandRange(-1.f, 1.f), 0.f)).GetSafeNormal() * DeathImpulseStrength;
 				Fragment->InitFragment(FragmentMesh, RandomImpulse);
 			}
 		}
