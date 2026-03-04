@@ -14,14 +14,12 @@ ACCD_BodyFragment::ACCD_BodyFragment()
 	AActor::SetReplicateMovement(true);
 	bAlwaysRelevant = true;
 	
-	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
+	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
 	SetRootComponent(MeshComp);
 	MeshComp->SetIsReplicated(true);
-	
-	// 물리 및 충돌 설정 (CCD_InteractionComponent가 잡을 수 있도록 함)
 	MeshComp->SetSimulatePhysics(true);
 	MeshComp->SetCollisionProfileName(TEXT("PhysicsActor"));
-    
+	
 	BurnableComp = CreateDefaultSubobject<UBurnableComponent>(TEXT("BurnableComp"));
 	BurnableComp->SetIsReplicated(true);
 	
@@ -36,11 +34,12 @@ void ACCD_BodyFragment::BeginPlay()
 	
 }
 
-void ACCD_BodyFragment::InitFragment(UStaticMesh* InMesh, FVector Impulse)
+void ACCD_BodyFragment::InitFragment(USkeletalMesh* InMesh, FVector Impulse)
 {
 	if (InMesh)
 	{
-		MeshComp->SetStaticMesh(InMesh);
+		MeshComp->SetSkeletalMesh(InMesh);
+		MeshComp->SetSimulatePhysics(true);
 		MeshComp->AddImpulse(Impulse, NAME_None, true);
 	}
 }

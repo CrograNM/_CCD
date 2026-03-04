@@ -5,7 +5,7 @@
 #include "GameFramework/Actor.h"
 #include "CCD_BodyFragment.generated.h"
 
-class UStaticMeshComponent;
+class USkeletalMeshComponent;
 class UProgressComponent;
 class UBurnableComponent;
 
@@ -18,13 +18,13 @@ public:
 	ACCD_BodyFragment();
 	
 	/** 스폰 후 메쉬를 설정하고 물리 충격을 가하는 함수 */
-	void InitFragment(UStaticMesh* InMesh, FVector Impulse);
+	void InitFragment(USkeletalMesh* InMesh, FVector Impulse);
 	
 protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	TObjectPtr<UStaticMeshComponent> MeshComp;
+	TObjectPtr<USkeletalMeshComponent> MeshComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UProgressComponent> ProgressComp;

@@ -312,7 +312,7 @@ void ACCDCharacter::HandleDeath()
 	// 카오스 디스트럭션 적용 (Geometry Collection Mesh 스폰)
 	if (DeathFragmentClass && FragmentMeshList.Num() > 0)
 	{
-		for (UStaticMesh* FragmentMesh : FragmentMeshList)
+		for (USkeletalMesh* FragmentMesh : FragmentMeshList)
 		{
 			FVector SpawnLocation = GetActorLocation() + FVector(0.f, 0.f, -44.f); // 캐릭터의 중심보다 약간 아래에 스폰 (피벗 조정)
             

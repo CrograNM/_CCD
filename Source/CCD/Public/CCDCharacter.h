@@ -147,7 +147,7 @@ protected:
     TSubclassOf<ACCD_BodyFragment> DeathFragmentClass;
 
     UPROPERTY(EditAnywhere, Category = "Death")
-    TArray<TObjectPtr<UStaticMesh>> FragmentMeshList;
+    TArray<TObjectPtr<USkeletalMesh>> FragmentMeshList;
     
     UFUNCTION()
     void OnRep_IsDead();
