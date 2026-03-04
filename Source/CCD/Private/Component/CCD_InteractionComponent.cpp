@@ -113,16 +113,31 @@ void UCCD_InteractionComponent::Server_PerformInteract_Implementation()
 		
 		if (UBurnableComponent* BurnComp = HitActor->FindComponentByClass<UBurnableComponent>())
 		{
+			UE_LOG(LogTemp, Warning, TEXT("[Hand] Target has BurnableComponent!"));
 			UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(HitActor->GetRootComponent());
-			if (RootPrim && RootPrim->IsSimulatingPhysics())
+			if (RootPrim)
 			{
-				Multicast_GrabObject(RootPrim, HitResult.ImpactPoint);
+				if (RootPrim->IsSimulatingPhysics())
+				{
+					Multicast_GrabObject(RootPrim, HitResult.ImpactPoint);
+					UE_LOG(LogTemp, Warning, TEXT("[Hand] Grabbed with : %s"), *HitActor->GetName());
+				}
+				else
+				{
+					UE_LOG(LogTemp, Error, TEXT("[Hand] Target is NOT simulating physics!"));
+				}
 			}
+			else UE_LOG(LogTemp, Error, TEXT("[Hand] no root primitive component!"));
 			IInteractInterface::Execute_Interact(BurnComp, OwnerCharacter);
 		}
 		else if (HitActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass()))
 		{
+			UE_LOG(LogTemp, Warning, TEXT("[Hand] Target does not has BurnableComponent!"));
 			IInteractInterface::Execute_Interact(HitActor, OwnerCharacter);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[Hand] Target does not implement InteractInterface!"));
 		}
 	}
 }
