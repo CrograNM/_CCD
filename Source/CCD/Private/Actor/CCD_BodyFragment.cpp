@@ -27,6 +27,8 @@ ACCD_BodyFragment::ACCD_BodyFragment()
 	ProgressComp = CreateDefaultSubobject<UProgressComponent>(TEXT("ProgressComp"));
 	ProgressComp->SetIsReplicated(true);
 	ProgressComp->ProgressValue = 5.0f;
+	
+	MeshComp->SetAllMassScale(0.01f);
 }
 
 void ACCD_BodyFragment::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
