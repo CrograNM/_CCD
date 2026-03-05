@@ -16,6 +16,13 @@ class CCD_API ACCD_BodyFragment : public AActor
 
 public:
 	ACCD_BodyFragment();
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
+	UPROPERTY(ReplicatedUsing = OnRep_SkeletalMesh)
+	TObjectPtr<USkeletalMesh> RepSkeletalMesh;
+
+	UFUNCTION()
+	void OnRep_SkeletalMesh();
 	
 	/** 스폰 후 메쉬를 설정하고 물리 충격을 가하는 함수 */
 	void InitFragment(USkeletalMesh* InMesh, FVector Impulse);
