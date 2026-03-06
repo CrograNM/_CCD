@@ -150,6 +150,9 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Death")
     TArray<TObjectPtr<USkeletalMesh>> FragmentMeshList;
     
+    UPROPERTY(EditAnywhere, Category = "Death")
+    float BloodSpawnRange = 300.f;
+    
     UPROPERTY(EditDefaultsOnly, Category = "Death")
     TSubclassOf<ADecal_StainActor_Base> BloodStainActorClass;
     

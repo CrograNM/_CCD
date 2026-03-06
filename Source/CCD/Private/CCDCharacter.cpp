@@ -15,6 +15,7 @@
 #include "Component/CCD_InteractionComponent.h"
 #include "Component/CCD_ViewComponent.h"
 #include "Component/WashableComponent.h"
+#include "Components/DecalComponent.h"
 #include "GameFramework/GameModeBase.h"
 #include "GeometryCollection/GeometryCollectionActor.h"
 #include "GeometryCollection/GeometryCollectionComponent.h"
@@ -285,6 +286,8 @@ void ACCDCharacter::OnRep_IsDead()
 }
 void ACCDCharacter::HandleDeath()
 {
+	if (!HasAuthority()) return;
+	
 	// 캡슐 컴포넌트 충돌 비활성화
 	if (UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(GetRootComponent()))
 	{
@@ -314,11 +317,11 @@ void ACCDCharacter::HandleDeath()
 	// 핏자국 데칼 스폰
 	if (BloodStainActorClass)
 	{
-		for (int i = 0; i < 5; ++i)
+		for (int i = 0; i < 3; ++i)
 		{
 			FHitResult HitResult;
-			FVector Start = GetActorLocation();
-			FVector End = Start + FVector(FMath::RandRange(-500, 500), FMath::RandRange(-500, 500), -500.0f);
+			FVector Start = GetActorLocation() + FVector(0.f, 0.f, 100.f);
+			FVector End = Start + FVector(FMath::RandRange(-BloodSpawnRange, BloodSpawnRange), FMath::RandRange(-BloodSpawnRange, BloodSpawnRange), -600.0f);
 			FCollisionQueryParams Params;
 			Params.AddIgnoredActor(this);
 	
@@ -333,11 +336,14 @@ void ACCDCharacter::HandleDeath()
 		
 				if (ADecal_StainActor_Base* SpawnedDecal = GetWorld()->SpawnActor<ADecal_StainActor_Base>(
 					BloodStainActorClass, 
-					HitResult.Location + FVector(0.f, 0.f, FMath::RandRange(-0.1f, 0.f)), 
+					HitResult.Location + FVector(0.f, 0.f, FMath::RandRange(-0.1f, 0.1f)), 
 					SpawnRot, 
 					SpawnParams))
 				{
-					UE_LOG(LogTemp, Warning, TEXT("Death : Decal Spawned"));
+					if (UDecalComponent* DecalComp = SpawnedDecal->GetDecal())
+					{
+						DecalComp->SortOrder = i;
+					}
 				}
 			}
 		}
