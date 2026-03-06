@@ -320,8 +320,8 @@ void ACCDCharacter::HandleDeath()
 		for (int i = 0; i < 3; ++i)
 		{
 			FHitResult HitResult;
-			FVector Start = GetActorLocation() + FVector(0.f, 0.f, 100.f);
-			FVector End = Start + FVector(FMath::RandRange(-BloodSpawnRange, BloodSpawnRange), FMath::RandRange(-BloodSpawnRange, BloodSpawnRange), -600.0f);
+			FVector Start = GetActorLocation() + FVector(0.f, 0.f, BloodSpawnHeight);
+			FVector End = Start + FVector(FMath::RandRange(-BloodSpawnRange, BloodSpawnRange), FMath::RandRange(-BloodSpawnRange, BloodSpawnRange), -500.0f - BloodSpawnHeight);
 			FCollisionQueryParams Params;
 			Params.AddIgnoredActor(this);
 	

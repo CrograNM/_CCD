@@ -151,6 +151,9 @@ protected:
     TArray<TObjectPtr<USkeletalMesh>> FragmentMeshList;
     
     UPROPERTY(EditAnywhere, Category = "Death")
+    float BloodSpawnHeight = 150.f;
+    
+    UPROPERTY(EditAnywhere, Category = "Death")
     float BloodSpawnRange = 300.f;
     
     UPROPERTY(EditDefaultsOnly, Category = "Death")
