@@ -318,7 +318,7 @@ void ACCDCharacter::HandleDeath()
 		{
 			FHitResult HitResult;
 			FVector Start = GetActorLocation();
-			FVector End = Start + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), -500.0f);
+			FVector End = Start + FVector(FMath::RandRange(-500, 500), FMath::RandRange(-500, 500), -500.0f);
 			FCollisionQueryParams Params;
 			Params.AddIgnoredActor(this);
 	
@@ -331,7 +331,11 @@ void ACCDCharacter::HandleDeath()
 				FRotator SpawnRot = HitResult.ImpactNormal.Rotation();
 				SpawnRot.Pitch -= 90.0f; // 데칼은 기본적으로 X축 방향으로 쏘므로 아래를 향하게 조정
 		
-				if (ADecal_StainActor_Base* SpawnedDecal = GetWorld()->SpawnActor<ADecal_StainActor_Base>(BloodStainActorClass, HitResult.Location, SpawnRot, SpawnParams))
+				if (ADecal_StainActor_Base* SpawnedDecal = GetWorld()->SpawnActor<ADecal_StainActor_Base>(
+					BloodStainActorClass, 
+					HitResult.Location + FVector(0.f, 0.f, FMath::RandRange(-0.1f, 0.f)), 
+					SpawnRot, 
+					SpawnParams))
 				{
 					UE_LOG(LogTemp, Warning, TEXT("Death : Decal Spawned"));
 				}
