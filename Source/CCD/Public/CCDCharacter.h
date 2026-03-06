@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "CCDCharacter.generated.h"
 
+class ADecal_StainActor_Base;
 class UCameraComponent;
 class USpringArmComponent;
 class UPhysicsHandleComponent;
@@ -148,6 +149,9 @@ protected:
 
     UPROPERTY(EditAnywhere, Category = "Death")
     TArray<TObjectPtr<USkeletalMesh>> FragmentMeshList;
+    
+    UPROPERTY(EditDefaultsOnly, Category = "Death")
+    TSubclassOf<ADecal_StainActor_Base> BloodStainActorClass;
     
     UFUNCTION()
     void OnRep_IsDead();

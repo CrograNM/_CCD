@@ -3,6 +3,7 @@
 
 #include "CCDPlayerController.h"
 #include "Actor/CCD_BodyFragment.h"
+#include "Actor/Decal_StainActor_Base.h"
 #include "AI/CCD_096.h"
 #include "Components/BoxComponent.h"
 #include "Camera/PlayerCameraManager.h"
@@ -13,6 +14,7 @@
 #include "Component/CCD_EquipmentComponent.h"
 #include "Component/CCD_InteractionComponent.h"
 #include "Component/CCD_ViewComponent.h"
+#include "Component/WashableComponent.h"
 #include "GameFramework/GameModeBase.h"
 #include "GeometryCollection/GeometryCollectionActor.h"
 #include "GeometryCollection/GeometryCollectionComponent.h"
@@ -309,11 +311,40 @@ void ACCDCharacter::HandleDeath()
 		GetCharacterMovement()->SetComponentTickEnabled(false);
 	}
 	
+	// 핏자국 데칼 스폰
+	if (BloodStainActorClass)
+	{
+		for (int i = 0; i < 5; ++i)
+		{
+			FHitResult HitResult;
+			FVector Start = GetActorLocation();
+			FVector End = Start + FVector(FMath::RandRange(-50, 50), FMath::RandRange(-50, 50), -500.0f);
+			FCollisionQueryParams Params;
+			Params.AddIgnoredActor(this);
+	
+			if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+			{
+				FActorSpawnParameters SpawnParams;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		
+				// 바닥 평면에 맞춘 회전값 (바닥 노멀 기준)
+				FRotator SpawnRot = HitResult.ImpactNormal.Rotation();
+				SpawnRot.Pitch -= 90.0f; // 데칼은 기본적으로 X축 방향으로 쏘므로 아래를 향하게 조정
+		
+				if (ADecal_StainActor_Base* SpawnedDecal = GetWorld()->SpawnActor<ADecal_StainActor_Base>(BloodStainActorClass, HitResult.Location, SpawnRot, SpawnParams))
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Death : Decal Spawned"));
+				}
+			}
+		}
+	}
+	
 	// 카오스 디스트럭션 적용 (Geometry Collection Mesh 스폰)
 	if (DeathFragmentClass && FragmentMeshList.Num() > 0)
 	{
 		for (USkeletalMesh* FragmentMesh : FragmentMeshList)
 		{
+			if (!FragmentMesh) continue;
 			FVector SpawnLocation = GetActorLocation() + FVector(0.f, 0.f, -44.f); // 캐릭터의 중심보다 약간 아래에 스폰 (피벗 조정)
             
 			ACCD_BodyFragment* Fragment = GetWorld()->SpawnActor<ACCD_BodyFragment>(
