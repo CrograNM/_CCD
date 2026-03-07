@@ -18,8 +18,11 @@ ACCD_BodyFragment::ACCD_BodyFragment()
 	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
 	SetRootComponent(MeshComp);
 	MeshComp->SetIsReplicated(true);
-	MeshComp->SetSimulatePhysics(true);
-	MeshComp->SetCollisionProfileName(TEXT("PhysicsActor"));
+	
+	// 초기에는 물리 시뮬레이션과 충돌 비활성화 (스폰 이후 시점에 활성화하기)
+	MeshComp->SetSimulatePhysics(false);
+	MeshComp->SetCollisionProfileName(TEXT("NoCollision"));
+	
 	MeshComp->SetNotifyRigidBodyCollision(true);
 	MeshComp->SetGenerateOverlapEvents(true);
 	
@@ -61,5 +64,6 @@ void ACCD_BodyFragment::OnRep_SkeletalMesh()
 	{
 		MeshComp->SetSkeletalMesh(RepSkeletalMesh);
 		MeshComp->SetSimulatePhysics(true);
+		MeshComp->SetCollisionProfileName(TEXT("PhysicsActor"));
 	}
 }

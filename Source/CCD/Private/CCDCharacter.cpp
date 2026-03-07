@@ -15,6 +15,7 @@
 #include "Component/CCD_InteractionComponent.h"
 #include "Component/CCD_ViewComponent.h"
 #include "Component/WashableComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/DecalComponent.h"
 #include "GameFramework/GameModeBase.h"
 #include "GeometryCollection/GeometryCollectionActor.h"
@@ -356,7 +357,8 @@ void ACCDCharacter::HandleDeath()
 		for (USkeletalMesh* FragmentMesh : FragmentMeshList)
 		{
 			if (!FragmentMesh) continue;
-			FVector SpawnLocation = GetActorLocation() + FVector(0.f, 0.f, -44.f); // 캐릭터의 중심보다 약간 아래에 스폰 (피벗 조정)
+			FVector SpawnLocation = GetActorLocation() + 
+				FVector(0.f, 0.f, -GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
             
 			ACCD_BodyFragment* Fragment = GetWorld()->SpawnActor<ACCD_BodyFragment>(
 				DeathFragmentClass, 
