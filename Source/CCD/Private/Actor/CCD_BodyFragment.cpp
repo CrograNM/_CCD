@@ -20,6 +20,8 @@ ACCD_BodyFragment::ACCD_BodyFragment()
 	MeshComp->SetIsReplicated(true);
 	MeshComp->SetSimulatePhysics(true);
 	MeshComp->SetCollisionProfileName(TEXT("PhysicsActor"));
+	MeshComp->SetNotifyRigidBodyCollision(true);
+	MeshComp->SetGenerateOverlapEvents(true);
 	
 	BurnableComp = CreateDefaultSubobject<UBurnableComponent>(TEXT("BurnableComp"));
 	BurnableComp->SetIsReplicated(true);
