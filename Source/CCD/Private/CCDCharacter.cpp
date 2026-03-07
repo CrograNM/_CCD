@@ -368,9 +368,18 @@ void ACCDCharacter::HandleDeath()
 
 			if (Fragment)
 			{
-				// 랜덤한 방향으로 튀어나가게 충격 가하기
-				FVector RandomImpulse = (FVector::UpVector + FVector(FMath::RandRange(-1.f, 1.f), FMath::RandRange(-1.f, 1.f), 0.f)).GetSafeNormal() * DeathImpulseStrength;
-				Fragment->InitFragment(FragmentMesh, RandomImpulse);
+				// // 랜덤한 방향으로 튀어나가게 충격 가하기
+				// FVector RandomImpulse = (FVector::UpVector + FVector(FMath::RandRange(-1.f, 1.f), FMath::RandRange(-1.f, 1.f), 0.f)).GetSafeNormal() * DeathImpulseStrength;
+				// Fragment->InitFragment(FragmentMesh, RandomImpulse);
+				
+				// 방사형 패턴으로 충격파
+				FBox SphereBounds = FragmentMesh->GetImportedBounds().GetBox();
+				FVector MeshRelativeCenter = SphereBounds.GetCenter();
+				FVector ImpulseDir = MeshRelativeCenter.GetSafeNormal();
+				ImpulseDir.Z += FMath::RandRange(0.1f, 0.3f); // 위로도 약간 튀어오르게 (살짝 랜덤)
+				ImpulseDir.Normalize();
+				FVector FinalImpulse = ImpulseDir * (DeathImpulseStrength + FMath::RandRange(100.0f, 500.0f)); // 충격 세기에 약간의 랜덤 추가
+				Fragment->InitFragment(FragmentMesh, FinalImpulse);
 			}
 		}
 	}
