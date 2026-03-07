@@ -91,6 +91,7 @@ void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 void ACCDCharacter::PerformInteract()
 {
 	if (bIsDead) return;
+	if (EquipmentComp->GetEquipmentState() != ECCD_EquipmentState::EES_Hands) return;
 	if (InteractionComp) InteractionComp->PerformInteract();
 }
 void ACCDCharacter::SwitchEquipment(const ECCD_EquipmentState NewState)

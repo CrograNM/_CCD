@@ -125,7 +125,7 @@ protected:
     UPROPERTY(Replicated)
     FRotator RemoteControlRotation;
     bool bIsUnequipping = false;
-    bool bIsActionInProgress = false;
+    bool bIsActionInProgress = false; // 애니메이션, 상호작용 등 액션 진행 중인지 여부
 
     UPROPERTY(EditAnywhere, Category = "Animation")
     TObjectPtr<UAnimMontage> EquipMontage;
