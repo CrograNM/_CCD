@@ -31,13 +31,13 @@ public:
 	
 	UFUNCTION(Server, Reliable)
 	void Server_CloseEye(const bool bNewIsEyeClosed);
-	void SetIsEyeClosed(const bool bNewIsEyeClosed) { Server_CloseEye(bNewIsEyeClosed); }
+	void SetIsEyeClosed(const bool bNewIsEyeClosed);
 	
 	float GetCurrentStamina() const { return CurrentStamina; }
 	float GetMaxStamina() const { return MaxStamina; }
 	float GetEyeCooldown() const { return EyeCooldownTime; }
 	float GetEyeCooldownDuration() const { return EyeCooldownDuration; }
-	// bool GetIsObserveActivated() const { return bIsObserveActivated; }
+	bool GetIsObserveActivated() const { return !bIsEyeClosed; }
 	
 protected:
 	virtual void BeginPlay() override;
@@ -63,14 +63,14 @@ protected:
 	UFUNCTION()
 	void OnRep_CurrentStamina();
 	
-	/** --- 시야 쿨타임 --- */
+	/** --- 시야 판정, 쿨타임 --- */
 	UPROPERTY(ReplicatedUsing = OnRep_IsEyeClosed)
 	bool bIsEyeClosed = false;
 	UFUNCTION()
 	void OnRep_IsEyeClosed();
 	
-	// UPROPERTY(Replicated)
-	// bool bIsObserveActivated = true; // SCP 시야 판정 활성화 여부
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayEyeClosedAnimation();
 	
 	UPROPERTY(EditAnywhere, Category = "Stats | Eye")
 	float EyeCooldownDuration = 5.f;
@@ -79,8 +79,6 @@ protected:
 	float EyeCooldownTime = 0.f; // 시야 쿨타임 경과 시간
 	UFUNCTION()
 	void OnRep_EyeCooldownTime();
-	
-	
 	
 private:
 	UPROPERTY()

@@ -57,13 +57,10 @@ void UCCD_StatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		{
 			EyeCooldownTime = FMath::Clamp(EyeCooldownTime + DeltaTime, 0.f, EyeCooldownDuration);
 			OnEyeCooldownChanged.Broadcast(EyeCooldownTime, EyeCooldownDuration);
-			// bIsObserveActivated = true;
 		}
 		else
 		{
-			bIsEyeClosed = true;
-			OnRep_IsEyeClosed(); // 시야 닫힘 이벤트 발생
-			// bIsObserveActivated = false;
+			SetIsEyeClosed(true);
 		}
 	}
 }
@@ -77,17 +74,17 @@ void UCCD_StatComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 	DOREPLIFETIME(UCCD_StatComponent, EyeCooldownTime);
 }
 
-// 달리기 상태 변경
-void UCCD_StatComponent::Server_SetSpeed_Implementation(const bool bNewIsRunning)
-{
-	bIsRunning = bNewIsRunning;
-	OwnerCharacter->GetCharacterMovement()->MaxWalkSpeed = bNewIsRunning ? RunSpeed : WalkSpeed;
-}
+// --- 달리기, 스태미나 ---
 void UCCD_StatComponent::SetIsRunning(const bool bNewIsRunning)
 {
 	if (!OwnerCharacter) return;
 	OwnerCharacter->GetCharacterMovement()->MaxWalkSpeed = bNewIsRunning ? RunSpeed : WalkSpeed;
 	Server_SetSpeed(bNewIsRunning);
+}
+void UCCD_StatComponent::Server_SetSpeed_Implementation(const bool bNewIsRunning)
+{
+	bIsRunning = bNewIsRunning;
+	OwnerCharacter->GetCharacterMovement()->MaxWalkSpeed = bNewIsRunning ? RunSpeed : WalkSpeed;
 }
 void UCCD_StatComponent::OnRep_CurrentStamina()
 {
@@ -95,21 +92,38 @@ void UCCD_StatComponent::OnRep_CurrentStamina()
 		OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
 }
 
-// 시야 쿨타임 상태 변경
+// --- 시야 판정, 쿨타임 ---
+void UCCD_StatComponent::SetIsEyeClosed(const bool bNewIsEyeClosed)
+{
+	Server_CloseEye(bNewIsEyeClosed);
+}
 void UCCD_StatComponent::Server_CloseEye_Implementation(const bool bNewIsEyeClosed)
 {
 	bIsEyeClosed = bNewIsEyeClosed;
 	OnRep_IsEyeClosed();
+	Multicast_PlayEyeClosedAnimation();
 }
 void UCCD_StatComponent::OnRep_IsEyeClosed()
 {
 	if (bIsEyeClosed)
 	{
 		EyeCooldownTime = 0.f;		// 쿨타임 초기화
-		OnEyeClosed.Broadcast();	// 시야 닫힘 이벤트 발생
+		// OnEyeClosed.Broadcast();	// 시야 닫힘 이벤트 발생
 		
-		bIsEyeClosed = false;
+		// 1초 후 시야 열림 처리 예약
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]()
+		{
+			bIsEyeClosed = false;
+			OnRep_IsEyeClosed();
+		}, 1.f, false);
 	}
+}
+void UCCD_StatComponent::Multicast_PlayEyeClosedAnimation_Implementation()
+{
+	// 서버와 모든 클라이언트에서 실행됨
+	EyeCooldownTime = 0.f;       // 쿨타임 초기화
+	OnEyeClosed.Broadcast();     // 델리게이트 발생
 }
 void UCCD_StatComponent::OnRep_EyeCooldownTime()
 {
