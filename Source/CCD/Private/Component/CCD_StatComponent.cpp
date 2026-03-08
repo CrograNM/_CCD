@@ -49,6 +49,23 @@ void UCCD_StatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		}
 		OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
 	}
+	
+	// 시야 쿨타임 처리 
+	if (OwnerCharacter && OwnerCharacter->HasAuthority() && !bIsEyeClosed)
+	{
+		if (EyeCooldownTime < EyeCooldownDuration)
+		{
+			EyeCooldownTime = FMath::Clamp(EyeCooldownTime + DeltaTime, 0.f, EyeCooldownDuration);
+			OnEyeCooldownChanged.Broadcast(EyeCooldownTime, EyeCooldownDuration);
+			// bIsObserveActivated = true;
+		}
+		else
+		{
+			bIsEyeClosed = true;
+			OnRep_IsEyeClosed(); // 시야 닫힘 이벤트 발생
+			// bIsObserveActivated = false;
+		}
+	}
 }
 
 void UCCD_StatComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -56,6 +73,8 @@ void UCCD_StatComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(UCCD_StatComponent, bIsRunning);
 	DOREPLIFETIME(UCCD_StatComponent, CurrentStamina);
+	DOREPLIFETIME(UCCD_StatComponent, bIsEyeClosed);
+	DOREPLIFETIME(UCCD_StatComponent, EyeCooldownTime);
 }
 
 // 달리기 상태 변경
@@ -74,4 +93,26 @@ void UCCD_StatComponent::OnRep_CurrentStamina()
 {
 	if (OwnerCharacter && OwnerCharacter->IsLocallyControlled())
 		OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
+}
+
+// 시야 쿨타임 상태 변경
+void UCCD_StatComponent::Server_CloseEye_Implementation(const bool bNewIsEyeClosed)
+{
+	bIsEyeClosed = bNewIsEyeClosed;
+	OnRep_IsEyeClosed();
+}
+void UCCD_StatComponent::OnRep_IsEyeClosed()
+{
+	if (bIsEyeClosed)
+	{
+		EyeCooldownTime = 0.f;		// 쿨타임 초기화
+		OnEyeClosed.Broadcast();	// 시야 닫힘 이벤트 발생
+		
+		bIsEyeClosed = false;
+	}
+}
+void UCCD_StatComponent::OnRep_EyeCooldownTime()
+{
+	if (OwnerCharacter && OwnerCharacter->IsLocallyControlled())
+		OnEyeCooldownChanged.Broadcast(EyeCooldownTime, EyeCooldownDuration);
 }

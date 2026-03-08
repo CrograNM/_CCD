@@ -6,6 +6,7 @@
 #include "CCD_MainWidget.generated.h"
 
 class UStaminaWidget;
+class UEyeWidget;
 
 UCLASS()
 class CCD_API UCCD_MainWidget : public UUserWidget
@@ -16,5 +17,6 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UStaminaWidget> WBP_Stamina;
 	
-	// 시야, 소음 등 추가 예정
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UEyeWidget> WBP_Eye;
 };

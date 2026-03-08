@@ -14,6 +14,7 @@
 #include "Component/CCD_StatComponent.h"
 #include "Engine/Scene.h"
 #include "Widget/CCD_MainWidget.h"
+#include "Widget/EyeWidget.h"
 #include "Widget/StaminaWidget.h"
 
 ACCDPlayerController::ACCDPlayerController()
@@ -277,9 +278,10 @@ void ACCDPlayerController::BindUIWithPawn(APawn* InPawn)
 {
 	if (!InPawn || !MainWidgetInstance) return;
 
-	// WBP_Stamina : 스탯 컴포넌트 바인딩
+	// 스탯 컴포넌트 바인딩
 	if (UCCD_StatComponent* StatComp = InPawn->FindComponentByClass<UCCD_StatComponent>())
 	{
+		// --- 스태미나 위젯 ---
 		if (MainWidgetInstance->WBP_Stamina)
 		{
 			// 중복 바인딩 방지
@@ -287,7 +289,19 @@ void ACCDPlayerController::BindUIWithPawn(APawn* InPawn)
 			StatComp->OnStaminaChanged.AddUObject(MainWidgetInstance->WBP_Stamina, &UStaminaWidget::UpdateStamina);
             
 			// 초기값 즉시 반영
-			MainWidgetInstance->WBP_Stamina->UpdateStamina(StatComp->GetCurrentStamina(), 100.f);
+			MainWidgetInstance->WBP_Stamina->UpdateStamina(StatComp->GetCurrentStamina(), StatComp->GetMaxStamina());
+		}
+		
+		// --- 시야 쿨타임 위젯 ---
+		if (MainWidgetInstance->WBP_Eye)
+		{
+			StatComp->OnEyeClosed.RemoveAll(MainWidgetInstance->WBP_Eye);
+			StatComp->OnEyeClosed.AddUObject(MainWidgetInstance->WBP_Eye, &UEyeWidget::CloseEyeAnimation);
+			
+			StatComp->OnEyeCooldownChanged.RemoveAll(MainWidgetInstance->WBP_Eye);
+			StatComp->OnEyeCooldownChanged.AddUObject(MainWidgetInstance->WBP_Eye, &UEyeWidget::UpdateCooldown);
+			
+			MainWidgetInstance->WBP_Eye->UpdateCooldown(StatComp->GetEyeCooldown(), StatComp->GetEyeCooldownDuration());
 		}
 	}
 }

@@ -46,6 +46,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Movement")
     void SetRunning(bool bNewIsRunning);
     
+    UFUNCTION(BlueprintCallable, Category = "Eye")
+    void CloseEye();
+    
     // 사망 처리
     UFUNCTION(BlueprintCallable, Category = "Death")
     void Die();

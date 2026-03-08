@@ -23,9 +23,9 @@ public:
 		if (ProgressBar_EyeCooldown)
 		{
 			float CooldownRatio = FMath::Clamp(CurrentTime / CooldownDuration, 0.0f, 1.0f);
-			ProgressBar_EyeCooldown->SetPercent(CooldownRatio);
+			ProgressBar_EyeCooldown->SetPercent(1.0 - CooldownRatio);
 			
-			if (CooldownRatio <= 0.0f)
+			if (CooldownRatio >= 1.0f)
 			{
 				CloseEyeAnimation();
 			}
