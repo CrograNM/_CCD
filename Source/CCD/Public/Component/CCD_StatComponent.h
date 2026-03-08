@@ -6,7 +6,7 @@
 #include "CCD_StatComponent.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStaminaChanged, float /*CurrentStamina*/, float /*MaxStamina*/);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEyeCooldownChanged, float /*CurrentCooldownTime*/, float /*CooldownDuration*/);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEyeCooldownChanged, float /*CooldownTime*/, float /*CooldownDuration*/);
 DECLARE_MULTICAST_DELEGATE (FOnEyeClosed);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))

@@ -14,7 +14,8 @@
 #include "Component/CCD_StatComponent.h"
 #include "Engine/Scene.h"
 #include "Widget/CCD_MainWidget.h"
-#include "Widget/EyeWidget.h"
+#include "Widget/EyeAnimWidget.h"
+#include "Widget/EyeCooldownWidget.h"
 #include "Widget/StaminaWidget.h"
 
 ACCDPlayerController::ACCDPlayerController()
@@ -296,12 +297,12 @@ void ACCDPlayerController::BindUIWithPawn(APawn* InPawn)
 		if (MainWidgetInstance->WBP_Eye)
 		{
 			StatComp->OnEyeClosed.RemoveAll(MainWidgetInstance->WBP_Eye);
-			StatComp->OnEyeClosed.AddUObject(MainWidgetInstance->WBP_Eye, &UEyeWidget::CloseEyeAnimation);
+			StatComp->OnEyeClosed.AddUObject(MainWidgetInstance->WBP_Eye, &UEyeAnimWidget::CloseEyeAnimation);
 			
-			StatComp->OnEyeCooldownChanged.RemoveAll(MainWidgetInstance->WBP_Eye);
-			StatComp->OnEyeCooldownChanged.AddUObject(MainWidgetInstance->WBP_Eye, &UEyeWidget::UpdateCooldown);
+			StatComp->OnEyeCooldownChanged.RemoveAll(MainWidgetInstance->WBP_EyeCooldown);
+			StatComp->OnEyeCooldownChanged.AddUObject(MainWidgetInstance->WBP_EyeCooldown, &UEyeCooldownWidget::UpdateCooldown);
 			
-			MainWidgetInstance->WBP_Eye->UpdateCooldown(StatComp->GetEyeCooldown(), StatComp->GetEyeCooldownDuration());
+			MainWidgetInstance->WBP_EyeCooldown->UpdateCooldown(StatComp->GetEyeCooldown(), StatComp->GetEyeCooldownDuration());
 		}
 	}
 }

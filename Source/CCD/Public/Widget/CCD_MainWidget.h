@@ -6,7 +6,8 @@
 #include "CCD_MainWidget.generated.h"
 
 class UStaminaWidget;
-class UEyeWidget;
+class UEyeCooldownWidget;
+class UEyeAnimWidget;
 
 UCLASS()
 class CCD_API UCCD_MainWidget : public UUserWidget
@@ -18,5 +19,8 @@ public:
 	TObjectPtr<UStaminaWidget> WBP_Stamina;
 	
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UEyeWidget> WBP_Eye;
+	TObjectPtr<UEyeCooldownWidget> WBP_EyeCooldown;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UEyeAnimWidget> WBP_Eye;
 };
