@@ -150,7 +150,8 @@ void UCCD_InteractionComponent::GrabObject_Impl(UPrimitiveComponent* ComponentTo
 {
 	if (!OwnerCharacter) return;
 	if (!PhysicsHandle || !ComponentToGrab) return;
-
+	OwnerCharacter->SetIsActionInProgress(true); // 상호작용 중 상태 설정
+	
 	GrabbedComponent = ComponentToGrab;
 	
 	float CameraYaw = OwnerCharacter->GetFirstPersonCamera()->GetComponentRotation().Yaw;
@@ -183,6 +184,7 @@ void UCCD_InteractionComponent::ReleaseObject_Impl()
 {
 	if (!OwnerCharacter) return;
 	if (!PhysicsHandle || !GrabbedComponent) return;
+	OwnerCharacter->SetIsActionInProgress(false); // 상호작용 중 상태 설정
 	
 	PhysicsHandle->ReleaseComponent();
 	

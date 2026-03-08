@@ -15,6 +15,7 @@
 #include "Component/CCD_InteractionComponent.h"
 #include "Component/CCD_ViewComponent.h"
 #include "Component/WashableComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/DecalComponent.h"
 #include "GameFramework/GameModeBase.h"
 #include "GeometryCollection/GeometryCollectionActor.h"
@@ -91,6 +92,7 @@ void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 void ACCDCharacter::PerformInteract()
 {
 	if (bIsDead) return;
+	if (EquipmentComp->GetEquipmentState() != ECCD_EquipmentState::EES_Hands) return;
 	if (InteractionComp) InteractionComp->PerformInteract();
 }
 void ACCDCharacter::SwitchEquipment(const ECCD_EquipmentState NewState)
@@ -355,7 +357,8 @@ void ACCDCharacter::HandleDeath()
 		for (USkeletalMesh* FragmentMesh : FragmentMeshList)
 		{
 			if (!FragmentMesh) continue;
-			FVector SpawnLocation = GetActorLocation() + FVector(0.f, 0.f, -44.f); // 캐릭터의 중심보다 약간 아래에 스폰 (피벗 조정)
+			FVector SpawnLocation = GetActorLocation() + 
+				FVector(0.f, 0.f, -GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
             
 			ACCD_BodyFragment* Fragment = GetWorld()->SpawnActor<ACCD_BodyFragment>(
 				DeathFragmentClass, 
@@ -365,9 +368,18 @@ void ACCDCharacter::HandleDeath()
 
 			if (Fragment)
 			{
-				// 랜덤한 방향으로 튀어나가게 충격 가하기
-				FVector RandomImpulse = (FVector::UpVector + FVector(FMath::RandRange(-1.f, 1.f), FMath::RandRange(-1.f, 1.f), 0.f)).GetSafeNormal() * DeathImpulseStrength;
-				Fragment->InitFragment(FragmentMesh, RandomImpulse);
+				// // 랜덤한 방향으로 튀어나가게 충격 가하기
+				// FVector RandomImpulse = (FVector::UpVector + FVector(FMath::RandRange(-1.f, 1.f), FMath::RandRange(-1.f, 1.f), 0.f)).GetSafeNormal() * DeathImpulseStrength;
+				// Fragment->InitFragment(FragmentMesh, RandomImpulse);
+				
+				// 방사형 패턴으로 충격파
+				FBox SphereBounds = FragmentMesh->GetImportedBounds().GetBox();
+				FVector MeshRelativeCenter = SphereBounds.GetCenter();
+				FVector ImpulseDir = MeshRelativeCenter.GetSafeNormal();
+				ImpulseDir.Z += FMath::RandRange(0.1f, 0.3f); // 위로도 약간 튀어오르게 (살짝 랜덤)
+				ImpulseDir.Normalize();
+				FVector FinalImpulse = ImpulseDir * (DeathImpulseStrength + FMath::RandRange(100.0f, 500.0f)); // 충격 세기에 약간의 랜덤 추가
+				Fragment->InitFragment(FragmentMesh, FinalImpulse);
 			}
 		}
 	}

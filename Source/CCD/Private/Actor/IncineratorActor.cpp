@@ -65,6 +65,7 @@ void AIncineratorActor::OnBurnAreaBeginOverlap(UPrimitiveComponent* OverlappedCo
 		if (UBurnableComponent* BurnComp = OtherActor->FindComponentByClass<UBurnableComponent>())
 		{
 			OverlappingBurnables.AddUnique(BurnComp);
+			UE_LOG(LogTemp, Warning, TEXT("Overlapped Incinerator : %s"), *OtherActor->GetName());
 		}
 	}
 }
