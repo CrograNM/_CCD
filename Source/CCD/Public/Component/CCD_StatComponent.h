@@ -5,6 +5,8 @@
 #include "Components/ActorComponent.h"
 #include "CCD_StatComponent.generated.h"
 
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStaminaChanged, float /*CurrentStamina*/, float /*MaxStamina*/);
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class CCD_API UCCD_StatComponent : public UActorComponent
 {
@@ -18,6 +20,8 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_SetSpeed(const bool bNewIsRunning);
 	void SetIsRunning(const bool bNewIsRunning);
+	
+	FOnStaminaChanged OnStaminaChanged;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -37,8 +41,11 @@ protected:
 	float StaminaConsumptionRate = 20.f; // 초당 소모량
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats")
 	float MaxStamina = 100.f;
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentStamina, VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	float CurrentStamina;
+	UFUNCTION()
+	void OnRep_CurrentStamina();
 	
 	/** --- 시야 쿨타임 --- */
 	// TODO : 시야 쿨타임 구현 (SCP-096 시야 체크와 연동) 

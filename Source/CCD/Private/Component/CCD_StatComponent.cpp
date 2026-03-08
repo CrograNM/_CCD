@@ -47,9 +47,8 @@ void UCCD_StatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 				CurrentStamina = FMath::Clamp(CurrentStamina + (StaminaRegenRate * DeltaTime), 0.f, MaxStamina);
 			}
 		}
+		OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
 	}
-	if (OwnerCharacter->IsLocallyControlled())
-		UE_LOG(LogTemp, Log, TEXT("[Local] Stamina: %f"), CurrentStamina);
 }
 
 void UCCD_StatComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -70,4 +69,9 @@ void UCCD_StatComponent::SetIsRunning(const bool bNewIsRunning)
 	if (!OwnerCharacter) return;
 	OwnerCharacter->GetCharacterMovement()->MaxWalkSpeed = bNewIsRunning ? RunSpeed : WalkSpeed;
 	Server_SetSpeed(bNewIsRunning);
+}
+void UCCD_StatComponent::OnRep_CurrentStamina()
+{
+	if (OwnerCharacter->IsLocallyControlled())
+		OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
 }
