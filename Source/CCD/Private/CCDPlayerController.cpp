@@ -11,7 +11,10 @@
 #include "EnhancedInputSubsystems.h"
 #include "Widget/SpectatorWidget.h"
 #include "Camera/PlayerCameraManager.h"
+#include "Component/CCD_StatComponent.h"
 #include "Engine/Scene.h"
+#include "Widget/CCD_MainWidget.h"
+#include "Widget/StaminaWidget.h"
 
 ACCDPlayerController::ACCDPlayerController()
 {
@@ -30,11 +33,26 @@ void ACCDPlayerController::BeginPlay()
 	// UI
 	if (IsLocalController() && MainWidgetClass)
 	{
-		MainWidgetInstance = CreateWidget<UUserWidget>(this, MainWidgetClass);
+		MainWidgetInstance = CreateWidget<UCCD_MainWidget>(this, MainWidgetClass);
 		if (MainWidgetInstance)
 		{
 			MainWidgetInstance->AddToViewport();
 		}
+	}
+	
+	if (HasAuthority()) 
+		SwitchToMainUI();
+}
+void ACCDPlayerController::OnRep_Pawn()
+{
+	// 클라이언트 측에서 Pawn이 새로 복제되어 들어올 때마다 호출
+	
+	Super::OnRep_Pawn();
+    
+	// Pawn이 복제되어 들어온 이 시점에 UI 바인딩을 수행하는 것이 가장 안전
+	if (GetPawn())
+	{
+		SwitchToMainUI(); // 내부에서 BindUIWithPawn 호출
 	}
 }
 
@@ -168,6 +186,28 @@ void ACCDPlayerController::ApplyDeath_Implementation(bool bIsDead)
 	}
 }
 
+/** --- Respawn --- */
+void ACCDPlayerController::ResetPlayerController(APawn* NewPawn)
+{
+	if (!NewPawn) return;
+	
+	if (ACCDPlayerCameraManager* MyCamManager = Cast<ACCDPlayerCameraManager>(PlayerCameraManager))
+	{
+		MyCamManager->SetDeathEffect(false);
+	}
+	SetViewTarget(NewPawn);
+	SwitchToMainUI();
+			
+	if (SpectatorInstance)
+	{
+		SpectatorInstance->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		SpectatorInstance->Destroy();
+		SpectatorInstance = nullptr;
+		SpectateCandidates.Empty();
+		CurrentSpectateIndex = -1;
+	}
+}
+
 /** --- UI --- */
 void ACCDPlayerController::SwitchToSpectatorUI()
 {
@@ -214,13 +254,16 @@ void ACCDPlayerController::SwitchToMainUI()
 	if (MainWidgetClass && !MainWidgetInstance)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("SwitchToMainUI 2"));
-		MainWidgetInstance = CreateWidget<UUserWidget>(this, MainWidgetClass);
+		MainWidgetInstance = CreateWidget<UCCD_MainWidget>(this, MainWidgetClass);
 		if (MainWidgetInstance)
 		{
 			MainWidgetInstance->AddToViewport();
 		}
 	}
+	
+	BindUIWithPawn(GetPawn());
 }
+
 void ACCDPlayerController::UpdateSpectatorWidget(TObjectPtr<ACCDCharacter> Target)
 {
 	if (SpectatorWidgetInstance)
@@ -230,24 +273,21 @@ void ACCDPlayerController::UpdateSpectatorWidget(TObjectPtr<ACCDCharacter> Targe
 	}
 }
 
-/** --- Respawn --- */
-void ACCDPlayerController::ResetPlayerController(APawn* NewPawn)
+void ACCDPlayerController::BindUIWithPawn(APawn* InPawn)
 {
-	if (!NewPawn) return;
-	
-	if (ACCDPlayerCameraManager* MyCamManager = Cast<ACCDPlayerCameraManager>(PlayerCameraManager))
+	if (!InPawn || !MainWidgetInstance) return;
+
+	// WBP_Stamina : 스탯 컴포넌트 바인딩
+	if (UCCD_StatComponent* StatComp = InPawn->FindComponentByClass<UCCD_StatComponent>())
 	{
-		MyCamManager->SetDeathEffect(false);
-	}
-	SetViewTarget(NewPawn);
-	SwitchToMainUI();
-			
-	if (SpectatorInstance)
-	{
-		SpectatorInstance->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-		SpectatorInstance->Destroy();
-		SpectatorInstance = nullptr;
-		SpectateCandidates.Empty();
-		CurrentSpectateIndex = -1;
+		if (MainWidgetInstance->WBP_Stamina)
+		{
+			// 중복 바인딩 방지
+			StatComp->OnStaminaChanged.RemoveAll(MainWidgetInstance->WBP_Stamina);
+			StatComp->OnStaminaChanged.AddUObject(MainWidgetInstance->WBP_Stamina, &UStaminaWidget::UpdateStamina);
+            
+			// 초기값 즉시 반영
+			MainWidgetInstance->WBP_Stamina->UpdateStamina(StatComp->GetCurrentStamina(), 100.f);
+		}
 	}
 }

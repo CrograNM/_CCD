@@ -26,7 +26,7 @@ void UCCD_StatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	
 	// 서버에서만 상태 판단 및 스태미나 계산 수행
-	if (OwnerCharacter->HasAuthority())
+	if (OwnerCharacter && OwnerCharacter->HasAuthority())
 	{
 		if (bIsRunning)
 		{
@@ -72,6 +72,6 @@ void UCCD_StatComponent::SetIsRunning(const bool bNewIsRunning)
 }
 void UCCD_StatComponent::OnRep_CurrentStamina()
 {
-	if (OwnerCharacter->IsLocallyControlled())
+	if (OwnerCharacter && OwnerCharacter->IsLocallyControlled())
 		OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
 }

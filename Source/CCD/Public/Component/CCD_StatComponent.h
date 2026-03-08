@@ -22,6 +22,7 @@ public:
 	void SetIsRunning(const bool bNewIsRunning);
 	
 	FOnStaminaChanged OnStaminaChanged;
+	float GetCurrentStamina() const { return CurrentStamina; }
 	
 protected:
 	virtual void BeginPlay() override;

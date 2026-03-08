@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "CCDPlayerController.generated.h"
 
+class UCCD_MainWidget;
 class UInputMappingContext;
 class UInputAction;
 class UUserWidget;
@@ -21,6 +22,7 @@ class CCD_API ACCDPlayerController : public APlayerController
 public:
 	ACCDPlayerController();
 	virtual void UpdateRotation(float DeltaTime) override;
+	virtual void OnRep_Pawn() override;
 	
 	/** --- Death --- */
 	UFUNCTION(Client, Reliable)
@@ -71,12 +73,15 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<UUserWidget> MainWidgetClass;
 	UPROPERTY()
-	UUserWidget* MainWidgetInstance = nullptr;
+	TObjectPtr<UCCD_MainWidget> MainWidgetInstance;
 		
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<USpectatorWidget> SpectatorWidgetClass;
 	UPROPERTY()
 	TObjectPtr<USpectatorWidget> SpectatorWidgetInstance = nullptr;
+	
+	// 위젯 연결
+	void BindUIWithPawn(APawn* InPawn);
 	
 private:
 	float PostProcessAlpha = 0.f;
