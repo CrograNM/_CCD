@@ -23,10 +23,8 @@ protected:
 	virtual void BeginPlay() override;
 	
 	/** --- 달리기 / 스태미나 --- */
-	UPROPERTY(ReplicatedUsing=OnRep_IsRunning)
+	UPROPERTY(Replicated)
 	bool bIsRunning = false;
-	UFUNCTION()
-	void OnRep_IsRunning();
 	
 	UPROPERTY(EditAnywhere, Category = "Stats")
 	float RunSpeed = 500.f;
@@ -35,9 +33,11 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Stats")
 	float StaminaRegenRate = 15.f; // 초당 회복량
+	UPROPERTY(EditAnywhere, Category = "Stats")
+	float StaminaConsumptionRate = 20.f; // 초당 소모량
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats")
 	float MaxStamina = 100.f;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
 	float CurrentStamina;
 	
 	/** --- 시야 쿨타임 --- */
