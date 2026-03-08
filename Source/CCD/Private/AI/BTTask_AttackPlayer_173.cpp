@@ -3,6 +3,7 @@
 
 #include "AI/BTTask_AttackPlayer_173.h"
 #include "AIController.h"
+#include "CCDCharacter.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -30,6 +31,9 @@ EBTNodeResult::Type UBTTask_AttackPlayer_173::ExecuteTask(UBehaviorTreeComponent
 			AIC->GetPawn(), 
 			UDamageType::StaticClass()
 		);
+
+		if (ACCDCharacter* Character = Cast<ACCDCharacter>(TargetActor))
+			Character->Die();
 
 		// 2. 공격 사운드
 

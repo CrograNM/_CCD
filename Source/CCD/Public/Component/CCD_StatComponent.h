@@ -75,6 +75,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Stats | Eye")
 	float EyeCooldownDuration = 5.f;
 	
+	UPROPERTY(EditAnywhere, Category = "Stats | Eye")
+	float BlinkTime = 0.5f;
+	
 	UPROPERTY(ReplicatedUsing = OnRep_EyeCooldownTime, VisibleAnywhere, BlueprintReadOnly, Category = "Stats | Eye")
 	float EyeCooldownTime = 0.f; // 시야 쿨타임 경과 시간
 	UFUNCTION()

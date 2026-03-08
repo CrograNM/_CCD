@@ -18,6 +18,7 @@
 #include "Component/WashableComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/DecalComponent.h"
+#include "Components/PawnNoiseEmitterComponent.h"
 #include "GameFramework/GameModeBase.h"
 #include "GeometryCollection/GeometryCollectionActor.h"
 #include "GeometryCollection/GeometryCollectionComponent.h"
@@ -62,6 +63,8 @@ ACCDCharacter::ACCDCharacter()
 	PhysicsHandle->LinearDamping = 50.0f;     // 출렁임을 방지하기 위한 감쇠
 	PhysicsHandle->AngularDamping = 50.0f;
 	PhysicsHandle->InterpolationSpeed = 20.0f; // 핸들 자체의 내부 보간 속도
+	
+	NoiseEmitter = CreateDefaultSubobject<UPawnNoiseEmitterComponent>(TEXT("NoiseEmitter"));
 }
 void ACCDCharacter::BeginPlay()
 {

@@ -3,6 +3,7 @@
 
 #include "AI/BTService_CheckObserved.h"
 #include "AIController.h"
+#include "CCDCharacter.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AI/CCD_173.h"
 #include "Kismet/GameplayStatics.h"
@@ -26,9 +27,15 @@ void UBTService_CheckObserved::TickNode(UBehaviorTreeComponent& OwnerComp, uint8
 		UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
 
 		// 1. 시야 판정 업데이트
+		
 		bool bObserved = SCP->IsObserved();
-		BB->SetValueAsBool(GetSelectedBlackboardKey(), bObserved);
 
+		if (ACCDCharacter* Character = Cast<ACCDCharacter>(PlayerPawn))
+			if (!Character->GetIsObserveActivated()) 
+				bObserved = false;
+		
+		BB->SetValueAsBool(GetSelectedBlackboardKey(), bObserved);
+		
 		// 2. 타겟 액터 설정
 		BB->SetValueAsObject(TargetActorKey.SelectedKeyName, PlayerPawn);
 

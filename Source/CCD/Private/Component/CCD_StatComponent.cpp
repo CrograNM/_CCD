@@ -116,7 +116,7 @@ void UCCD_StatComponent::OnRep_IsEyeClosed()
 		{
 			bIsEyeClosed = false;
 			OnRep_IsEyeClosed();
-		}, 1.f, false);
+		}, BlinkTime, false);
 	}
 }
 void UCCD_StatComponent::Multicast_PlayEyeClosedAnimation_Implementation()

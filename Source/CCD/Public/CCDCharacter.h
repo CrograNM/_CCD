@@ -169,4 +169,8 @@ protected:
     void OnRep_IsDead();
     void HandleDeath(); // 사망 시 서버에서 호출
     void HandleRevive(); // 부활 시 서버에서 호출
+    
+    // 사운드
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+    UPawnNoiseEmitterComponent* NoiseEmitter;
 };
