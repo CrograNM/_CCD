@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "CCDCharacter.generated.h"
 
+class UCCD_StatComponent;
 class ADecal_StainActor_Base;
 class UCameraComponent;
 class USpringArmComponent;
@@ -42,6 +43,9 @@ public:
     UFUNCTION(Server, Reliable, Category = "Equipment")
     void Server_UseEquipment();
     
+    UFUNCTION(BlueprintCallable, Category = "Movement")
+    void SetRunning(bool bNewIsRunning);
+    
     // 사망 처리
     UFUNCTION(BlueprintCallable, Category = "Death")
     void Die();
@@ -63,9 +67,6 @@ public:
     
     UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Animation")
     void Server_PlayActionOfMop();
-    
-    UFUNCTION(Server, Reliable, Category = "Movement")
-    void Server_SetMaxWalkSpeed(float NewSpeed);
     
     UFUNCTION()
     void OnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted);
@@ -121,6 +122,9 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     TObjectPtr<UCCD_EquipmentComponent> EquipmentComp;
     
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    TObjectPtr<UCCD_StatComponent> StatComp;
+    
     /** --- 기타 --- */
     UPROPERTY(Replicated)
     FRotator RemoteControlRotation;
@@ -132,9 +136,6 @@ protected:
 
     UPROPERTY(EditAnywhere, Category = "Design")
     float InteractRange = 300.f;
-    
-    UFUNCTION(BlueprintCallable, Category = "Movement")
-    void SetRunning(float NewSpeed);
     
     /** --- 사망 상태 관리 --- */
     UPROPERTY(ReplicatedUsing = OnRep_IsDead)

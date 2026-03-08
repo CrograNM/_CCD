@@ -13,6 +13,7 @@
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "Component/CCD_EquipmentComponent.h"
 #include "Component/CCD_InteractionComponent.h"
+#include "Component/CCD_StatComponent.h"
 #include "Component/CCD_ViewComponent.h"
 #include "Component/WashableComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -31,6 +32,7 @@ ACCDCharacter::ACCDCharacter()
 	ViewComp = CreateDefaultSubobject<UCCD_ViewComponent>(TEXT("ViewComp"));
 	InteractionComp = CreateDefaultSubobject<UCCD_InteractionComponent>(TEXT("InteractionComp"));
 	EquipmentComp = CreateDefaultSubobject<UCCD_EquipmentComponent>(TEXT("EquipmentComp"));
+	StatComp = CreateDefaultSubobject<UCCD_StatComponent>(TEXT("StatComp"));
 	
 	// --- 카메라 설정 ---
 	// 3인칭 카메라
@@ -116,6 +118,11 @@ void ACCDCharacter::Server_UseEquipment_Implementation()
 	{
 		EquipmentComp->ExecuteActiveEquipment();
 	}
+}
+void ACCDCharacter::SetRunning(bool bNewIsRunning)
+{
+	if (bIsDead) return;
+	if (StatComp) StatComp->SetIsRunning(bNewIsRunning);
 }
 
 /** --- 사망 및 부활 처리 --- */
@@ -221,20 +228,6 @@ void ACCDCharacter::BindMontageEndedDelegate()
 		MontageEndedDelegate.BindUObject(this, &ACCDCharacter::OnEquipMontageEnded);
 		AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, EquipMontage);
 	}
-}
-
-/** --- 이동 속도 변경 --- */
-void ACCDCharacter::Server_SetMaxWalkSpeed_Implementation(float NewSpeed)
-{
-	GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
-}
-void ACCDCharacter::SetRunning(float NewSpeed)
-{
-	// 1. 로컬 속도를 즉시 변경 (클라이언트 예측을 위해)
-	GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
-
-	// 2. 서버에게도 속도 변경을 요청
-	Server_SetMaxWalkSpeed(NewSpeed);
 }
 
 /** --- 사망 상태 관리 --- */
@@ -411,6 +404,7 @@ void ACCDCharacter::HandleRevive()
 	}
 }
 
+// SCP 상호작용
 void ACCDCharacter::CheckForSCP096()
 {
 	// 로컬 플레이어가 조정 중일 때만 시선 체크를 수행
