@@ -1,10 +1,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Component/CCD_StatComponent.h"
 #include "GameFramework/Character.h"
 #include "CCDCharacter.generated.h"
 
-class UCCD_StatComponent;
 class ADecal_StainActor_Base;
 class UCameraComponent;
 class USpringArmComponent;
@@ -93,6 +93,8 @@ public:
     
     UFUNCTION(BlueprintCallable)
     FORCEINLINE bool IsDead() const { return bIsDead; }
+    
+    bool GetIsObserveActivated() const { return StatComp ? StatComp->GetIsObserveActivated() : false; }
     
     void CheckForSCP096();
     
