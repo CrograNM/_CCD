@@ -14,11 +14,15 @@ UBTService_PlayTriggeredSound::UBTService_PlayTriggeredSound()
 	// 서비스의 반응 속도 설정
 	Interval = 0.5f;
 	RandomDeviation = 0.1f;
+	
+	bNotifyBecomeRelevant = true;
+	bNotifyCeaseRelevant = true;
 }
 
 void UBTService_PlayTriggeredSound::OnBecomeRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	Super::OnBecomeRelevant(OwnerComp, NodeMemory);
+	UE_LOG(LogTemp, Log, TEXT("096 Panic Sound Started!"));
 
 	APawn* ControllingPawn = OwnerComp.GetAIOwner()->GetPawn();
     

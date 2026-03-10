@@ -71,3 +71,34 @@ bool ACCD_096::IsTriggered() const
 	}
 	return false;
 }
+
+void ACCD_096::PlayPanicSound()
+{
+	if (ScreamAudio && PanicSound)
+	{
+		ScreamAudio->SetSound(PanicSound);
+		ScreamAudio->Play();
+	}
+}
+
+void ACCD_096::PlayChaseSound()
+{
+	if (ScreamAudio && ChaseSound)
+	{
+		if (ScreamAudio->Sound == ChaseSound && ScreamAudio->IsPlaying())
+		{
+			return; 
+		}
+
+		ScreamAudio->SetSound(ChaseSound);
+		ScreamAudio->Play();
+	}
+}
+
+void ACCD_096::StopScreamSound()
+{
+	if (ScreamAudio && ScreamAudio->IsPlaying())
+	{
+		ScreamAudio->Stop();
+	}
+}

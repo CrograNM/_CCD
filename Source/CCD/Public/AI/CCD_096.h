@@ -31,6 +31,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Settings")
 	class USoundBase* PanicSound;
 
+	UPROPERTY(EditAnywhere, Category = "Settings")
+	class USoundBase* ChaseSound;
+	
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -39,6 +42,15 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	void TriggerPanic(AActor* Player);
+	
+	// 패닉(절규) 사운드 시작
+	void PlayPanicSound();
+	
+	// 추격 사운드 시작 (이미 재생 중이면 무시하여 끊김 방지)
+	void PlayChaseSound();
+	
+	// 모든 사운드 중지
+	void StopScreamSound();
 	
 	// 플레이어 클래스에서 맞은 컴포넌트가 얼굴인지 확인할 때 사용
 	UBoxComponent* GetFaceTrigger() const { return FaceTrigger; }
