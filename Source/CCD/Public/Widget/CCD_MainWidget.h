@@ -8,6 +8,7 @@
 class UStaminaWidget;
 class UEyeCooldownWidget;
 class UEyeAnimWidget;
+class UNoiseWidget;
 
 UCLASS()
 class CCD_API UCCD_MainWidget : public UUserWidget
@@ -23,4 +24,7 @@ public:
 	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UEyeAnimWidget> WBP_Eye;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UNoiseWidget> WBP_Noise;
 };
