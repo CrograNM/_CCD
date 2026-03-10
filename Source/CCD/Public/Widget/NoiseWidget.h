@@ -12,5 +12,5 @@ class CCD_API UNoiseWidget : public UUserWidget
 	
 public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Noise")
-	void UpdateNoiseDisplay(float NoiseLevel);
+	void UpdateNoiseLevel(float NoiseLevel);
 };

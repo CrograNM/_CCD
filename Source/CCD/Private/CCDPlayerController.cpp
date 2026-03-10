@@ -16,6 +16,7 @@
 #include "Widget/CCD_MainWidget.h"
 #include "Widget/EyeAnimWidget.h"
 #include "Widget/EyeCooldownWidget.h"
+#include "Widget/NoiseWidget.h"
 #include "Widget/StaminaWidget.h"
 
 ACCDPlayerController::ACCDPlayerController()
@@ -303,6 +304,15 @@ void ACCDPlayerController::BindUIWithPawn(APawn* InPawn)
 			StatComp->OnEyeCooldownChanged.AddUObject(MainWidgetInstance->WBP_EyeCooldown, &UEyeCooldownWidget::UpdateCooldown);
 			
 			MainWidgetInstance->WBP_EyeCooldown->UpdateCooldown(StatComp->GetEyeCooldown(), StatComp->GetEyeCooldownDuration());
+		}
+		
+		// --- 소음 레벨 위젯 ---
+		if (MainWidgetInstance->WBP_Noise)
+		{
+			StatComp->OnNoiseLevelChanged.RemoveAll(MainWidgetInstance->WBP_Noise);
+			StatComp->OnNoiseLevelChanged.AddUObject(MainWidgetInstance->WBP_Noise, &UNoiseWidget::UpdateNoiseLevel);
+			
+			MainWidgetInstance->WBP_Noise->UpdateNoiseLevel(StatComp->GetNoiseLevel());
 		}
 	}
 }
