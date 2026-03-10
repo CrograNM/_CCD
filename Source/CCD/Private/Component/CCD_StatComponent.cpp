@@ -19,6 +19,19 @@ void UCCD_StatComponent::BeginPlay()
 	SetComponentTickEnabled(false);
 	OwnerCharacter = Cast<ACCDCharacter>(GetOwner());
 	SetComponentTickEnabled(true); 
+	
+	
+	if (OwnerCharacter && OwnerCharacter->IsLocallyControlled())
+	{
+		GetWorld()->GetTimerManager().SetTimer(NoiseRandomizeTimerHandle, 
+			[this]()
+			{ 
+				NoiseLevel = FMath::FRandRange(0.f, 1.f); 
+			},
+			NoiseRandomizeTime, 
+			true
+		);
+	}
 }
 
 void UCCD_StatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

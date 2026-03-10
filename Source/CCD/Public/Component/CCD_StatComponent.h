@@ -8,6 +8,7 @@
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStaminaChanged, float /*CurrentStamina*/, float /*MaxStamina*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEyeCooldownChanged, float /*CooldownTime*/, float /*CooldownDuration*/);
 DECLARE_MULTICAST_DELEGATE (FOnEyeClosed);
+DECLARE_MULTICAST_DELEGATE_OneParam (FOnNoiseLevelChanged, float /*NoiseLevel*/);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class CCD_API UCCD_StatComponent : public UActorComponent
@@ -20,9 +21,10 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	/** --- Delegate --- */
-	FOnStaminaChanged OnStaminaChanged;
-	FOnEyeCooldownChanged OnEyeCooldownChanged;
-	FOnEyeClosed OnEyeClosed; // Closed = true 일 때 발생
+	FOnStaminaChanged OnStaminaChanged;	// 스태미나
+	FOnEyeCooldownChanged OnEyeCooldownChanged; // 시야 쿨타임
+	FOnEyeClosed OnEyeClosed; // 시야 닫힘 이벤트, Closed = true 일 때 발생
+	FOnNoiseLevelChanged OnNoiseLevelChanged; // 소음 레벨 변경 이벤트
 	
 	/** --- Getter / Setter --- */
 	UFUNCTION(Server, Reliable)
@@ -38,6 +40,7 @@ public:
 	float GetEyeCooldown() const { return EyeCooldownTime; }
 	float GetEyeCooldownDuration() const { return EyeCooldownDuration; }
 	bool GetIsObserveActivated() const { return !bIsEyeClosed; }
+	float GetNoiseLevel() const { return NoiseLevel; }
 	
 protected:
 	virtual void BeginPlay() override;
@@ -82,6 +85,13 @@ protected:
 	float EyeCooldownTime = 0.f; // 시야 쿨타임 경과 시간
 	UFUNCTION()
 	void OnRep_EyeCooldownTime();
+	
+	/** --- 소음 (노이즈) --- */
+	const float NoiseRandomizeTime = 3.0f; // 3초에 한번 소음 레벨 랜덤화
+	FTimerHandle NoiseRandomizeTimerHandle;
+	
+	UPROPERTY()
+	float NoiseLevel = 0.f;
 	
 private:
 	UPROPERTY()
