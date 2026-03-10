@@ -87,7 +87,8 @@ protected:
 	void OnRep_EyeCooldownTime();
 	
 	/** --- 소음 (노이즈) --- */
-	const float NoiseRandomizeTime = 3.0f; // 3초에 한번 소음 레벨 랜덤화
+	UPROPERTY(EditAnywhere, Category = "Stats | Noise")
+	float NoiseRandomizeTime = 3.0f; // 3초에 한번 소음 레벨 랜덤화
 	FTimerHandle NoiseRandomizeTimerHandle;
 	
 	UPROPERTY()

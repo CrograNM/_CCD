@@ -27,6 +27,8 @@ void UCCD_StatComponent::BeginPlay()
 			[this]()
 			{ 
 				NoiseLevel = FMath::FRandRange(0.f, 1.f); 
+				OnNoiseLevelChanged.Broadcast(NoiseLevel);
+				UE_LOG(LogTemp, Warning, TEXT("Update Noise : %f"), NoiseLevel);
 			},
 			NoiseRandomizeTime, 
 			true
