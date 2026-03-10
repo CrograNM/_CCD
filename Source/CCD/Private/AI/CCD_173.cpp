@@ -16,6 +16,10 @@ ACCD_173::ACCD_173()
 	ScreamAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("ScreamAudio"));
 	ScreamAudio->SetupAttachment(GetRootComponent());
 	ScreamAudio->bAutoActivate = false;
+	
+	MoveAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("MoveAudio"));
+	MoveAudio->SetupAttachment(GetRootComponent());
+	MoveAudio->bAutoActivate = false;
 }
 
 // Called when the game starts or when spawned
@@ -92,5 +96,22 @@ void ACCD_173::PlayRandomAttackSound()
 			
 			UE_LOG(LogTemp, Log, TEXT("SCP-173 Attack Sound Index: %d"), RandomIndex);
 		}
+	}
+}
+
+void ACCD_173::StartMoveSound()
+{
+	if (MoveAudio && MoveSound && !MoveAudio->IsPlaying())
+	{
+		MoveAudio->SetSound(MoveSound);
+		MoveAudio->Play();
+	}
+}
+
+void ACCD_173::StopMoveSound()
+{
+	if (MoveAudio && MoveAudio->IsPlaying())
+	{
+		MoveAudio->Stop();
 	}
 }

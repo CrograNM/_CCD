@@ -35,6 +35,14 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Settings")
 	TArray<class USoundBase*> AttackSounds;
 	
+	// 이동 소리 전용 컴포넌트
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	class UAudioComponent* MoveAudio;
+	
+	// 이동 사운드 에셋 할당
+	UPROPERTY(EditAnywhere, Category = "Settings")
+	class USoundBase* MoveSound;
+	
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -49,4 +57,6 @@ public:
 	// 랜덤 공격 사운드 재생 함수
 	void PlayRandomAttackSound();
 
+	void StartMoveSound();
+	void StopMoveSound();
 };
