@@ -4,6 +4,7 @@
 #include "AI/BTTask_AttackPlayer_173.h"
 #include "AIController.h"
 #include "CCDCharacter.h"
+#include "AI/CCD_173.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -23,19 +24,15 @@ EBTNodeResult::Type UBTTask_AttackPlayer_173::ExecuteTask(UBehaviorTreeComponent
 
 	if (TargetActor)
 	{
-		// 1. 데미지 입히기
-		UGameplayStatics::ApplyDamage(
-			TargetActor, 
-			DamageAmount, 
-			AIC, 
-			AIC->GetPawn(), 
-			UDamageType::StaticClass()
-		);
+		if (ACCD_173* SCP173 = Cast<ACCD_173>(OwnerComp.GetAIOwner()->GetPawn()))
+		{
+			SCP173->PlayRandomAttackSound();
+		}
 
 		if (ACCDCharacter* Character = Cast<ACCDCharacter>(TargetActor))
+		{
 			Character->Die();
-
-		// 2. 공격 사운드
+		}
 
 		return EBTNodeResult::Succeeded;
 	}

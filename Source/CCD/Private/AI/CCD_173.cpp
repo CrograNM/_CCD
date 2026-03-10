@@ -2,7 +2,7 @@
 
 
 #include "AI/CCD_173.h"
-
+#include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -12,6 +12,10 @@ ACCD_173::ACCD_173()
 	PrimaryActorTick.bCanEverTick = true;
 
 	// ObservationSocketNames.Add(FName("socket_head"));
+	
+	ScreamAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("ScreamAudio"));
+	ScreamAudio->SetupAttachment(GetRootComponent());
+	ScreamAudio->bAutoActivate = false;
 }
 
 // Called when the game starts or when spawned
@@ -73,4 +77,20 @@ bool ACCD_173::IsObserved()
 	}
 
 	return false;
+}
+
+void ACCD_173::PlayRandomAttackSound()
+{
+	if (AttackSounds.Num() > 0 && ScreamAudio)
+	{
+		int32 RandomIndex = FMath::RandRange(0, AttackSounds.Num() - 1);
+		
+		if (AttackSounds[RandomIndex])
+		{
+			ScreamAudio->SetSound(AttackSounds[RandomIndex]);
+			ScreamAudio->Play();
+			
+			UE_LOG(LogTemp, Log, TEXT("SCP-173 Attack Sound Index: %d"), RandomIndex);
+		}
+	}
 }
