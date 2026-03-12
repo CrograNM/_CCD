@@ -23,7 +23,7 @@ protected:
 	FTimerHandle ScannerTimerHandle;
 	
 	UPROPERTY(EditAnywhere, Category = "Design | Sound")
-	float ScanInterval = 2.0f; // 스캔 간격 (초)
+	float ScanInterval = 1.5f; // 스캔 간격 (초)
 	
 	UPROPERTY(ReplicatedUsing=OnRep_IsScanning)
 	bool bIsScanning = false;

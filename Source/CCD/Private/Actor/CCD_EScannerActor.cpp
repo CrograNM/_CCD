@@ -43,7 +43,14 @@ void ACCD_EScannerActor::ExecuteAction()
 	bIsScanning = !bIsScanning;
 	if (bIsScanning)
 	{
-		GetWorldTimerManager().SetTimer(ScannerTimerHandle, this, &ACCD_EScannerActor::PerformScan, ScanInterval, true, 0.0f);
+		// 애니메이션 후 스캔 시작 (아직 애니메이션 없음)
+		GetWorldTimerManager().SetTimer(
+			ScannerTimerHandle, 
+			this, 
+			&ACCD_EScannerActor::PerformScan, 
+			1.0f, 
+			false
+		);
 	}
 	else
 	{
@@ -64,13 +71,29 @@ void ACCD_EScannerActor::OnRep_IsScanning()
 }
 void ACCD_EScannerActor::PerformScan()
 {
-	if (!HasAuthority()) return;
+	if (!HasAuthority() || !bIsScanning) return;
 
 	// 거리 계산 후 변수 갱신
 	ScannerDistance = GetScanActorDistance();
 	
 	// 모든 클라이언트의 UI 수치 갱신을 위해 멀티캐스트 호출
 	Multicast_UpdateScannerUI();
+	
+	// 스캔 간격을 거리 기반으로 조절 (거리가 멀수록 간격 증가)
+	float CurrentDistance = (ScannerDistance < 0.f) ? MaxScanDistance : ScannerDistance;
+	float NextInterval = FMath::GetMappedRangeValueClamped(
+		FVector2D(0.f, MaxScanDistance), 
+		FVector2D(0.5f, 1.5f), 
+		CurrentDistance
+	);
+	
+	GetWorldTimerManager().SetTimer(
+		ScannerTimerHandle, 
+		this, 
+		&ACCD_EScannerActor::PerformScan, 
+		NextInterval, 
+		false
+	);
 }
 
 void ACCD_EScannerActor::Multicast_UpdateScannerUI_Implementation()
@@ -82,9 +105,13 @@ void ACCD_EScannerActor::UpdateScannerUI()
 {
 	if (ScannerSound && ScannerDistance >= 0.f) // 유효한 거리 값이 있을 때만 사운드 재생
 	{
-		float ClampedDistance = FMath::Clamp(ScannerDistance, 0.f, MaxScanDistance);
-		float VolumeRate =  1.0 - (ClampedDistance / MaxScanDistance); // 거리에 따라 볼륨 조절
-		UGameplayStatics::PlaySoundAtLocation(this, ScannerSound, GetActorLocation(), VolumeRate); 
+		float CurrentDistance = (ScannerDistance < 0.f) ? MaxScanDistance : ScannerDistance;
+		float PitchRate = FMath::GetMappedRangeValueClamped(
+				FVector2D(0.f, MaxScanDistance), 
+				FVector2D(1.0f, 0.5f), 
+				CurrentDistance
+			);
+		UGameplayStatics::PlaySoundAtLocation(this, ScannerSound, GetActorLocation(), 1.0, PitchRate); 
 	}
 	
 	if (!ScannerWidget && ScannerWidgetComp)
