@@ -20,6 +20,19 @@ public:
 	void Multicast_UpdateScannerUI();
 	
 protected:
+	FTimerHandle ScannerTimerHandle;
+	
+	UPROPERTY(EditAnywhere, Category = "Design | Sound")
+	float ScanInterval = 2.0f; // 스캔 간격 (초)
+	
+	UPROPERTY(ReplicatedUsing=OnRep_IsScanning)
+	bool bIsScanning = false;
+	
+	void PerformScan();
+	
+	UFUNCTION()
+	void OnRep_IsScanning();
+	
 	// 서버에서 계산한 거리를 클라이언트에 전달
 	UPROPERTY(Replicated)
 	float ScannerDistance = -1.0f;
@@ -33,7 +46,7 @@ protected:
 private:
 	float GetScanActorDistance() const;
 	const float MaxScanDistance = 1000.f; // 탐지 최대 거리
-
+	
 	// 장비의 외형
 	UPROPERTY(VisibleAnywhere, Category = "Equipment")
 	TObjectPtr<UStaticMeshComponent> MeshComp;

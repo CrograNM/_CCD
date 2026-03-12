@@ -34,16 +34,43 @@ void ACCD_EScannerActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ACCD_EScannerActor, ScannerDistance);
+	DOREPLIFETIME(ACCD_EScannerActor, bIsScanning);
 }
 
 void ACCD_EScannerActor::ExecuteAction()
 {
-	// UE_LOG(LogTemp, Warning, TEXT("[Scanner] ExecuteAction"));
-	// 서버에서 거리를 계산하여 변수에 담습니다.
-	if (HasAuthority())
+	if (!HasAuthority()) return;
+	bIsScanning = !bIsScanning;
+	if (bIsScanning)
 	{
-		Multicast_UpdateScannerUI();
+		GetWorldTimerManager().SetTimer(ScannerTimerHandle, this, &ACCD_EScannerActor::PerformScan, ScanInterval, true, 0.0f);
 	}
+	else
+	{
+		GetWorldTimerManager().ClearTimer(ScannerTimerHandle);
+		ScannerDistance = -1.0f; // 거리 초기화
+		UpdateScannerUI();
+	}
+	// 서버에서도 즉시 UI 상태 반영
+	OnRep_IsScanning();
+}
+
+void ACCD_EScannerActor::OnRep_IsScanning()
+{
+	// if (bIsScanning)
+	// {
+	// 	if (ScannerWidgetComp) ScannerWidgetComp->SetHiddenInGame(false);
+	// }
+}
+void ACCD_EScannerActor::PerformScan()
+{
+	if (!HasAuthority()) return;
+
+	// 거리 계산 후 변수 갱신
+	ScannerDistance = GetScanActorDistance();
+	
+	// 모든 클라이언트의 UI 수치 갱신을 위해 멀티캐스트 호출
+	Multicast_UpdateScannerUI();
 }
 
 void ACCD_EScannerActor::Multicast_UpdateScannerUI_Implementation()
@@ -53,8 +80,6 @@ void ACCD_EScannerActor::Multicast_UpdateScannerUI_Implementation()
 
 void ACCD_EScannerActor::UpdateScannerUI()
 {
-	ScannerDistance = GetScanActorDistance();
-	
 	if (ScannerSound && ScannerDistance >= 0.f) // 유효한 거리 값이 있을 때만 사운드 재생
 	{
 		float ClampedDistance = FMath::Clamp(ScannerDistance, 0.f, MaxScanDistance);
