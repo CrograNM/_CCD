@@ -20,9 +20,7 @@ public class CCD : ModuleRules
 			"EnhancedInput",
 			"ActorSequence", 
 			"MovieScene", 
-			"LevelSequence", 
-			"OnlineSubsystem", 
-			"OnlineSubsystemUtils"
+			"LevelSequence"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {
