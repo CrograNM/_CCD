@@ -44,6 +44,12 @@ void UMultiplayGameInstance::HostSession(FName SessionName, bool bIsLAN)
 	SessionSettings.bShouldAdvertise = true; // 서버 리스트에 노출 여부
 	SessionSettings.bUsesPresence = true;    // Steam 등에서 상태 표시 사용
 
+	SessionSettings.bIsDedicated = false;
+	SessionSettings.bUsesStats = false;
+	
+	// 세션 데이터에 커스텀 이름 저장 (필요 시)
+	// SessionSettings.Set(SETTING_MAPNAME, FString("Lobby"), EOnlineDataAdvertisementType::ViaOnlineService);
+	
 	SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
 	SessionInterface->CreateSession(0, SessionName, SessionSettings);
 }
@@ -52,22 +58,12 @@ void UMultiplayGameInstance::OnCreateSessionComplete(FName SessionName, bool bWa
 {
 	if (bWasSuccessful)
 	{
-		UWorld* World = GetWorld();
-		if (World)
+		if (UWorld* World = GetWorld())
 		{
-			// 1. 경로 수정: /Game/ 으로 시작하는지 확인하세요.
-			// 2. OpenLevel 사용: 리슨 서버 모드(?listen)로 직접 레벨을 엽니다.
 			FString LobbyPath = TEXT("/Game/_CCD/Maps/Lobby");
-			
-			// 마지막 인자에 "listen"을 넣으면 해당 호스트는 리슨 서버 상태가 됩니다.
 			UGameplayStatics::OpenLevel(World, FName(*LobbyPath), true, TEXT("listen"));
-
-			UE_LOG(LogTemp, Warning, TEXT("호스트가 리슨 서버 모드로 로비 이동 중: %s"), *LobbyPath);
+			UE_LOG(LogTemp, Warning, TEXT("세션 생성 성공: %s"), *SessionName.ToString());
 		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("-- 세션 생성 실패 --"));
 	}
 }
 
@@ -76,34 +72,36 @@ void UMultiplayGameInstance::FindSessions()
 	if (!SessionInterface.IsValid()) return;
 
 	SessionSearch = MakeShareable(new FOnlineSessionSearch());
+	
 	SessionSearch->bIsLanQuery = true; // LAN 환경 테스트
-	SessionSearch->MaxSearchResults = 10;
-	SessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
+	SessionSearch->MaxSearchResults = 50;
+	
+	// SEARCH PRESENCE
+	// SessionSearch->QuerySettings.Set(FName(TEXT("PRESENCE")), true, EOnlineComparisonOp::Equals);
 
 	SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
 	SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
+	
+	UE_LOG(LogTemp, Warning, TEXT("방 찾기 시작..."));
 }
 
 void UMultiplayGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 {
+	TArray<FString> SessionNames;
 	if (bWasSuccessful && SessionSearch.IsValid())
 	{
-		// 검색된 세션 배열
-		TArray<FOnlineSessionSearchResult> SearchResults = SessionSearch->SearchResults;
-
-		UE_LOG(LogTemp, Warning, TEXT("세션 검색 완료! 찾은 방 개수: %d"), SearchResults.Num());
-
-		for (int32 i = 0; i < SearchResults.Num(); i++)
+		UE_LOG(LogTemp, Warning, TEXT("방 검색 성공. 개수: %d"), SessionSearch->SearchResults.Num());
+		for (const FOnlineSessionSearchResult& Result : SessionSearch->SearchResults)
 		{
-			// 방장 이름 또는 세션 ID 출력
-			FString OwnerName = SearchResults[i].Session.OwningUserName;
-			int32 Ping = SearchResults[i].PingInMs;
-
-			UE_LOG(LogTemp, Warning, TEXT("방 번호[%d]: 방장(%s), 핑(%d)"), i, *OwnerName, Ping);
-            
-			// TODO: 여기서 Delegate나 이벤트를 호출하여 UI(UMG) 리스트에 추가 로직을 작성합니다.
+			// UI 리스트에 표시할 이름 추가 (방장 이름)
+			SessionNames.Add(Result.Session.OwningUserName);
 		}
 	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("방 검색 실패 또는 결과 없음."));
+	}
+	OnFindSessionsCompleteEvent.Broadcast(SessionNames);
 }
 
 void UMultiplayGameInstance::JoinGameSession(int32 SessionIndex)
