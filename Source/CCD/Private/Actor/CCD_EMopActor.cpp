@@ -31,7 +31,6 @@ void ACCD_EMopActor::ExecuteAction()
 	if (OwnerCharacter->GetIsActionInProgress()) return;
 	
 	OwnerCharacter->Server_PlayActionOfMop();
-	Multicast_PlayMopSwingSound();
 }
 
 void ACCD_EMopActor::BeginPlay()
@@ -90,10 +89,14 @@ void ACCD_EMopActor::PerformMopTrace()
 			else MopPollution_Excrement += 0.2f;
 			
 			UpdateMopMaterial();
-			
-			// 세척 효과 재생 (모든 클라이언트에서)
-			Multicast_PlayWashEffect(HitResult.ImpactPoint);
 		}
+		
+		// 세척 효과 재생 (모든 클라이언트에서)
+		Multicast_PlayWashEffect(HitResult.ImpactPoint);
+	}
+	else {
+		// 대걸레 허공 휘두르기 사운드 재생
+		Multicast_PlayMopSwingSound();
 	}
 }
 
