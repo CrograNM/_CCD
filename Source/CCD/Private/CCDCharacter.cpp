@@ -22,6 +22,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "GeometryCollection/GeometryCollectionActor.h"
 #include "GeometryCollection/GeometryCollectionComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
 /** --- 생성자 및 기본 함수 --- */
@@ -416,34 +417,49 @@ void ACCDCharacter::HandleRevive()
 // SCP 상호작용
 void ACCDCharacter::CheckForSCP096()
 {
-	// 로컬 플레이어가 조정 중일 때만 시선 체크를 수행
-	if (!IsLocallyControlled()) return;
+	if (!IsLocallyControlled() || !FirstPersonCamera) return;
 
-	// 현재 사용 중인 카메라 컴포넌트 가져오기 (1인칭 기준)
-	if (!FirstPersonCamera) return;
+	// 1. 필요한 위치 정보 가져오기
+	FVector CameraLoc = FirstPersonCamera->GetComponentLocation();
+	FVector CameraForward = FirstPersonCamera->GetForwardVector();
 
-	FVector Start = FirstPersonCamera->GetComponentLocation();
-	FVector ForwardVector = FirstPersonCamera->GetForwardVector();
-	FVector End = Start + (ForwardVector * 5000.0f);
+	// 모든 096 개체를 찾아서 체크 (멀티플레이어 고려)
+	TArray<AActor*> FoundSCPs;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACCD_096::StaticClass(), FoundSCPs);
 
-	FHitResult Hit;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this); // 나 자신은 무시
-
-	// Line Trace 실행
-	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+	for (AActor* Actor : FoundSCPs)
 	{
-		// 맞은 액터가 SCP-096인지 확인
-		if (ACCD_096* SCP096 = Cast<ACCD_096>(Hit.GetActor()))
+		ACCD_096* SCP096 = Cast<ACCD_096>(Actor);
+		if (!SCP096 || SCP096->IsTriggered()) continue;
+
+		// 2. 얼굴 위치(Socket 또는 FaceTrigger 중심) 가져오기
+		FVector FaceLoc = SCP096->GetFaceTrigger()->GetComponentLocation();
+		FVector DirToFace = (FaceLoc - CameraLoc).GetSafeNormal();
+
+		// 3. 내적(Dot Product)을 이용한 시야각 계산
+		float DotProduct = FVector::DotProduct(CameraForward, DirToFace);
+
+		// Threshold 설정 (예: 0.94는 약 20도 범위, 0.98은 약 11도 범위)
+		// 이 값이 클수록 더 정확히 쳐다봐야 함
+		float ViewThreshold = 0.95f; 
+
+		if (DotProduct > ViewThreshold)
 		{
-			// 맞은 컴포넌트가 096의 얼굴 트리거인지 확인
-			if (Hit.GetComponent() == SCP096->GetFaceTrigger())
+			// 4. 시야각 안에는 있지만 벽에 가려졌는지 확인 (Occlusion Check)
+			FHitResult Hit;
+			FCollisionQueryParams Params;
+			Params.AddIgnoredActor(this);
+			Params.AddIgnoredActor(SCP096); 
+
+			bool bIsOccluded = GetWorld()->LineTraceSingleByChannel(Hit, CameraLoc, FaceLoc, ECC_Visibility, Params);
+
+			if (!bIsOccluded)
 			{
-				// 이미 화가 난 상태가 아니라면 트리거 발동
-				if (!SCP096->IsTriggered())
-				{
-					SCP096->TriggerPanic(this); // 격노 시작
-				}
+				// 얼굴이 시야에 들어왔고 가려지지도 않음!
+				SCP096->TriggerPanic(this);
+                
+				// 디버깅용 파란 선
+				DrawDebugLine(GetWorld(), CameraLoc, FaceLoc, FColor::Blue, false, 2.0f, 0, 2.0f);
 			}
 		}
 	}

@@ -58,7 +58,8 @@ public:
 
 	void StartMoveSound();
 	void StopMoveSound();
-	
+	void SetMovementInstant(bool bInstant);
+
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlayAttackSound(int32 SoundIndex);
 	

@@ -5,6 +5,7 @@
 
 #include "CCDCharacter.h"
 #include "Components/AudioComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -132,5 +133,23 @@ void ACCD_173::Multicast_StopMoveSound_Implementation()
 	if (MoveAudio && MoveAudio->IsPlaying())
 	{
 		MoveAudio->Stop();
+	}
+}
+
+void ACCD_173::SetMovementInstant(bool bInstant)
+{
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		if (bInstant)
+		{
+			MoveComp->MaxWalkSpeed = 3000.0f; 
+			MoveComp->MaxAcceleration = 10000.0f;
+			MoveComp->bRequestedMoveUseAcceleration = false;
+		}
+		else
+		{
+			MoveComp->MaxWalkSpeed = 0.0f;
+			MoveComp->Velocity = FVector::ZeroVector;
+		}
 	}
 }

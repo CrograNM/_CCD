@@ -65,6 +65,11 @@ void UBTService_CheckObserved::TickNode(UBehaviorTreeComponent& OwnerComp, uint8
 
 	if (bAnyOneObserved)
 	{
+		SCP->SetMovementInstant(false);
 		AIC->StopMovement();
+	}
+	else
+	{
+		SCP->SetMovementInstant(true);
 	}
 }
