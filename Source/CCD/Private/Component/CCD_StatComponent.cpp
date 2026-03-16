@@ -23,7 +23,7 @@ void UCCD_StatComponent::BeginPlay()
 	
 	if (OwnerCharacter && OwnerCharacter->IsLocallyControlled())
 	{
-		GetWorld()->GetTimerManager().SetTimer(NoiseRandomizeTimerHandle, 
+		/*GetWorld()->GetTimerManager().SetTimer(NoiseRandomizeTimerHandle, 
 			[this]()
 			{ 
 				NoiseLevel = FMath::FRandRange(0.f, 1.f); 
@@ -32,7 +32,7 @@ void UCCD_StatComponent::BeginPlay()
 			},
 			NoiseRandomizeTime, 
 			true
-		);
+		);*/
 	}
 }
 

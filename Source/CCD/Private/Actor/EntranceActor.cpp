@@ -5,6 +5,7 @@
 #include "ActorSequencePlayer.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "GameFramework/GameStateBase.h"
 
 
 AEntranceActor::AEntranceActor()
@@ -56,25 +57,30 @@ bool AEntranceActor::IsWaitingAreaFull() const
 {
 	if (!WatingArea) return false;
 	
-	// TODO: 모든 플레이어 확인 로직 
-	
-	// 임시 로직 : 한 액터라도 있으면 가득 찬 것으로 간주
+	// 모든 플레이어 오버랩 확인 로직 
+	int32 TotalPlayers = GetWorld()->GetGameState()->PlayerArray.Num();
+	int32 OverlappingPlayers = 0;
 	TArray<AActor*> OverlappingActors;
 	WatingArea->GetOverlappingActors(OverlappingActors);
 	for (AActor* Actor : OverlappingActors)
 	{
-		if (Actor && Actor != this)
+		// 폰(Character)이고 실제로 컨트롤러가 소유하고 있는지 확인
+		if (APawn* Pawn = Cast<APawn>(Actor))
 		{
-			return true;
+			if (Pawn->IsPlayerControlled())
+			{
+				OverlappingPlayers++;
+			}
 		}
 	}
-	return false; 
+	// 접속자 전원이 영역 안에 들어왔는지 반환
+	return (OverlappingPlayers >= TotalPlayers && TotalPlayers > 0);
 }
 
 void AEntranceActor::OnWaitingAreaBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (IsWaitingAreaFull())
+	if (HasAuthority() && IsWaitingAreaFull())
 	{
 		bCanStart = true;
 		OnRep_CanStart();
@@ -84,7 +90,7 @@ void AEntranceActor::OnWaitingAreaBeginOverlap(UPrimitiveComponent* OverlappedCo
 void AEntranceActor::OnWaitingAreaEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (!IsWaitingAreaFull())
+	if (HasAuthority() && !IsWaitingAreaFull())
 	{
 		bCanStart = false;
 		OnRep_CanStart();
@@ -93,19 +99,10 @@ void AEntranceActor::OnWaitingAreaEndOverlap(UPrimitiveComponent* OverlappedComp
 
 void AEntranceActor::OnRep_CanStart()
 {
-	if (bCanStart)
+	if (StatusLightMaterial)
 	{
-		if (StatusLightMaterial)
-		{
-			StatusLightMaterial->SetVectorParameterValue(TEXT("EmissiveColor"), FVector(0.0f, 5.0f, 0.0f)); // 초록색으로 변경
-		}
-	}
-	else
-	{
-		if (StatusLightMaterial)
-		{
-			StatusLightMaterial->SetVectorParameterValue(TEXT("EmissiveColor"), FVector(5.0f, 0.0f, 0.0f)); // 빨간색으로 변경
-		}
+		FVector Color = bCanStart ? FVector(0.0f, 5.0f, 0.0f) : FVector(5.0f, 0.0f, 0.0f);
+		StatusLightMaterial->SetVectorParameterValue(TEXT("EmissiveColor"), Color);
 	}
 }
 
@@ -124,6 +121,17 @@ void AEntranceActor::Multicast_PlaySequence_Implementation()
 	}
 }
 
+void AEntranceActor::StartLevelTravel()
+{
+	if (!HasAuthority() || NextLevelPath.IsEmpty()) return;
+
+	if (UWorld* World = GetWorld())
+	{
+		FString TravelURL = NextLevelPath + TEXT("?listen");
+		World->ServerTravel(TravelURL);
+	}
+}
+
 void AEntranceActor::Interact_Implementation(AActor* Interactor)
 {
 	if (!HasAuthority()) return;
@@ -137,5 +145,12 @@ void AEntranceActor::Interact_Implementation(AActor* Interactor)
 	
 	// 서버가 모든 클라이언트에게 애니메이션 재생 명령
 	Multicast_PlaySequence();
+	
+	// 2초 후 레벨 이동 타이머 시작
+	GetWorldTimerManager().SetTimer(TravelTimerHandle, this, &AEntranceActor::StartLevelTravel, 2.0f, false);
+	
+	// 중복 상호작용 방지
+	bCanStart = false;
+	OnRep_CanStart();
 }
 

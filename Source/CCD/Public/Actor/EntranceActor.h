@@ -56,6 +56,11 @@ protected:
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void Multicast_PlaySequence(); // 모든 클라이언트에서 시퀀스를 정방향으로 재생
 
+	// --- Level Transition ---
+	UPROPERTY(EditAnywhere, Category = "Design | Level")
+	FString NextLevelPath; // 이동할 맵 경로 (예: /Game/_CCD/Maps/InGame)
+	FTimerHandle TravelTimerHandle; // 2초 대기를 위한 타이머
+	void StartLevelTravel();
 	
 	// --- VFX/SFX ---
 	UPROPERTY(EditAnywhere, Category = "Design | Sound")
