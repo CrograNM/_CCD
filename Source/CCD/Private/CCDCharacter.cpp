@@ -429,7 +429,7 @@ void ACCDCharacter::CheckForSCP096()
 	for (AActor* Actor : FoundSCPs)
 	{
 		ACCD_096* SCP096 = Cast<ACCD_096>(Actor);
-		if (!SCP096 || SCP096->IsTriggered()) continue;
+		if (!SCP096 || SCP096->IsPlayerMarked(this)) continue;
 		
 		FVector FaceLoc = SCP096->GetFaceTrigger()->GetComponentLocation();
 		FVector DirToFace = (FaceLoc - CameraLoc).GetSafeNormal();
@@ -450,7 +450,7 @@ void ACCDCharacter::CheckForSCP096()
 
 			if (!bIsOccluded)
 			{
-				Server_Trigger096Panic(SCP096);
+				Server_Trigger096Panic(SCP096); 
 			}
 		}
 	}
@@ -460,6 +460,7 @@ void ACCDCharacter::Server_Trigger096Panic_Implementation(ACCD_096* Target096)
 {
 	if (Target096)
 	{
-		Target096->TriggerPanic(this);
+		Target096->MarkPlayer(this); 
 	}
 }
+

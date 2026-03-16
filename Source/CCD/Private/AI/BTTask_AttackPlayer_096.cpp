@@ -23,10 +23,21 @@ EBTNodeResult::Type UBTTask_AttackPlayer_096::ExecuteTask(UBehaviorTreeComponent
 	if (TargetPlayer && SCP096 && !TargetPlayer->IsDead())
 	{
 		SCP096->Multicast_PlayKillSound();
-		
 		TargetPlayer->Die(); 
 		
-		SCP096->SetState(E096State::Idle); 
+		AActor* NextTarget = SCP096->GetNextTarget();
+
+		if (NextTarget)
+		{
+			BB->SetValueAsObject(TEXT("TargetActor"), NextTarget);
+			SCP096->SetState(E096State::Enraged); 
+			
+			AIC->StopMovement();
+		}
+		else
+		{
+			SCP096->SetState(E096State::Idle);
+		}
 
 		return EBTNodeResult::Succeeded;
 	}

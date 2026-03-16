@@ -4,6 +4,7 @@
 #include "AI/CCD_096.h"
 
 #include "AIController.h"
+#include "CCDCharacter.h"
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -54,43 +55,57 @@ void ACCD_096::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetime
 	DOREPLIFETIME(ACCD_096, CurrentState);
 }
 
+void ACCD_096::MarkPlayer(AActor* Player)
+{
+	if (!HasAuthority() || !Player) return;
+	
+	ACCDCharacter* TargetChar = Cast<ACCDCharacter>(Player);
+	if (TargetList.Contains(Player) || (TargetChar && TargetChar->IsDead())) return;
+	
+	TargetList.Add(Player);
+	UE_LOG(LogTemp, Log, TEXT("Player Marked: %s (Total: %d)"), *Player->GetName(), TargetList.Num());
+	
+	if (CurrentState == E096State::Idle)
+	{
+		TriggerPanic(Player);
+	}
+}
+
 void ACCD_096::TriggerPanic(AActor* Player)
 {
-	if (!HasAuthority()) return;
+	if (!HasAuthority() || CurrentState != E096State::Idle) return;
 
-	CurrentState = E096State::Panic;
-	OnRep_CurrentState();
-	
+	SetState(E096State::Panic);
+    
 	if (AAIController* AIC = Cast<AAIController>(GetController()))
 	{
 		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
 		{
-			BB->SetValueAsEnum(TEXT("AIState"), static_cast<uint8>(CurrentState));
 			BB->SetValueAsObject(TEXT("TargetActor"), Player);
 			AIC->StopMovement();
 		}
 	}
 }
 
+AActor* ACCD_096::GetNextTarget()
+{
+	TargetList.RemoveAll([](const TObjectPtr<AActor>& A) {
+		ACCDCharacter* C = Cast<ACCDCharacter>(A);
+		return !A || (C && C->IsDead());
+	});
+
+	return (TargetList.Num() > 0) ? TargetList[0] : nullptr;
+}
+
 void ACCD_096::SetState(E096State NewState)
 {
 	if (!HasAuthority()) return;
-
 	CurrentState = NewState;
-	OnRep_CurrentState(); //
+	OnRep_CurrentState();
 
 	if (AAIController* AIC = Cast<AAIController>(GetController()))
-	{
 		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
-		{
 			BB->SetValueAsEnum(TEXT("AIState"), static_cast<uint8>(CurrentState));
-			
-			if (NewState == E096State::Idle)
-			{
-				BB->ClearValue(TEXT("TargetActor"));
-			}
-		}
-	}
 }
 
 void ACCD_096::OnRep_CurrentState()

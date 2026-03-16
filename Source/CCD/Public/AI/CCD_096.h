@@ -37,6 +37,12 @@ public:
 	void PlayPanicSound();
 	void PlayChaseSound();
 	void StopScreamSound();
+	
+	void MarkPlayer(AActor* Player);
+	
+	bool IsPlayerMarked(AActor* Player) const { return TargetList.Contains(Player); }
+	
+	AActor* GetNextTarget();
 
 protected:
 	virtual void BeginPlay() override;
@@ -45,6 +51,10 @@ protected:
 	/** --- 상태 변수 및 복제 함수 --- */
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentState, VisibleAnywhere, Category = "AI")
 	E096State CurrentState = E096State::Idle;
+	
+	// 얼굴을 본 플레이어들의 목록
+	UPROPERTY()
+	TArray<TObjectPtr<AActor>> TargetList;
 
 	UFUNCTION()
 	void OnRep_CurrentState();
@@ -64,6 +74,8 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Settings")
 	TObjectPtr<class USoundBase> KillSound;
+	
+	
 
 public:	
 	virtual void Tick(float DeltaTime) override;
@@ -71,4 +83,6 @@ public:
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlayKillSound();
+	
+
 };
