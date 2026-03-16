@@ -3,7 +3,9 @@
 
 #include "AI/BTService_PlayMoveSound_173.h"
 #include "AIController.h"
+#include "CCDCharacter.h"
 #include "AI/CCD_173.h"
+#include "BehaviorTree/BlackboardComponent.h"
 
 UBTService_PlayMoveSound_173::UBTService_PlayMoveSound_173()
 {
@@ -17,9 +19,15 @@ void UBTService_PlayMoveSound_173::OnBecomeRelevant(UBehaviorTreeComponent& Owne
 {
 	Super::OnBecomeRelevant(OwnerComp, NodeMemory);
 
-	if (ACCD_173* SCP173 = Cast<ACCD_173>(OwnerComp.GetAIOwner()->GetPawn()))
+	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
+	
+	ACCDCharacter* Target = Cast<ACCDCharacter>(BB->GetValueAsObject(FName("TargetActor")));
+	if (Target && !Target->IsDead())
 	{
-		SCP173->StartMoveSound();
+		if (ACCD_173* SCP173 = Cast<ACCD_173>(OwnerComp.GetAIOwner()->GetPawn()))
+		{
+			SCP173->StartMoveSound();
+		}
 	}
 }
 

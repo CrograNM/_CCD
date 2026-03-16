@@ -111,7 +111,7 @@ void ACCD_173::StopMoveSound()
 
 void ACCD_173::Multicast_PlayAttackSound_Implementation(int32 SoundIndex)
 {
-	if (AttackSounds.IsValidIndex(SoundIndex) && ScreamAudio)
+	if (AttackSounds.IsValidIndex(SoundIndex) && ScreamAudio && !ScreamAudio->IsPlaying())
 	{
 		ScreamAudio->SetSound(AttackSounds[SoundIndex]);
 		ScreamAudio->Play();

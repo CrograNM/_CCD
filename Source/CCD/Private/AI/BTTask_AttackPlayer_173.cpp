@@ -16,26 +16,24 @@ UBTTask_AttackPlayer_173::UBTTask_AttackPlayer_173()
 EBTNodeResult::Type UBTTask_AttackPlayer_173::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	AAIController* AIC = OwnerComp.GetAIOwner();
-	if (!AIC) return EBTNodeResult::Failed;
-
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
-	// 블랙보드에서 TargetActor(플레이어)를 가져옴
 	AActor* TargetActor = Cast<AActor>(BB->GetValueAsObject(TargetActorKey.SelectedKeyName));
-
-	if (TargetActor)
+	ACCDCharacter* Character = Cast<ACCDCharacter>(TargetActor);
+	
+	if (!Character || Character->IsDead()) 
 	{
-		if (ACCD_173* SCP173 = Cast<ACCD_173>(OwnerComp.GetAIOwner()->GetPawn()))
-		{
-			SCP173->PlayRandomAttackSound();
-		}
-
-		if (ACCDCharacter* Character = Cast<ACCDCharacter>(TargetActor))
-		{
-			Character->Die();
-		}
-
-		return EBTNodeResult::Succeeded;
+		BB->ClearValue(TargetActorKey.SelectedKeyName);
+		return EBTNodeResult::Failed;
+	}
+	
+	if (ACCD_173* SCP173 = Cast<ACCD_173>(AIC->GetPawn()))
+	{
+		SCP173->PlayRandomAttackSound();
 	}
 
-	return EBTNodeResult::Failed;
+	Character->Die();
+	
+	BB->ClearValue(TargetActorKey.SelectedKeyName);
+
+	return EBTNodeResult::Succeeded;
 }

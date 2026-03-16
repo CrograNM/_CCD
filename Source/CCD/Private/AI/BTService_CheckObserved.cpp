@@ -52,6 +52,14 @@ void UBTService_CheckObserved::TickNode(UBehaviorTreeComponent& OwnerComp, uint8
 		BB->SetValueAsFloat(DistanceToPlayerKey.SelectedKeyName, MinDistance);
 	}
 	
+	else
+	{
+		BB->ClearValue(TargetActorKey.SelectedKeyName);
+		BB->SetValueAsBool(GetSelectedBlackboardKey(), false);
+		
+		AIC->StopMovement();
+	}
+	
 	bool bAnyOneObserved = SCP->IsObserved();
 	BB->SetValueAsBool(GetSelectedBlackboardKey(), bAnyOneObserved);
 
