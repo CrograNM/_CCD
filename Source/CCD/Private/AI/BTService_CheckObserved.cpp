@@ -20,33 +20,43 @@ void UBTService_CheckObserved::TickNode(UBehaviorTreeComponent& OwnerComp, uint8
 
 	AAIController* AIC = OwnerComp.GetAIOwner();
 	ACCD_173* SCP = Cast<ACCD_173>(AIC->GetPawn());
-	APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+	if (!SCP || !AIC) return;
 
-	if (SCP && PlayerPawn)
+	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
+
+	ACCDCharacter* ClosestPlayer = nullptr;
+	float MinDistance = FLT_MAX;
+	
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
-		UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
-
-		// 1. 시야 판정 업데이트
-		
-		bool bObserved = SCP->IsObserved();
-
-		if (ACCDCharacter* Character = Cast<ACCDCharacter>(PlayerPawn))
-			if (!Character->GetIsObserveActivated()) 
-				bObserved = false;
-		
-		BB->SetValueAsBool(GetSelectedBlackboardKey(), bObserved);
-		
-		// 2. 타겟 액터 설정
-		BB->SetValueAsObject(TargetActorKey.SelectedKeyName, PlayerPawn);
-
-		// 3. 거리 계산 로직
-		float Distance = FVector::Dist(SCP->GetActorLocation(), PlayerPawn->GetActorLocation());
-		BB->SetValueAsFloat(DistanceToPlayerKey.SelectedKeyName, Distance);
-
-		// 관찰 중이면 즉시 이동 멈춤
-		if (bObserved)
+		if (APlayerController* PC = It->Get())
 		{
-			AIC->StopMovement();
+			if (ACCDCharacter* PlayerChar = Cast<ACCDCharacter>(PC->GetPawn()))
+			{
+				if (!PlayerChar->IsDead())
+				{
+					float Distance = FVector::Dist(SCP->GetActorLocation(), PlayerChar->GetActorLocation());
+					if (Distance < MinDistance)
+					{
+						MinDistance = Distance;
+						ClosestPlayer = PlayerChar;
+					}
+				}
+			}
 		}
+	}
+	
+	if (ClosestPlayer)
+	{
+		BB->SetValueAsObject(TargetActorKey.SelectedKeyName, ClosestPlayer);
+		BB->SetValueAsFloat(DistanceToPlayerKey.SelectedKeyName, MinDistance);
+	}
+	
+	bool bAnyOneObserved = SCP->IsObserved();
+	BB->SetValueAsBool(GetSelectedBlackboardKey(), bAnyOneObserved);
+
+	if (bAnyOneObserved)
+	{
+		AIC->StopMovement();
 	}
 }

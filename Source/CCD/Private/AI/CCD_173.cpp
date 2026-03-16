@@ -2,6 +2,8 @@
 
 
 #include "AI/CCD_173.h"
+
+#include "CCDCharacter.h"
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -20,23 +22,22 @@ ACCD_173::ACCD_173()
 	MoveAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("MoveAudio"));
 	MoveAudio->SetupAttachment(GetRootComponent());
 	MoveAudio->bAutoActivate = false;
+	
+	bReplicates = true;
 }
 
-// Called when the game starts or when spawned
 void ACCD_173::BeginPlay()
 {
 	Super::BeginPlay();
 	
 }
 
-// Called every frame
 void ACCD_173::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 }
 
-// Called to bind functionality to input
 void ACCD_173::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -45,61 +46,79 @@ void ACCD_173::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 bool ACCD_173::IsObserved()
 {
-	// 1. 플레이어 카메라 정보 가져오기
-	APlayerCameraManager* CameraManager = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0);
-	if (!CameraManager) return false;
-
-	FVector CameraLoc = CameraManager->GetCameraLocation();
-	FVector CameraForward = CameraManager->GetCameraRotation().Vector();
-
-	// 2. 시야각(FOV) 체크: 내적(Dot Product) 사용
-	FVector ToMe = GetActorLocation() - CameraLoc;
-	ToMe.Normalize();
-
-	float Dot = FVector::DotProduct(CameraForward, ToMe);
-
-	// 시야 밖이면 더 계산할 것도 없이 false
-	if (Dot < VisibilityThreshold) return false;
-
-	// 3. 가려짐 체크: 소켓 위치로 라인 트레이스
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this); // 나 자신은 무시
-	Params.AddIgnoredActor(UGameplayStatics::GetPlayerPawn(GetWorld(), 0)); // 플레이어도 무시
-
-	for (const FName& SocketName : ObservationSocketNames)
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
-		FVector SocketLoc = GetMesh()->GetSocketLocation(SocketName);
-		FHitResult Hit;
-		
-		bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, CameraLoc, SocketLoc, ECC_Visibility, Params);
+		APlayerController* PC = It->Get();
+		if (!PC) continue;
 
-		// 아무것도 안 걸렸거나, 나를 맞췄다면 "보이고 있음"
-		if (!bHit || Hit.GetActor() == this)
+		ACCDCharacter* Character = Cast<ACCDCharacter>(PC->GetPawn());
+
+		if (!Character || Character->IsDead() || !Character->GetIsObserveActivated()) continue;
+
+		APlayerCameraManager* CameraManager = PC->PlayerCameraManager;
+		if (!CameraManager) continue;
+
+		FVector CameraLoc = CameraManager->GetCameraLocation();
+		FVector CameraForward = CameraManager->GetCameraRotation().Vector();
+
+		// 시야각(FOV) 체크
+		FVector ToMe = GetActorLocation() - CameraLoc;
+		ToMe.Normalize();
+		float Dot = FVector::DotProduct(CameraForward, ToMe);
+
+		if (Dot < VisibilityThreshold) continue; 
+
+		// 가려짐 체크 (Line Trace)
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+		Params.AddIgnoredActor(Character);
+
+		for (const FName& SocketName : ObservationSocketNames)
 		{
-			return true;
+			FVector SocketLoc = GetMesh()->GetSocketLocation(SocketName);
+			FHitResult Hit;
+			
+			if (!GetWorld()->LineTraceSingleByChannel(Hit, CameraLoc, SocketLoc, ECC_Visibility, Params) || Hit.GetActor() == this)
+			{
+				return true; 
+			}
 		}
 	}
-
 	return false;
 }
 
 void ACCD_173::PlayRandomAttackSound()
 {
-	if (AttackSounds.Num() > 0 && ScreamAudio)
+	if (HasAuthority() && AttackSounds.Num() > 0)
 	{
 		int32 RandomIndex = FMath::RandRange(0, AttackSounds.Num() - 1);
-		
-		if (AttackSounds[RandomIndex])
-		{
-			ScreamAudio->SetSound(AttackSounds[RandomIndex]);
-			ScreamAudio->Play();
-			
-			UE_LOG(LogTemp, Log, TEXT("SCP-173 Attack Sound Index: %d"), RandomIndex);
-		}
+		Multicast_PlayAttackSound(RandomIndex);
 	}
 }
 
+// 이동 사운드 제어
 void ACCD_173::StartMoveSound()
+{
+	if (HasAuthority()) Multicast_StartMoveSound();
+}
+
+void ACCD_173::StopMoveSound()
+{
+	if (HasAuthority()) Multicast_StopMoveSound();
+}
+
+
+
+void ACCD_173::Multicast_PlayAttackSound_Implementation(int32 SoundIndex)
+{
+	if (AttackSounds.IsValidIndex(SoundIndex) && ScreamAudio)
+	{
+		ScreamAudio->SetSound(AttackSounds[SoundIndex]);
+		ScreamAudio->Play();
+	}
+}
+
+void ACCD_173::Multicast_StartMoveSound_Implementation()
 {
 	if (MoveAudio && MoveSound && !MoveAudio->IsPlaying())
 	{
@@ -108,7 +127,7 @@ void ACCD_173::StartMoveSound()
 	}
 }
 
-void ACCD_173::StopMoveSound()
+void ACCD_173::Multicast_StopMoveSound_Implementation()
 {
 	if (MoveAudio && MoveAudio->IsPlaying())
 	{

@@ -54,9 +54,18 @@ public:
 	UFUNCTION(BlueprintPure, Category = "AI")
 	bool IsObserved();
 	
-	// 랜덤 공격 사운드 재생 함수
 	void PlayRandomAttackSound();
 
 	void StartMoveSound();
 	void StopMoveSound();
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayAttackSound(int32 SoundIndex);
+	
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_StartMoveSound();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_StopMoveSound();
 };
