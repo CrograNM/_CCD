@@ -8,6 +8,7 @@
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 ACCD_096::ACCD_096()
@@ -22,6 +23,8 @@ ACCD_096::ACCD_096()
 	ScreamAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("ScreamAudio"));
 	ScreamAudio->SetupAttachment(GetRootComponent());
 	ScreamAudio->bAutoActivate = false;
+	
+	bReplicates = true;
 }
 
 // Called when the game starts or when spawned
@@ -45,18 +48,66 @@ void ACCD_096::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
+void ACCD_096::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ACCD_096, CurrentState);
+}
+
 void ACCD_096::TriggerPanic(AActor* Player)
 {
+	if (!HasAuthority()) return;
+
+	CurrentState = E096State::Panic;
+	OnRep_CurrentState();
+	
 	if (AAIController* AIC = Cast<AAIController>(GetController()))
 	{
 		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
 		{
-			BB->SetValueAsEnum(TEXT("AIState"), 1); // Panic 상태로 변경
+			BB->SetValueAsEnum(TEXT("AIState"), static_cast<uint8>(CurrentState));
 			BB->SetValueAsObject(TEXT("TargetActor"), Player);
-			
-			// 즉시 이동 중지
 			AIC->StopMovement();
 		}
+	}
+}
+
+void ACCD_096::SetState(E096State NewState)
+{
+	if (!HasAuthority()) return;
+
+	CurrentState = NewState;
+	OnRep_CurrentState(); //
+
+	if (AAIController* AIC = Cast<AAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+		{
+			BB->SetValueAsEnum(TEXT("AIState"), static_cast<uint8>(CurrentState));
+			
+			if (NewState == E096State::Idle)
+			{
+				BB->ClearValue(TEXT("TargetActor"));
+			}
+		}
+	}
+}
+
+void ACCD_096::OnRep_CurrentState()
+{
+	switch (CurrentState)
+	{
+	case E096State::Idle:
+		StopScreamSound();
+		break;
+	case E096State::Panic:
+		PlayPanicSound();
+		// 여기서 "부들부들 떠는" 애니메이션 몽타주 재생
+		break;
+	case E096State::Enraged:
+		PlayChaseSound();
+		// 여기서 "미친 듯이 달려오는" 애니메이션으로 전환
+		break;
 	}
 }
 
@@ -100,5 +151,24 @@ void ACCD_096::StopScreamSound()
 	if (ScreamAudio && ScreamAudio->IsPlaying())
 	{
 		ScreamAudio->Stop();
+	}
+}
+
+void ACCD_096::Multicast_PlayKillSound_Implementation()
+{
+	if (KillSound)
+	{
+		StopScreamSound(); 
+        
+
+		UGameplayStatics::PlaySoundAtLocation(
+			this, 
+			KillSound, 
+			GetActorLocation(), 
+			1.0f, 
+			1.0f 
+		);
+        
+		UE_LOG(LogTemp, Log, TEXT("096 Kill Sound Played as One-Shot"));
 	}
 }

@@ -20,11 +20,6 @@ UBTService_PlayChaseSound::UBTService_PlayChaseSound()
 void UBTService_PlayChaseSound::OnBecomeRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	Super::OnBecomeRelevant(OwnerComp, NodeMemory);
-	
-	if (ACCD_096* SCP096 = Cast<ACCD_096>(OwnerComp.GetAIOwner()->GetPawn()))
-	{
-		SCP096->PlayChaseSound();
-	}
 }
 
 void UBTService_PlayChaseSound::OnCeaseRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)

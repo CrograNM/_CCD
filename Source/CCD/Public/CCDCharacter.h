@@ -173,4 +173,7 @@ protected:
     // 사운드
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
     UPawnNoiseEmitterComponent* NoiseEmitter;
+    
+    UFUNCTION(Server, Reliable)
+    void Server_Trigger096Panic(ACCD_096* Target096);
 };

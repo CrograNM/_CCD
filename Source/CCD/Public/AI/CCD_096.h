@@ -6,55 +6,69 @@
 #include "GameFramework/Character.h"
 #include "CCD_096.generated.h"
 
+UENUM(BlueprintType)
+enum class E096State : uint8
+{
+	Idle      UMETA(DisplayName = "Idle"),
+	Panic     UMETA(DisplayName = "Panic"),
+	Enraged   UMETA(DisplayName = "Enraged")
+};
+
 UCLASS()
 class CCD_API ACCD_096 : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
 	ACCD_096();
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-	
-	// 얼굴 감지용 트리거
-	UPROPERTY(VisibleAnywhere, Category = "Components")
-	class UBoxComponent* FaceTrigger;
+	/** --- 서버 전용 상태 설정 함수 --- */
+	UFUNCTION(BlueprintCallable, Category = "AI")
+	void SetState(E096State NewState);
 
-	// 비명 소리 컴포넌트
-	UPROPERTY(VisibleAnywhere, Category = "Components")
-	class UAudioComponent* ScreamAudio;
+	/** --- Getter --- */
+	FORCEINLINE E096State GetCurrentState() const { return CurrentState; }
+	FORCEINLINE class UBoxComponent* GetFaceTrigger() const { return FaceTrigger; }
 
-	// 당황 시 재생할 사운드 에셋
-	UPROPERTY(EditAnywhere, Category = "Settings")
-	class USoundBase* PanicSound;
-
-	UPROPERTY(EditAnywhere, Category = "Settings")
-	class USoundBase* ChaseSound;
-	
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	UFUNCTION(BlueprintPure, Category = "AI")
+	bool IsTriggered() const;
 
 	void TriggerPanic(AActor* Player);
-	
-	// 패닉(절규) 사운드 시작
 	void PlayPanicSound();
-	
-	// 추격 사운드 시작 (이미 재생 중이면 무시하여 끊김 방지)
 	void PlayChaseSound();
-	
-	// 모든 사운드 중지
 	void StopScreamSound();
-	
-	// 플레이어 클래스에서 맞은 컴포넌트가 얼굴인지 확인할 때 사용
-	UBoxComponent* GetFaceTrigger() const { return FaceTrigger; }
 
-	// 트리거된 상태인지 확인 (Do Once 로직 구현용)
-	bool IsTriggered() const;
+protected:
+	virtual void BeginPlay() override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	/** --- 상태 변수 및 복제 함수 --- */
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentState, VisibleAnywhere, Category = "AI")
+	E096State CurrentState = E096State::Idle;
+
+	UFUNCTION()
+	void OnRep_CurrentState();
+
+	/** --- 컴포넌트 및 세팅 --- */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<class UBoxComponent> FaceTrigger;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<class UAudioComponent> ScreamAudio;
+
+	UPROPERTY(EditAnywhere, Category = "Settings")
+	TObjectPtr<class USoundBase> PanicSound;
+
+	UPROPERTY(EditAnywhere, Category = "Settings")
+	TObjectPtr<class USoundBase> ChaseSound;
+	
+	UPROPERTY(EditAnywhere, Category = "Settings")
+	TObjectPtr<class USoundBase> KillSound;
+
+public:	
+	virtual void Tick(float DeltaTime) override;
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayKillSound();
 };
