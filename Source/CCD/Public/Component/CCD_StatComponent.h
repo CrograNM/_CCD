@@ -32,8 +32,8 @@ public:
 	void SetIsRunning(const bool bNewIsRunning);
 	
 	UFUNCTION(Server, Reliable)
-	void Server_CloseEye(const bool bNewIsEyeClosed);
-	void SetIsEyeClosed(const bool bNewIsEyeClosed);
+	void Server_CloseEye();
+	void CloseEye();
 	
 	float GetCurrentStamina() const { return CurrentStamina; }
 	float GetMaxStamina() const { return MaxStamina; }
@@ -79,7 +79,10 @@ protected:
 	float EyeCooldownDuration = 5.f;
 	
 	UPROPERTY(EditAnywhere, Category = "Stats | Eye")
-	float BlinkTime = 0.5f;
+	float EyeCloseTime = 0.2f;
+	
+	UPROPERTY(EditAnywhere, Category = "Stats | Eye")
+	float EyeOpenTime = 0.2f;
 	
 	UPROPERTY(ReplicatedUsing = OnRep_EyeCooldownTime, VisibleAnywhere, BlueprintReadOnly, Category = "Stats | Eye")
 	float EyeCooldownTime = 0.f; // 시야 쿨타임 경과 시간

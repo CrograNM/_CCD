@@ -131,7 +131,7 @@ void ACCDCharacter::SetRunning(bool bNewIsRunning)
 void ACCDCharacter::CloseEye()
 {
 	if (bIsDead) return;
-	if (StatComp) StatComp->SetIsEyeClosed(true);
+	if (StatComp) StatComp->CloseEye();
 }
 
 /** --- 사망 및 부활 처리 --- */

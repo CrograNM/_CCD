@@ -75,7 +75,7 @@ void UCCD_StatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		}
 		else
 		{
-			SetIsEyeClosed(true);
+			CloseEye();
 		}
 	}
 }
@@ -108,30 +108,33 @@ void UCCD_StatComponent::OnRep_CurrentStamina()
 }
 
 // --- 시야 판정, 쿨타임 ---
-void UCCD_StatComponent::SetIsEyeClosed(const bool bNewIsEyeClosed)
+void UCCD_StatComponent::CloseEye()
 {
-	Server_CloseEye(bNewIsEyeClosed);
+	Server_CloseEye();
 }
-void UCCD_StatComponent::Server_CloseEye_Implementation(const bool bNewIsEyeClosed)
+void UCCD_StatComponent::Server_CloseEye_Implementation()
 {
-	bIsEyeClosed = bNewIsEyeClosed;
-	OnRep_IsEyeClosed();
+	FTimerHandle TimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]()
+	{
+		bIsEyeClosed = true;
+		OnRep_IsEyeClosed();
+	}, EyeCloseTime, false);
 	Multicast_PlayEyeClosedAnimation();
 }
 void UCCD_StatComponent::OnRep_IsEyeClosed()
 {
+	UE_LOG(LogTemp, Warning, TEXT("[IsEyeClosed] : %s"), bIsEyeClosed ? TEXT("true") : TEXT("false"));
 	if (bIsEyeClosed)
 	{
 		EyeCooldownTime = 0.f;		// 쿨타임 초기화
-		// OnEyeClosed.Broadcast();	// 시야 닫힘 이벤트 발생
 		
-		// 1초 후 시야 열림 처리 예약
 		FTimerHandle TimerHandle;
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]()
 		{
 			bIsEyeClosed = false;
 			OnRep_IsEyeClosed();
-		}, BlinkTime, false);
+		}, EyeOpenTime, false);
 	}
 }
 void UCCD_StatComponent::Multicast_PlayEyeClosedAnimation_Implementation()
