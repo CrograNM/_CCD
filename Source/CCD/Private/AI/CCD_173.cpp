@@ -142,7 +142,7 @@ void ACCD_173::SetMovementInstant(bool bInstant)
 	{
 		if (bInstant)
 		{
-			MoveComp->MaxWalkSpeed = 3000.0f; 
+			MoveComp->MaxWalkSpeed = 4000.0f; 
 			MoveComp->MaxAcceleration = 10000.0f;
 			MoveComp->bRequestedMoveUseAcceleration = false;
 		}
