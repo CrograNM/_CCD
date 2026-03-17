@@ -47,6 +47,9 @@ protected:
 	TObjectPtr<UBoxComponent> WatingArea;
 	
 	// --- 제어 변수 ---
+	UPROPERTY(Replicated)
+	bool bIsLoading = false; // 레벨 이동 중복 방지 플래그
+	
 	UPROPERTY(ReplicatedUsing=OnRep_CanStart) 
 	bool bCanStart = false;
 	UFUNCTION()

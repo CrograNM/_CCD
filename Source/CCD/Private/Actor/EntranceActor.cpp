@@ -34,6 +34,7 @@ void AEntranceActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AEntranceActor, bCanStart);
+	DOREPLIFETIME(AEntranceActor, bIsLoading);
 }
 
 void AEntranceActor::BeginPlay()
@@ -142,15 +143,18 @@ void AEntranceActor::Interact_Implementation(AActor* Interactor)
 		UE_LOG(LogTemp, Warning, TEXT("[Entrance] Wait for All Players"));
 		return;
 	}
+	if (bIsLoading)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Entrance] Already Loading..."));
+		return;
+	}
+	// 중복 상호작용 방지
+	bIsLoading = true;
 	
 	// 서버가 모든 클라이언트에게 애니메이션 재생 명령
 	Multicast_PlaySequence();
 	
 	// 2초 후 레벨 이동 타이머 시작
 	GetWorldTimerManager().SetTimer(TravelTimerHandle, this, &AEntranceActor::StartLevelTravel, 2.0f, false);
-	
-	// 중복 상호작용 방지
-	bCanStart = false;
-	OnRep_CanStart();
 }
 
