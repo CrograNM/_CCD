@@ -6,7 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "FlickerLight.generated.h"
 
-class UPointLightComponent;
+class USpotLightComponent;
 
 UCLASS()
 class CCD_API AFlickerLight : public AActor
@@ -20,8 +20,9 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	UPointLightComponent* PointLight;
+	USpotLightComponent* SpotLight;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flicker|Perlin")
 	float Frequency = 5.0f; // 얼마나 빠르게 지직거릴 것인가 (주파수)

@@ -2,35 +2,35 @@
 
 
 #include "Actor/FlickerLight.h"
-#include "TimerManager.h"
-#include "Components/PointLightComponent.h"
+#include "Components/SpotLightComponent.h"
 
 AFlickerLight::AFlickerLight()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
-	PointLight = CreateDefaultSubobject<UPointLightComponent>(TEXT("PointLight"));
-	RootComponent = PointLight;
+	
+	SpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("SpotLight"));
+	RootComponent = SpotLight;
+	
+	SpotLight->SetRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f));
 }
 
 void AFlickerLight::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (PointLight)
+	if (SpotLight)
 	{
 		float TimeTime = GetWorld()->GetTimeSeconds();
 		float NoiseValue = FMath::PerlinNoise1D(TimeTime * Frequency);
-		
+
 		float FinalIntensity = BaseIntensity + (NoiseValue * Amplitude * BaseIntensity);
 
-		// 임계값(Threshold) 체크: 노이즈가 너무 낮으면 아예 끔
 		if (NoiseValue < NoiseThreshold)
 		{
 			FinalIntensity = 0.0f;
 		}
 
-		PointLight->SetIntensity(FMath::Max(0.0f, FinalIntensity));
+		SpotLight->SetIntensity(FMath::Max(0.0f, FinalIntensity));
 	}
 }
 
