@@ -136,6 +136,12 @@ void ACCDCharacter::CloseEye()
 	if (StatComp) StatComp->CloseEye();
 }
 
+void ACCDCharacter::DestroyAllEquipment() const
+{
+	if (!HasAuthority()) return;
+	if (EquipmentComp)EquipmentComp->DestroyAllEquipment();
+}
+
 /** --- 사망 및 부활 처리 --- */
 void ACCDCharacter::Die()
 {	
