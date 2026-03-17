@@ -3,6 +3,7 @@
 #include "Components/BoxComponent.h"
 #include "ActorSequenceComponent.h"
 #include "ActorSequencePlayer.h"
+#include "CCDCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/GameStateBase.h"
@@ -128,6 +129,17 @@ void AEntranceActor::StartLevelTravel()
 
 	if (UWorld* World = GetWorld())
 	{
+		// 이동 직전, 영역 내 모든 플레이어를 숨겨서 '장비 둥둥' 현상 방지
+		TArray<AActor*> OverlappingActors;
+		WatingArea->GetOverlappingActors(OverlappingActors);
+		for (AActor* Actor : OverlappingActors)
+		{
+			if (ACCDCharacter* Character = Cast<ACCDCharacter>(Actor))
+			{
+				Character->DestroyAllEquipment();
+			}
+		}
+		
 		FString TravelURL = NextLevelPath + TEXT("?listen");
 		World->ServerTravel(TravelURL);
 	}

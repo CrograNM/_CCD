@@ -49,6 +49,8 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Eye")
     void CloseEye();
     
+    void DestroyAllEquipment() const;
+    
     // 사망 처리
     UFUNCTION(BlueprintCallable, Category = "Death")
     void Die();
