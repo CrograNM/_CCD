@@ -102,20 +102,26 @@ void ACCD_EMopActor::PerformMopTrace()
 
 void ACCD_EMopActor::UpdateMopMaterial()
 {
-	if (DynamicMopMaterial)
+	if (!DynamicMopMaterial) return;
+	float TotalPollution = MopPollution_Blood + MopPollution_Excrement;
+	if (TotalPollution <= 0.001f)
 	{
-		// 혹은 두 색상을 섞어서 BaseColor 변경
-		FLinearColor CleanColor = FLinearColor(0.228f, 0.343f, 0.405f, 1.0f); // 깨끗한 물 색상
-		FLinearColor BloodColor = FLinearColor(0.69f, 0.13f, 0.13f, 1.0f); // 핏빛
-		FLinearColor PoopColor = FLinearColor(0.0f, 0.5f, 0.0f, 1.0f); // 배설물
-
-		FLinearColor FinalColor = CleanColor;
-		FinalColor = FMath::Lerp(FinalColor, BloodColor, MopPollution_Blood);
-		FinalColor = FMath::Lerp(FinalColor, PoopColor, MopPollution_Excrement);
-		
-		// 이후 대걸레 자체의 머티리얼 파라미터를 제어해야함 (현재는 임시 머티리얼로 M_BucketWater 사용 중)
-		DynamicMopMaterial->SetVectorParameterValue(TEXT("BaseColor"), FinalColor);
+		DynamicMopMaterial->SetScalarParameterValue(TEXT("PollutionRate"), 0.0f); 
+		return;
 	}
+	// 오염 정도를 0.5~1.0 범위로 매핑하여 머티리얼에 전달
+	TotalPollution = FMath::GetMappedRangeValueClamped(FVector2D(0.f, 1.f), FVector2D(0.5f, 1.f), TotalPollution);
+	DynamicMopMaterial->SetScalarParameterValue(TEXT("PollutionRate"), TotalPollution); 
+	UE_LOG(LogTemp, Warning, TEXT("TotalPollution: %f"), TotalPollution);
+	
+	FLinearColor BloodColor = FLinearColor(0.15f, 0.05, 0.05f, 1.00f); // 핏빛
+	FLinearColor PoopColor = FLinearColor(0.32f, 0.35f, 0.06f, 1.00f); // 배설물
+	
+	FLinearColor FinalColor = FLinearColor(0.0f, 0.0f, 0.0f, 1.00f);
+	FinalColor = FMath::Lerp(FinalColor, BloodColor, MopPollution_Blood);
+	FinalColor = FMath::Lerp(FinalColor, PoopColor, MopPollution_Excrement);
+	
+	DynamicMopMaterial->SetVectorParameterValue(TEXT("PollutionColor"), FinalColor);
 }
 
 void ACCD_EMopActor::OnRep_Pollution() { UpdateMopMaterial(); }
