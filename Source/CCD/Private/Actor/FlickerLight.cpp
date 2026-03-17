@@ -11,7 +11,10 @@ AFlickerLight::AFlickerLight()
 	SpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("SpotLight"));
 	RootComponent = SpotLight;
 	
-	SpotLight->SetRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f));
+	BaseIntensity = 50000.0f;
+	AttenuationRadius = 1500.0f;
+	OuterConeAngle = 65.0f;
+	InnerConeAngle = 40.0f;
 }
 
 void AFlickerLight::Tick(float DeltaTime)
@@ -22,15 +25,15 @@ void AFlickerLight::Tick(float DeltaTime)
 	{
 		float TimeTime = GetWorld()->GetTimeSeconds();
 		float NoiseValue = FMath::PerlinNoise1D(TimeTime * Frequency);
-
 		float FinalIntensity = BaseIntensity + (NoiseValue * Amplitude * BaseIntensity);
 
-		if (NoiseValue < NoiseThreshold)
-		{
-			FinalIntensity = 0.0f;
-		}
-
+		if (NoiseValue < NoiseThreshold) { FinalIntensity = 0.0f; }
+		
 		SpotLight->SetIntensity(FMath::Max(0.0f, FinalIntensity));
+		SpotLight->SetAttenuationRadius(AttenuationRadius);
+		SpotLight->SetOuterConeAngle(OuterConeAngle);
+		SpotLight->SetInnerConeAngle(InnerConeAngle);
+		SpotLight->SetIndirectLightingIntensity(IndirectLightingIntensity);
 	}
 }
 

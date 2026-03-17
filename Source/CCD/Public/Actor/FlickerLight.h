@@ -36,4 +36,20 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flicker|Perlin")
 	float NoiseThreshold = -0.8f; // 이 값보다 노이즈가 낮아지면 완전히 꺼지게 설정 가능
 	
+	//빛이 도달하는 최대 거리
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flicker|Settings")
+	float AttenuationRadius = 1000.0f; 
+
+	// 빛이 퍼지는 외곽 각도
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flicker|Settings")
+	float OuterConeAngle = 60.0f;
+
+	// 빛의 중심부와 외곽 사이의 부드러움
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flicker|Settings")
+	float InnerConeAngle = 30.0f;
+
+	// 간접광 강도
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flicker|Settings")
+	float IndirectLightingIntensity = 1.0f;
+	
 };
