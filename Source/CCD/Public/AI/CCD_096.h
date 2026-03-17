@@ -65,9 +65,15 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<class UAudioComponent> ScreamAudio;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<class UAudioComponent> ScreamAudio_Secondary;
 
 	UPROPERTY(EditAnywhere, Category = "Settings")
 	TObjectPtr<class USoundBase> PanicSound;
+	
+	UPROPERTY(EditAnywhere, Category = "Settings")
+	TObjectPtr<class USoundBase> PanicSound_2;
 
 	UPROPERTY(EditAnywhere, Category = "Settings")
 	TObjectPtr<class USoundBase> ChaseSound;

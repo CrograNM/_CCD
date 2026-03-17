@@ -25,6 +25,10 @@ ACCD_096::ACCD_096()
 	ScreamAudio->SetupAttachment(GetRootComponent());
 	ScreamAudio->bAutoActivate = false;
 	
+	ScreamAudio_Secondary = CreateDefaultSubobject<UAudioComponent>(TEXT("ScreamAudio_Secondary"));
+	ScreamAudio_Secondary->SetupAttachment(GetRootComponent());
+	ScreamAudio_Secondary->bAutoActivate = false;
+	
 	bReplicates = true;
 }
 
@@ -145,6 +149,12 @@ void ACCD_096::PlayPanicSound()
 		ScreamAudio->SetSound(PanicSound);
 		ScreamAudio->Play();
 	}
+	
+	if (ScreamAudio_Secondary && PanicSound_2)
+	{
+		ScreamAudio_Secondary->SetSound(PanicSound_2);
+		ScreamAudio_Secondary->Play();
+	}
 }
 
 void ACCD_096::PlayChaseSound()
@@ -163,10 +173,8 @@ void ACCD_096::PlayChaseSound()
 
 void ACCD_096::StopScreamSound()
 {
-	if (ScreamAudio && ScreamAudio->IsPlaying())
-	{
-		ScreamAudio->Stop();
-	}
+	if (ScreamAudio && ScreamAudio->IsPlaying()) ScreamAudio->Stop();
+	if (ScreamAudio_Secondary && ScreamAudio_Secondary->IsPlaying()) ScreamAudio_Secondary->Stop();
 }
 
 void ACCD_096::Multicast_PlayKillSound_Implementation()
