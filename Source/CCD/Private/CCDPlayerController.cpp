@@ -33,16 +33,6 @@ void ACCDPlayerController::BeginPlay()
 		Subsystem->AddMappingContext(DefaultMappingContext, 0);
 	}
 	
-	// // UI
-	// if (IsLocalController() && MainWidgetClass)
-	// {
-	// 	MainWidgetInstance = CreateWidget<UCCD_MainWidget>(this, MainWidgetClass);
-	// 	if (MainWidgetInstance)
-	// 	{
-	// 		MainWidgetInstance->AddToViewport();
-	// 	}
-	// }
-	
 	if (HasAuthority()) 
 		SwitchToMainUI();
 }
