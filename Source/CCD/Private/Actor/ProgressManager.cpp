@@ -2,7 +2,7 @@
 #include "Actor/ProgressManager.h"
 #include "Widget/ProgressWidget.h"
 #include "Blueprint/UserWidget.h"
-#include "CCDGameMode.h"
+#include "GameData/CCDGameMode.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"

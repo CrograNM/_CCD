@@ -5,7 +5,7 @@
 #include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AI/CCD_096.h"
-#include "CCDCharacter.h"
+#include "Player/CCDCharacter.h"
 
 UBTTask_AttackPlayer_096::UBTTask_AttackPlayer_096()
 {

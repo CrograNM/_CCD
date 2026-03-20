@@ -4,7 +4,7 @@
 #include "AI/CCD_096.h"
 
 #include "AIController.h"
-#include "CCDCharacter.h"
+#include "Player/CCDCharacter.h"
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"

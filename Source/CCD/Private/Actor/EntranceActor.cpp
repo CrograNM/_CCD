@@ -3,7 +3,7 @@
 #include "Components/BoxComponent.h"
 #include "ActorSequenceComponent.h"
 #include "ActorSequencePlayer.h"
-#include "CCDCharacter.h"
+#include "Player/CCDCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/GameStateBase.h"

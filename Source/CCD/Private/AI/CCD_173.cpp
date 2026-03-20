@@ -3,7 +3,7 @@
 
 #include "AI/CCD_173.h"
 
-#include "CCDCharacter.h"
+#include "Player/CCDCharacter.h"
 #include "Components/AudioComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"

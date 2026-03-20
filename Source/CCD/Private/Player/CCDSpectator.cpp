@@ -1,5 +1,5 @@
 
-#include "CCDSpectator.h"
+#include "Player/CCDSpectator.h"
 
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"

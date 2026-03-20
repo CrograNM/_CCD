@@ -1,7 +1,7 @@
 
-#include "CCDCharacter.h"
+#include "Player/CCDCharacter.h"
 
-#include "CCDPlayerController.h"
+#include "Player/CCDPlayerController.h"
 #include "Actor/CCD_BodyFragment.h"
 #include "Actor/Decal_StainActor_Base.h"
 #include "AI/CCD_096.h"

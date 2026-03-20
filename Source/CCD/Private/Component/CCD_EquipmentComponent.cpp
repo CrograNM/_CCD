@@ -1,6 +1,6 @@
 
 #include "Component/CCD_EquipmentComponent.h"
-#include "CCDCharacter.h"
+#include "Player/CCDCharacter.h"
 #include "Actor/CCD_EquipActor_Base.h"
 #include "Net/UnrealNetwork.h"
 

@@ -1,7 +1,7 @@
 
 #include "Actor/CCD_EquipActor_Base.h"
 
-#include "CCDCharacter.h"
+#include "Player/CCDCharacter.h"
 
 ACCD_EquipActor_Base::ACCD_EquipActor_Base()
 {

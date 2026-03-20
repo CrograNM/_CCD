@@ -3,7 +3,7 @@
 
 #include "AI/BTTask_AttackPlayer_173.h"
 #include "AIController.h"
-#include "CCDCharacter.h"
+#include "Player/CCDCharacter.h"
 #include "AI/CCD_173.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/GameplayStatics.h"

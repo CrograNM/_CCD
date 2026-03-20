@@ -1,7 +1,7 @@
 
 #include "Component/CCD_StatComponent.h"
 
-#include "CCDCharacter.h"
+#include "Player/CCDCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 

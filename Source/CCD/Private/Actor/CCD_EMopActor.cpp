@@ -4,7 +4,7 @@
 #include <Camera/CameraComponent.h>
 #include <Net/UnrealNetwork.h>
 
-#include "CCDCharacter.h"
+#include "Player/CCDCharacter.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Actor/WaterBucketActor.h"
 #include "Component/WashableComponent.h"

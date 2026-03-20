@@ -1,6 +1,6 @@
 
 #include "Component/CCD_InteractionComponent.h"
-#include "CCDCharacter.h"
+#include "Player/CCDCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "Component/BurnableComponent.h"

@@ -1,10 +1,10 @@
 
-#include "CCDPlayerController.h"
+#include "Player/CCDPlayerController.h"
 
-#include "CCDCharacter.h"
-#include "CCDGameMode.h"
-#include "CCDPlayerCameraManager.h"
-#include "CCDSpectator.h"
+#include "Player/CCDCharacter.h"
+#include "GameData/CCDGameMode.h"
+#include "Player/CCDPlayerCameraManager.h"
+#include "Player/CCDSpectator.h"
 #include "EngineUtils.h"
 #include "Blueprint/UserWidget.h"
 #include "EnhancedInputComponent.h"

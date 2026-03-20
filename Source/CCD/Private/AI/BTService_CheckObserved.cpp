@@ -3,7 +3,7 @@
 
 #include "AI/BTService_CheckObserved.h"
 #include "AIController.h"
-#include "CCDCharacter.h"
+#include "Player/CCDCharacter.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AI/CCD_173.h"
 #include "Kismet/GameplayStatics.h"

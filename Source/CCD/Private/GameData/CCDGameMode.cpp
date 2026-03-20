@@ -1,6 +1,6 @@
-#include "CCDGameMode.h"
-#include "CCDCharacter.h"
-#include "CCDPlayerController.h"
+#include "GameData/CCDGameMode.h"
+#include "Player/CCDCharacter.h"
+#include "Player/CCDPlayerController.h"
 #include "Actor/ProgressManager.h"
 #include "Kismet/GameplayStatics.h"
 
