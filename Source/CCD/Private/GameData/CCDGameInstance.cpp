@@ -1,5 +1,7 @@
 
 #include "GameData/CCDGameInstance.h"
+
+#include "OnlineSubsystemUtils.h"
 #include "GameData/CCDSaveGame.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -29,4 +31,37 @@ FString UCCDGameInstance::GetSavedName() const
 		}
 	}
 	return TEXT("None");
+}
+
+void UCCDGameInstance::HostSession(FString RoomName, bool bIsLAN, FString Path) const
+{
+	const IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
+	if (!Subsystem) return;
+
+	if (const IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface(); SessionInterface.IsValid())
+	{
+		FOnlineSessionSettings SessionSettings;
+		SessionSettings.bIsLANMatch = bIsLAN;
+		SessionSettings.NumPublicConnections = 3;
+		SessionSettings.bShouldAdvertise = true;
+		SessionSettings.bUsesPresence = true;
+		SessionSettings.bAllowJoinInProgress = true;
+
+		SessionSettings.Set(FName(TEXT("RoomName")), RoomName, EOnlineDataAdvertisementType::ViaOnlineService);
+
+		SessionInterface->CreateSession(0, NAME_GameSession, SessionSettings);
+		
+		// 세션 생성 후 바로 게임 시작
+		FString TravelURL = Path.IsEmpty() ? TEXT("/Game/_CCD/Maps/Lobby") : Path;
+		GetWorld()->ServerTravel(TravelURL + TEXT("?listen"));
+	}
+}
+
+FString UCCDGameInstance::GetRoomNameFromSearchResult(FBlueprintSessionResult SearchResult) const
+{
+	if (FString FoundRoomName; SearchResult.OnlineResult.Session.SessionSettings.Get(FName(TEXT("RoomName")), FoundRoomName))
+	{
+		return FoundRoomName;
+	}
+	return SearchResult.OnlineResult.Session.OwningUserName;
 }

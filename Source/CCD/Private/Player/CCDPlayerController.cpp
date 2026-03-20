@@ -13,6 +13,8 @@
 #include "Camera/PlayerCameraManager.h"
 #include "Component/CCD_StatComponent.h"
 #include "Engine/Scene.h"
+#include "GameData/CCDGameInstance.h"
+#include "GameData/CCDPlayerState.h"
 #include "Widget/CCD_MainWidget.h"
 #include "Widget/EyeAnimWidget.h"
 #include "Widget/EyeCooldownWidget.h"
@@ -23,6 +25,24 @@ ACCDPlayerController::ACCDPlayerController()
 {
 	PlayerCameraManagerClass = ACCDPlayerCameraManager::StaticClass();
 }
+
+void ACCDPlayerController::Server_SetInitialPlayerName_Implementation(const FString& InName)
+{
+	if (ACCDPlayerState* PS = GetPlayerState<ACCDPlayerState>())
+	{
+		// "None"이거나 비어있으면 기본 엔진 이름 사용, 아니면 커스텀 이름 사용
+		if ((InName.IsEmpty() || InName == TEXT("None")))
+		{
+			PS->CustomName = PS->GetPlayerName();
+			UE_LOG(LogTemp, Log, TEXT("Server_SetInitialPlayerName: Using default name '%s'"), *PS->CustomName);
+		}
+		else
+		{
+			PS->CustomName = InName;
+		}
+	}
+}
+
 void ACCDPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -35,6 +55,16 @@ void ACCDPlayerController::BeginPlay()
 	
 	if (HasAuthority()) 
 		SwitchToMainUI();
+	
+	// 초기 플레이어 이름 설정
+	if (IsLocalController())
+	{
+		if (UCCDGameInstance* GI = GetGameInstance<UCCDGameInstance>())
+		{
+			FString MySavedName = GI->GetSavedName();
+			Server_SetInitialPlayerName(MySavedName);
+		}
+	}
 }
 void ACCDPlayerController::OnRep_Pawn()
 {

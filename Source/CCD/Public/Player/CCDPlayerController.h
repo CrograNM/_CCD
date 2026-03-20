@@ -24,6 +24,9 @@ public:
 	virtual void UpdateRotation(float DeltaTime) override;
 	virtual void OnRep_Pawn() override;
 	
+	UFUNCTION(Server, Reliable)
+	void Server_SetInitialPlayerName(const FString& InName);
+	
 	/** --- Death --- */
 	UFUNCTION(Client, Reliable)
 	void ApplyDeath(bool bIsDead);	// Fade 처리
