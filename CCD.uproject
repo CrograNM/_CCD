@@ -32,12 +32,16 @@
 			"Enabled": true
 		},
 		{
-			"Name": "MultiplayerSessions",
-			"Enabled": false
-		},
-		{
 			"Name": "OnlineSubsystemSteam",
 			"Enabled": true
+		},
+		{
+			"Name": "SteamSockets",
+			"Enabled": true
+		},
+		{
+			"Name": "MultiplayerSessions",
+			"Enabled": false
 		}
 	]
 }

@@ -24,14 +24,21 @@ public:
 
 	/** --- Session --- **/
 	UFUNCTION(BlueprintCallable, Category = "Multiplayer")
-	void HostSession(FString RoomName, bool bIsLAN, FString Path) const;
+	void HostSession(FString RoomName, bool bIsLAN, FString Path);
 
 	UFUNCTION(BlueprintPure, Category = "Multiplayer")
 	FString GetRoomNameFromSearchResult(FBlueprintSessionResult SearchResult) const;
 	
 	UFUNCTION(BlueprintPure, Category = "Steam")
 	FString GetSteamNameIfAvailable() const;
+	
+	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
+	
 private:
 	FString UserProfileName;
 	FString SaveSlotName = TEXT("UserProfile");
+	FString MapPath = TEXT("");
+	
+	FOnCreateSessionCompleteDelegate CreateSessionCompleteDelegate;
+	FDelegateHandle CreateSessionCompleteDelegateHandle;
 };

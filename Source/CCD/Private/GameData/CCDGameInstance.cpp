@@ -9,6 +9,7 @@ void UCCDGameInstance::Init()
 {
 	Super::Init();
 	UserProfileName = GetSavedName();
+	CreateSessionCompleteDelegate = FOnCreateSessionCompleteDelegate::CreateUObject(this, &UCCDGameInstance::OnCreateSessionComplete);
 }
 
 void UCCDGameInstance::SaveCustomName(FString NewName)
@@ -33,27 +34,33 @@ FString UCCDGameInstance::GetSavedName() const
 	return TEXT("None");
 }
 
-void UCCDGameInstance::HostSession(FString RoomName, bool bIsLAN, FString Path) const
+void UCCDGameInstance::HostSession(FString RoomName, bool bIsLAN, FString Path)
 {
+	if (Path == TEXT(""))
+	{
+		MapPath = TEXT("/Game/_CCD/Maps/Lobby");
+	}
+	else MapPath = Path;
+	
 	const IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
 	if (!Subsystem) return;
 
-	if (const IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface(); SessionInterface.IsValid())
+	IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
+	if (SessionInterface.IsValid())
 	{
+		CreateSessionCompleteDelegateHandle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
+		
 		FOnlineSessionSettings SessionSettings;
-		SessionSettings.bIsLANMatch = bIsLAN;
 		SessionSettings.NumPublicConnections = 3;
 		SessionSettings.bShouldAdvertise = true;
-		SessionSettings.bUsesPresence = true;
 		SessionSettings.bAllowJoinInProgress = true;
-
-		SessionSettings.Set(FName(TEXT("RoomName")), RoomName, EOnlineDataAdvertisementType::ViaOnlineService);
-
-		SessionInterface->CreateSession(0, NAME_GameSession, SessionSettings);
+		SessionSettings.bIsLANMatch = bIsLAN;
+		SessionSettings.bUsesPresence = true;
+		SessionSettings.bUseLobbiesIfAvailable = true;
 		
-		// 세션 생성 후 바로 게임 시작
-		FString TravelURL = Path.IsEmpty() ? TEXT("/Game/_CCD/Maps/Lobby") : Path;
-		GetWorld()->ServerTravel(TravelURL + TEXT("?listen"));
+		SessionSettings.Set(FName(TEXT("RoomName")), RoomName, EOnlineDataAdvertisementType::ViaOnlineService);
+		
+		SessionInterface->CreateSession(0, NAME_GameSession, SessionSettings);
 	}
 }
 
@@ -82,4 +89,26 @@ FString UCCDGameInstance::GetSteamNameIfAvailable() const
 	UE_LOG(LogTemp, Warning, TEXT("Subsystem Name: %s"), 
 		Subsystem ? *Subsystem->GetSubsystemName().ToString() : TEXT("None"));
 	return TEXT("");
+}
+
+void UCCDGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
+{
+	IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
+	if (Subsystem)
+	{
+		IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
+		if (SessionInterface.IsValid())
+		{
+			SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
+		}
+	}
+
+	if (bWasSuccessful)
+	{
+		GetWorld()->ServerTravel(MapPath + TEXT("?listen"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to Create Session!"));
+	}
 }
