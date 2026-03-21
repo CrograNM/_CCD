@@ -55,8 +55,9 @@ void UCCDGameInstance::HostSession(FString RoomName, bool bIsLAN, FString Path)
 		SessionSettings.bShouldAdvertise = true;
 		SessionSettings.bAllowJoinInProgress = true;
 		SessionSettings.bIsLANMatch = bIsLAN;
-		SessionSettings.bUsesPresence = true;
-		SessionSettings.bUseLobbiesIfAvailable = true;
+		SessionSettings.bUsesPresence = !bIsLAN;
+		SessionSettings.bUseLobbiesIfAvailable = !bIsLAN;
+		SessionSettings.bAllowJoinViaPresence = !bIsLAN;
 		
 		SessionSettings.Set(FName(TEXT("RoomName")), RoomName, EOnlineDataAdvertisementType::ViaOnlineService);
 		
