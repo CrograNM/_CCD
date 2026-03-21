@@ -65,3 +65,21 @@ FString UCCDGameInstance::GetRoomNameFromSearchResult(FBlueprintSessionResult Se
 	}
 	return SearchResult.OnlineResult.Session.OwningUserName;
 }
+
+FString UCCDGameInstance::GetSteamNameIfAvailable() const
+{
+	IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(); 
+	
+	if (Subsystem && Subsystem->GetSubsystemName() == FName(TEXT("Steam")))
+	{
+		IOnlineIdentityPtr Identity = Subsystem->GetIdentityInterface();
+		if (Identity.IsValid())
+		{
+			// 로그인된 0번 로컬 유저의 닉네임을 가져옴
+			return Identity->GetPlayerNickname(0);
+		}
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Subsystem Name: %s"), 
+		Subsystem ? *Subsystem->GetSubsystemName().ToString() : TEXT("None"));
+	return TEXT("");
+}

@@ -16,6 +16,9 @@ public:
 	// 유저 이름
 	UPROPERTY(ReplicatedUsing = OnRep_CustomName, BlueprintReadOnly, Category = "PlayerInfo")
 	FString CustomName = TEXT("None");
+	
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "PlayerInfo")
+	FString SteamName = TEXT("");
 
 	// 플레이어 사망 여부
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "PlayerInfo")

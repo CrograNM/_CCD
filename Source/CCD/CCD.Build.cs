@@ -22,7 +22,8 @@ public class CCD : ModuleRules
 			"MovieScene", 
 			"LevelSequence", 
 			"OnlineSubsystem",
-			"OnlineSubsystemUtils"
+			"OnlineSubsystemSteam",
+			"OnlineSubsystemUtils",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {

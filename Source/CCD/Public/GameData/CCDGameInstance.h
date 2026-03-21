@@ -28,6 +28,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Multiplayer")
 	FString GetRoomNameFromSearchResult(FBlueprintSessionResult SearchResult) const;
+	
+	UFUNCTION(BlueprintPure, Category = "Steam")
+	FString GetSteamNameIfAvailable() const;
 private:
 	FString UserProfileName;
 	FString SaveSlotName = TEXT("UserProfile");

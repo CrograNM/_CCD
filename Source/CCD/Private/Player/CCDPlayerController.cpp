@@ -33,6 +33,7 @@ void ACCDPlayerController::Server_SetInitialPlayerName_Implementation(const FStr
 		// "None"이거나 비어있으면 기본 엔진 이름 사용, 아니면 커스텀 이름 사용
 		if ((InName.IsEmpty() || InName == TEXT("None")))
 		{
+			// 기본 엔진 이름을 가져와서 설정
 			PS->CustomName = PS->GetPlayerName();
 			UE_LOG(LogTemp, Log, TEXT("Server_SetInitialPlayerName: Using default name '%s'"), *PS->CustomName);
 		}
