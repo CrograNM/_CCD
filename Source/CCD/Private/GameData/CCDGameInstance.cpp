@@ -10,6 +10,7 @@ void UCCDGameInstance::Init()
 	Super::Init();
 	UserProfileName = GetSavedName();
 	CreateSessionCompleteDelegate = FOnCreateSessionCompleteDelegate::CreateUObject(this, &UCCDGameInstance::OnCreateSessionComplete);
+	DestroySessionCompleteDelegate = FOnDestroySessionCompleteDelegate::CreateUObject(this, &UCCDGameInstance::OnDestroySessionComplete);
 }
 
 void UCCDGameInstance::SaveCustomName(FString NewName)
@@ -21,7 +22,6 @@ void UCCDGameInstance::SaveCustomName(FString NewName)
 		UGameplayStatics::SaveGameToSlot(SaveInstance, SaveSlotName, 0);
 	}
 }
-
 FString UCCDGameInstance::GetSavedName() const
 {
 	if (UGameplayStatics::DoesSaveGameExist(SaveSlotName, 0))
@@ -33,14 +33,36 @@ FString UCCDGameInstance::GetSavedName() const
 	}
 	return TEXT("None");
 }
+FString UCCDGameInstance::GetRoomNameFromSearchResult(FBlueprintSessionResult SearchResult) const
+{
+	if (FString FoundRoomName; SearchResult.OnlineResult.Session.SessionSettings.Get(FName(TEXT("RoomName")), FoundRoomName))
+	{
+		return FoundRoomName;
+	}
+	return SearchResult.OnlineResult.Session.OwningUserName;
+}
+FString UCCDGameInstance::GetSteamNameIfAvailable() const
+{
+	IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(); 
+	
+	if (Subsystem && Subsystem->GetSubsystemName() == FName(TEXT("Steam")))
+	{
+		IOnlineIdentityPtr Identity = Subsystem->GetIdentityInterface();
+		if (Identity.IsValid())
+		{
+			// 로그인된 0번 로컬 유저의 닉네임을 가져옴
+			return Identity->GetPlayerNickname(0);
+		}
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Subsystem Name: %s"), 
+		Subsystem ? *Subsystem->GetSubsystemName().ToString() : TEXT("None"));
+	return TEXT("");
+}
 
 void UCCDGameInstance::HostSession(FString RoomName, bool bIsLAN, FString Path)
 {
-	if (Path == TEXT(""))
-	{
-		MapPath = TEXT("/Game/_CCD/Maps/Lobby");
-	}
-	else MapPath = Path;
+	// 로비 맵 경로가 전달되면 업데이트, 그렇지 않으면 기본값 사용
+	if (Path != TEXT("")) LobbyMapPath = Path; 
 	
 	const IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
 	if (!Subsystem) return;
@@ -64,32 +86,24 @@ void UCCDGameInstance::HostSession(FString RoomName, bool bIsLAN, FString Path)
 		SessionInterface->CreateSession(0, NAME_GameSession, SessionSettings);
 	}
 }
-
-FString UCCDGameInstance::GetRoomNameFromSearchResult(FBlueprintSessionResult SearchResult) const
+void UCCDGameInstance::LeaveSession()
 {
-	if (FString FoundRoomName; SearchResult.OnlineResult.Session.SessionSettings.Get(FName(TEXT("RoomName")), FoundRoomName))
-	{
-		return FoundRoomName;
-	}
-	return SearchResult.OnlineResult.Session.OwningUserName;
-}
+	IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
+	if (!Subsystem) return;
 
-FString UCCDGameInstance::GetSteamNameIfAvailable() const
-{
-	IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(); 
-	
-	if (Subsystem && Subsystem->GetSubsystemName() == FName(TEXT("Steam")))
+	IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
+	if (SessionInterface.IsValid())
 	{
-		IOnlineIdentityPtr Identity = Subsystem->GetIdentityInterface();
-		if (Identity.IsValid())
+		if (SessionInterface->GetNamedSession(NAME_GameSession))
 		{
-			// 로그인된 0번 로컬 유저의 닉네임을 가져옴
-			return Identity->GetPlayerNickname(0);
+			DestroySessionCompleteDelegateHandle = SessionInterface->AddOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegate);
+			SessionInterface->DestroySession(NAME_GameSession);
+		}
+		else
+		{
+			UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
 		}
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Subsystem Name: %s"), 
-		Subsystem ? *Subsystem->GetSubsystemName().ToString() : TEXT("None"));
-	return TEXT("");
 }
 
 void UCCDGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
@@ -106,10 +120,25 @@ void UCCDGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSucce
 
 	if (bWasSuccessful)
 	{
-		GetWorld()->ServerTravel(MapPath + TEXT("?listen"));
+		GetWorld()->ServerTravel(LobbyMapPath + TEXT("?listen"));
 	}
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to Create Session!"));
 	}
+}
+void UCCDGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
+{
+	IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
+	if (Subsystem)
+	{
+		IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
+		if (SessionInterface.IsValid())
+		{
+			SessionInterface->ClearOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegateHandle);
+		}
+	}
+
+	// 세션이 성공적으로 파괴되었거나 실패했더라도 메인 메뉴로 이동한다
+	UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
 }

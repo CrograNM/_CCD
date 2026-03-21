@@ -19,26 +19,32 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SaveCustomName(FString NewName);
 
+	/** --- Getters --- **/
 	UFUNCTION(BlueprintCallable)
 	FString GetSavedName() const;
-
-	/** --- Session --- **/
-	UFUNCTION(BlueprintCallable, Category = "Multiplayer")
-	void HostSession(FString RoomName, bool bIsLAN, FString Path);
-
 	UFUNCTION(BlueprintPure, Category = "Multiplayer")
 	FString GetRoomNameFromSearchResult(FBlueprintSessionResult SearchResult) const;
-	
 	UFUNCTION(BlueprintPure, Category = "Steam")
 	FString GetSteamNameIfAvailable() const;
 	
+	/** --- Session --- **/
+	UFUNCTION(BlueprintCallable, Category = "Multiplayer")
+	void HostSession(FString RoomName, bool bIsLAN, FString Path);
+	UFUNCTION(BlueprintCallable, Category = "Multiplayer")
+	void LeaveSession();
+	
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
+	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
 	
 private:
 	FString UserProfileName;
 	FString SaveSlotName = TEXT("UserProfile");
-	FString MapPath = TEXT("");
+	FString LobbyMapPath = TEXT("/Game/_CCD/Maps/Lobby");
+	FString MainMenuPath = TEXT("/Game/_CCD/Maps/LV_MainMenu");
 	
+	// Delegates for session management
 	FOnCreateSessionCompleteDelegate CreateSessionCompleteDelegate;
 	FDelegateHandle CreateSessionCompleteDelegateHandle;
+	FOnDestroySessionCompleteDelegate DestroySessionCompleteDelegate;
+	FDelegateHandle DestroySessionCompleteDelegateHandle;
 };
