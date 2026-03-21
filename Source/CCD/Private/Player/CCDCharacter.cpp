@@ -19,6 +19,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/DecalComponent.h"
 #include "Components/PawnNoiseEmitterComponent.h"
+#include "GameData/CCDPlayerState.h"
 #include "GameFramework/GameModeBase.h"
 #include "GeometryCollection/GeometryCollectionActor.h"
 #include "GeometryCollection/GeometryCollectionComponent.h"
@@ -153,9 +154,11 @@ void ACCDCharacter::Server_Die_Implementation()
 	UE_LOG(LogTemp, Warning, TEXT("[ACCDCharacter] Die called"));
 	
 	bIsDead = true;
-	// 서버 전용 (충돌 비활성, 물체 투하, 장비 제거, 이동 불가), 이후 카오스 디스트럭션 적용 예정
+	if (ACCDPlayerState* PS = GetPlayerState<ACCDPlayerState>())
+	{
+		PS->bIsDead = true;
+	}
 	HandleDeath();	
-	// 클라이언트 전용 (로컬 시각 효과), 서버도 명시적으로 적용
 	OnRep_IsDead(); 
 }
 void ACCDCharacter::Revive()
@@ -167,6 +170,10 @@ void ACCDCharacter::Server_Revive_Implementation()
 	if (!bIsDead) return;
 	UE_LOG(LogTemp, Warning, TEXT("[ACCDCharacter] Revive called"));
 	bIsDead = false;
+	if (ACCDPlayerState* PS = GetPlayerState<ACCDPlayerState>())
+	{
+		PS->bIsDead = false;
+	}
 	HandleRevive();
 	if (AGameModeBase* GM = GetWorld()->GetAuthGameMode())
 	{
