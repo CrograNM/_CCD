@@ -21,6 +21,12 @@ void UCCD_EquipmentComponent::BeginPlay()
 	}
 }
 
+void UCCD_EquipmentComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	DestroyAllEquipment(); 
+	Super::EndPlay(EndPlayReason);
+}
+
 void UCCD_EquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

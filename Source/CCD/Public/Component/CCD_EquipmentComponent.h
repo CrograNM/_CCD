@@ -54,6 +54,7 @@ public:
 	
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	
 	/** --- 변수 : 장비 상태 --- */
 	UPROPERTY(ReplicatedUsing = OnRep_EquipmentState)
