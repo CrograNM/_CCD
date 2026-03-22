@@ -240,7 +240,6 @@ void ACCDPlayerController::SwitchToSpectatorUI()
 	// 기존 일반 HUD 제거
 	if (MainWidgetInstance)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SwitchToSpectatorUI 1"));
 		MainWidgetInstance->RemoveFromParent();
 		MainWidgetInstance = nullptr;
 	}
@@ -248,8 +247,6 @@ void ACCDPlayerController::SwitchToSpectatorUI()
 	// 관전자 전용 UI 생성 및 표시
 	if (SpectatorWidgetClass)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SwitchToSpectatorUI 2"));
-
 		// 인스턴스가 없으면 새로 생성
 		if (!SpectatorWidgetInstance || !IsValid(SpectatorWidgetInstance))
 		{
@@ -269,7 +266,6 @@ void ACCDPlayerController::SwitchToMainUI()
 	// 관전자 UI 제거
 	if (SpectatorWidgetInstance)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SwitchToMainUI 1"));
 		SpectatorWidgetInstance->RemoveFromParent();
 		SpectatorWidgetInstance = nullptr;
 	}
@@ -277,7 +273,6 @@ void ACCDPlayerController::SwitchToMainUI()
 	// 기존 메인 HUD 복구
 	if (MainWidgetClass && !MainWidgetInstance)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SwitchToMainUI 2"));
 		MainWidgetInstance = CreateWidget<UCCD_MainWidget>(this, MainWidgetClass);
 		if (MainWidgetInstance)
 		{

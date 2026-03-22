@@ -18,22 +18,7 @@ void UCCD_StatComponent::BeginPlay()
 	Super::BeginPlay();
 	SetComponentTickEnabled(false);
 	OwnerCharacter = Cast<ACCDCharacter>(GetOwner());
-	SetComponentTickEnabled(true); 
-	
-	
-	if (OwnerCharacter && OwnerCharacter->IsLocallyControlled())
-	{
-		/*GetWorld()->GetTimerManager().SetTimer(NoiseRandomizeTimerHandle, 
-			[this]()
-			{ 
-				NoiseLevel = FMath::FRandRange(0.f, 1.f); 
-				OnNoiseLevelChanged.Broadcast(NoiseLevel);
-				// UE_LOG(LogTemp, Warning, TEXT("Update Noise : %f"), NoiseLevel);
-			},
-			NoiseRandomizeTime, 
-			true
-		);*/
-	}
+	SetComponentTickEnabled(true);
 }
 
 void UCCD_StatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -124,7 +109,6 @@ void UCCD_StatComponent::Server_CloseEye_Implementation()
 }
 void UCCD_StatComponent::OnRep_IsEyeClosed()
 {
-	UE_LOG(LogTemp, Warning, TEXT("[IsEyeClosed] : %s"), bIsEyeClosed ? TEXT("true") : TEXT("false"));
 	if (bIsEyeClosed)
 	{
 		EyeCooldownTime = 0.f;		// 쿨타임 초기화

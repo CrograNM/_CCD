@@ -50,7 +50,7 @@ FString UCCDGameInstance::GetRoomNameFromSearchResult(FBlueprintSessionResult Se
 }
 FString UCCDGameInstance::GetSteamNameIfAvailable() const
 {
-	IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(); 
+	const IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
 	
 	if (Subsystem && Subsystem->GetSubsystemName() == FName(TEXT("Steam")))
 	{
@@ -95,7 +95,9 @@ void UCCDGameInstance::HostSession(FString RoomName, bool bIsLAN, FString Path)
 }
 void UCCDGameInstance::LeaveSession()
 {
-	IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
+	UE_LOG(LogTemp, Warning, TEXT("Attempting to leave session..."));
+
+	const IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
 	if (!Subsystem) return;
 
 	IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
@@ -109,13 +111,52 @@ void UCCDGameInstance::LeaveSession()
 		else
 		{
 			UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
+			UE_LOG(LogTemp, Warning, TEXT("No active session found. Returning to main menu."));
 		}
+	}
+	else 
+	{
+		UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
+		UE_LOG(LogTemp, Warning, TEXT("Session Interface invalid. Cannot leave session cleanly."));
+	}
+}
+
+void UCCDGameInstance::CleanupLocalSession()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Cleaning up leftover local session..."));
+	
+	const IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
+	if (Subsystem)
+	{
+		IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
+		if (SessionInterface.IsValid())
+		{
+			// 로컬에 'GameSession'이라는 이름의 세션이 남아있다면 강제 파괴
+			if (SessionInterface->GetNamedSession(NAME_GameSession))
+			{
+				// 맵 이동 콜백 등을 기다리지 않고 즉시 메모리에서 날려버립니다.
+				SessionInterface->DestroySession(NAME_GameSession);
+				UE_LOG(LogTemp, Warning, TEXT("Leftover Local Session Destroyed Cleanly."));
+			}
+			else 
+			{
+				UE_LOG(LogTemp, Warning, TEXT("No leftover local session found."));
+			}
+		}
+		else 
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Session Interface invalid. Cannot clean up local session."));
+		}
+	}
+	else 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No Online Subsystem found. Cannot clean up local session."));
 	}
 }
 
 void UCCDGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
 {
-	IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
+	const IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
 	if (Subsystem)
 	{
 		IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
@@ -136,7 +177,7 @@ void UCCDGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSucce
 }
 void UCCDGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
 {
-	IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
+	const IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
 	if (Subsystem)
 	{
 		IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
@@ -144,9 +185,20 @@ void UCCDGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSucc
 		{
 			SessionInterface->ClearOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegateHandle);
 		}
+		else 
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Session Interface invalid. Cannot clear destroy session delegate."));
+		}
 	}
-
-	// 세션이 성공적으로 파괴되었거나 실패했더라도 메인 메뉴로 이동한다
+	else 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No Online Subsystem found. Cannot clear destroy session delegate."));
+	}
+	
+	if (!bWasSuccessful)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to Destroy Session! Returning to main menu anyway."));
+	}
 	UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
 }
 

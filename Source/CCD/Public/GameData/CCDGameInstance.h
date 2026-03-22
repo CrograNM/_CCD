@@ -32,6 +32,8 @@ public:
 	void HostSession(FString RoomName, bool bIsLAN, FString Path);
 	UFUNCTION(BlueprintCallable, Category = "Multiplayer")
 	void LeaveSession();
+	UFUNCTION(BlueprintCallable, Category = "Multiplayer")
+	void CleanupLocalSession();
 	
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
