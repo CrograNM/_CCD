@@ -4,6 +4,7 @@
 #include "OnlineSubsystemUtils.h"
 #include "GameData/CCDSaveGame.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/Engine.h"
 
 void UCCDGameInstance::Init()
 {
@@ -11,6 +12,12 @@ void UCCDGameInstance::Init()
 	UserProfileName = GetSavedName();
 	CreateSessionCompleteDelegate = FOnCreateSessionCompleteDelegate::CreateUObject(this, &UCCDGameInstance::OnCreateSessionComplete);
 	DestroySessionCompleteDelegate = FOnDestroySessionCompleteDelegate::CreateUObject(this, &UCCDGameInstance::OnDestroySessionComplete);
+
+	// 네트워크 실패 이벤트 바인딩
+	if (GEngine)
+	{	
+		GEngine->OnNetworkFailure().AddUObject(this, &UCCDGameInstance::HandleNetworkFailure);
+	}
 }
 
 void UCCDGameInstance::SaveCustomName(FString NewName)
@@ -141,4 +148,12 @@ void UCCDGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSucc
 
 	// 세션이 성공적으로 파괴되었거나 실패했더라도 메인 메뉴로 이동한다
 	UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
+}
+
+void UCCDGameInstance::HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType,
+	const FString& ErrorString)
+{
+	UE_LOG(LogTemp, Error, TEXT("Network Disconnected: %s. Cleaning up local session..."), *ErrorString);
+	
+	LeaveSession();
 }

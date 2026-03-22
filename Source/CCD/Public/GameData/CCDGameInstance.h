@@ -37,6 +37,8 @@ public:
 	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
 	
 private:
+	void HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);
+	
 	FString UserProfileName;
 	FString SaveSlotName = TEXT("UserProfile");
 	FString LobbyMapPath = TEXT("/Game/_CCD/Maps/Lobby");
