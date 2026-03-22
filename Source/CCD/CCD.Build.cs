@@ -24,6 +24,7 @@ public class CCD : ModuleRules
 			"OnlineSubsystem",
 			"OnlineSubsystemSteam",
 			"OnlineSubsystemUtils",
+			"PCG"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {
