@@ -5,7 +5,6 @@
 #include "Component/ProgressComponent.h"
 #include "Net/UnrealNetwork.h"
 
-
 ACCD_BodyFragment::ACCD_BodyFragment()
 {
 	PrimaryActorTick.bCanEverTick = false;

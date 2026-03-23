@@ -50,7 +50,7 @@ protected:
 	TObjectPtr<class UNiagaraSystem> MopWashEffect;
 	
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_PlayWashEffect(const FVector_NetQuantize& ImpactPoint);
+	void Multicast_PlayWashEffect(const FVector_NetQuantize& ImpactPoint, const FVector_NetQuantizeNormal& ImpactNormal);
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlayMopSwingSound();

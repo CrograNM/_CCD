@@ -1,4 +1,3 @@
-
 #include "Actor/CCD_EMopActor.h"
 
 #include <Camera/CameraComponent.h>
@@ -92,7 +91,7 @@ void ACCD_EMopActor::PerformMopTrace()
 		}
 		
 		// 세척 효과 재생 (모든 클라이언트에서)
-		Multicast_PlayWashEffect(HitResult.ImpactPoint);
+		Multicast_PlayWashEffect(HitResult.ImpactPoint, HitResult.ImpactNormal);
 	}
 	else {
 		// 대걸레 허공 휘두르기 사운드 재생
@@ -126,7 +125,7 @@ void ACCD_EMopActor::UpdateMopMaterial()
 
 void ACCD_EMopActor::OnRep_Pollution() { UpdateMopMaterial(); }
 
-void ACCD_EMopActor::Multicast_PlayWashEffect_Implementation(const FVector_NetQuantize& ImpactPoint)
+void ACCD_EMopActor::Multicast_PlayWashEffect_Implementation(const FVector_NetQuantize& ImpactPoint, const FVector_NetQuantizeNormal& ImpactNormal)
 {
 	if (MopWashSound)
 	{
@@ -134,7 +133,9 @@ void ACCD_EMopActor::Multicast_PlayWashEffect_Implementation(const FVector_NetQu
 	}
 	if (MopWashEffect)
 	{
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), MopWashEffect, ImpactPoint);
+		FRotator SpawnRot = ImpactNormal.Rotation();
+		SpawnRot.Pitch -= 90.0f;
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), MopWashEffect, ImpactPoint, SpawnRot);
 	}
 }
 
