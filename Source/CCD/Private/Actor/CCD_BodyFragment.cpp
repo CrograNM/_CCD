@@ -55,24 +55,21 @@ void ACCD_BodyFragment::OnMeshHit(UPrimitiveComponent* HitComponent, AActor* Oth
 	FVector NormalImpulse, const FHitResult& Hit)
 {
 	UE_LOG(LogTemp, Warning, TEXT("%s - OnMeshHit: ImpulseSize = %f"), *GetName(), NormalImpulse.Size());
-	if (!HitSound) return;
+	
+	if (!HitSound || !HitEffect || !DecalStainActorClass) return;
+	if (GetWorld()->GetTimeSeconds() - LastHitTime < HitCoolDown) return;
 	
 	// 충격 강도 계산
 	float ImpulseSize = NormalImpulse.Size();
-
-	// 최소 충격량보다 작거나, 쿨타임(예: 0.5초)이 지나지 않았다면 무시
-	if (ImpulseSize < HitThreshold) return;
-	if (GetWorld()->GetTimeSeconds() - LastSoundTime < HitCoolDown) return;
-
-	// 충격 강도에 따라 볼륨 조절 - 0.2 ~ 1.0 사이의 볼륨으로 클램프
-	float TargetVolume = FMath::GetMappedRangeValueClamped(FVector2D(HitThreshold, HitThreshold + 2000.f), FVector2D(0.2f, 0.8f), ImpulseSize);
-
-	// 충돌 지점에서 소리 재생
-	UGameplayStatics::PlaySoundAtLocation(this, HitSound, Hit.ImpactPoint, TargetVolume, 1, 0, HitAttenuation);
+	if (ImpulseSize < HitSoundThreshold) return;
 	
-	LastSoundTime = GetWorld()->GetTimeSeconds();
+	// 충격 강도에 따라 사운드 볼륨 조절
+	float TargetVolume = FMath::GetMappedRangeValueClamped(FVector2D(HitSoundThreshold, HitSoundThreshold + 2000.f), FVector2D(0.2f, 0.8f), ImpulseSize);
+	UGameplayStatics::PlaySoundAtLocation(this, HitSound, Hit.ImpactPoint, TargetVolume, 1, 0, HitSoundAttenuation);
+	LastHitTime = GetWorld()->GetTimeSeconds();
 	
-	// 충돌 지점에서 데칼 스폰, 이펙트 재생
+	// 충격 강도에 따라 이펙트 발생
+	if (ImpulseSize < HitEffectThreshold) return;
 	FHitResult HitResult = Hit;
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -96,7 +93,8 @@ void ACCD_BodyFragment::OnRep_SkeletalMesh()
 	if (RepSkeletalMesh)
 	{
 		MeshComp->SetSkeletalMesh(RepSkeletalMesh);
-		MeshComp->SetSimulatePhysics(true);
 		MeshComp->SetCollisionProfileName(TEXT("PhysicsActor"));
+		MeshComp->SetSimulatePhysics(true);
+		MeshComp->SetNotifyRigidBodyCollision(true);
 	}
 }

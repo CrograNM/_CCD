@@ -41,27 +41,29 @@ protected:
 	TObjectPtr<UBurnableComponent> BurnableComp;	
 	
 	// --- Hit, Sound, VFX ---
-	UPROPERTY(EditAnywhere, Category = "Design | Sound")
-	float HitThreshold = 100.0f;
-	
-	UPROPERTY(EditAnywhere, Category = "Design | Sound")
-	float HitCoolDown = 0.25f;
-	
-	UPROPERTY(EditAnywhere, Category = "Design | Sound")
-	TObjectPtr<USoundBase> HitSound;
-	
-	UPROPERTY(EditAnywhere, Category = "Design | Sound")
-	TObjectPtr<USoundAttenuation> HitAttenuation;
+	UPROPERTY(EditAnywhere, Category = "Design")
+	float HitSoundThreshold = 100.0f;
 	
 	UPROPERTY(EditAnywhere, Category = "Design")
+    float HitEffectThreshold = 100.0f;
+    
+	UPROPERTY(EditAnywhere, Category = "Design")
+	float HitCoolDown = 0.25f;
+	
+	UPROPERTY(EditAnywhere, Category = "Design | SFX")
+	TObjectPtr<USoundBase> HitSound;
+	
+	UPROPERTY(EditAnywhere, Category = "Design | SFX")
+	TObjectPtr<USoundAttenuation> HitSoundAttenuation;
+	
+	UPROPERTY(EditAnywhere, Category = "Design | VFX")
 	TObjectPtr<class UNiagaraSystem> HitEffect;
 	
 	// Spawn Decal
-	UPROPERTY(EditDefaultsOnly, Category = "Design")
+	UPROPERTY(EditDefaultsOnly, Category = "Design | VFX")
 	TSubclassOf<ADecal_StainActor_Base> DecalStainActorClass;
 	
-	// 사운드 중첩 방지용
-	float LastSoundTime = 0.0f;
+	float LastHitTime = 0.0f;
 
 	// 충돌 이벤트 함수
 	UFUNCTION()
