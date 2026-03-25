@@ -54,28 +54,34 @@ void ACCD_BodyFragment::BeginPlay()
 void ACCD_BodyFragment::OnMeshHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
-	UE_LOG(LogTemp, Warning, TEXT("%s - OnMeshHit: ImpulseSize = %f"), *GetName(), NormalImpulse.Size());
+	// 기본 유효성 검사
+	if (!HitSound || !DecalStainActorClass) return;
+    
+	// 충격량 계산 및 임계값 체크
+	float ImpulseSize = NormalImpulse.Size();
 	
-	if (!HitSound || !HitEffect || !DecalStainActorClass) return;
+	if (ImpulseSize < HitSoundThreshold) return;
+
+	// 쿨다운 체크
 	if (GetWorld()->GetTimeSeconds() - LastHitTime < HitCoolDown) return;
 	
-	// 충격 강도 계산
-	float ImpulseSize = NormalImpulse.Size();
-	if (ImpulseSize < HitSoundThreshold) return;
-	
-	// 충격 강도에 따라 사운드 볼륨 조절
+	UE_LOG(LogTemp, Warning, TEXT("%s - 충돌 발생 ImpulseSize = %f"), *GetName(), ImpulseSize);
+    
+	// 사운드 재생
 	float TargetVolume = FMath::GetMappedRangeValueClamped(FVector2D(HitSoundThreshold, HitSoundThreshold + 2000.f), FVector2D(0.2f, 0.8f), ImpulseSize);
 	UGameplayStatics::PlaySoundAtLocation(this, HitSound, Hit.ImpactPoint, TargetVolume, 1, 0, HitSoundAttenuation);
+    
 	LastHitTime = GetWorld()->GetTimeSeconds();
-	
-	// 충격 강도에 따라 이펙트 발생
-	if (ImpulseSize < HitEffectThreshold) return;
-	FHitResult HitResult = Hit;
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	FRotator SpawnRot = HitResult.ImpactNormal.Rotation();
-	SpawnRot.Pitch -= 90.0f;
-	GetWorld()->SpawnActor<ADecal_StainActor_Base>(DecalStainActorClass, HitResult.Location, SpawnRot, SpawnParams);
+    
+	// 핏자국 생성
+	if (ImpulseSize >= HitEffectThreshold) 
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		FRotator SpawnRot = Hit.ImpactNormal.Rotation();
+		SpawnRot.Pitch -= 90.0f;
+		GetWorld()->SpawnActor<ADecal_StainActor_Base>(DecalStainActorClass, Hit.Location, SpawnRot, SpawnParams);
+	}
 }
 
 void ACCD_BodyFragment::InitFragment(USkeletalMesh* InMesh, FVector Impulse)
