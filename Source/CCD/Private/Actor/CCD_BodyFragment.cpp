@@ -1,6 +1,7 @@
 
 #include "Actor/CCD_BodyFragment.h"
 
+#include "NiagaraFunctionLibrary.h"
 #include "Actor/Decal_StainActor_Base.h"
 #include "Component/BurnableComponent.h"
 #include "Component/ProgressComponent.h"
@@ -71,17 +72,29 @@ void ACCD_BodyFragment::OnMeshHit(UPrimitiveComponent* HitComponent, AActor* Oth
 	float TargetVolume = FMath::GetMappedRangeValueClamped(FVector2D(HitSoundThreshold, HitSoundThreshold + 2000.f), FVector2D(0.2f, 0.8f), ImpulseSize);
 	UGameplayStatics::PlaySoundAtLocation(this, HitSound, Hit.ImpactPoint, TargetVolume, 1, 0, HitSoundAttenuation);
     
+	if (HitEffect)
+	{
+		FRotator SpawnRot = Hit.ImpactNormal.Rotation();
+		SpawnRot.Pitch -= 90.0f;
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), HitEffect, Hit.Location, SpawnRot);
+	}
+	
 	LastHitTime = GetWorld()->GetTimeSeconds();
     
 	// 핏자국 생성
-	if (ImpulseSize >= HitEffectThreshold) 
+	if (ImpulseSize >= HitEffectThreshold && CurrentStainCount < MaxStainCount)
 	{
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		FRotator SpawnRot = Hit.ImpactNormal.Rotation();
 		SpawnRot.Pitch -= 90.0f;
-		GetWorld()->SpawnActor<ADecal_StainActor_Base>(DecalStainActorClass, Hit.Location, SpawnRot, SpawnParams);
+       
+		if (GetWorld()->SpawnActor<ADecal_StainActor_Base>(DecalStainActorClass, Hit.Location, SpawnRot, SpawnParams))
+		{
+			CurrentStainCount++;
+		}
 	}
+	
 }
 
 void ACCD_BodyFragment::InitFragment(USkeletalMesh* InMesh, FVector Impulse)

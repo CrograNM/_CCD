@@ -59,6 +59,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Design | VFX")
 	TObjectPtr<class UNiagaraSystem> HitEffect;
 	
+	UPROPERTY(EditAnywhere, Category = "Design | VFX")
+	int32 MaxStainCount = 5; // 최대 생성 가능한 핏자국 개수
+	
+	int32 CurrentStainCount = 0; // 현재 생성된 핏자국 개수
+	
 	// Spawn Decal
 	UPROPERTY(EditDefaultsOnly, Category = "Design | VFX")
 	TSubclassOf<ADecal_StainActor_Base> DecalStainActorClass;
