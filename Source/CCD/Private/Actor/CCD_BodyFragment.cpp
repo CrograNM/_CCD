@@ -1,10 +1,11 @@
 
 #include "Actor/CCD_BodyFragment.h"
 
+#include "Actor/Decal_StainActor_Base.h"
 #include "Component/BurnableComponent.h"
 #include "Component/ProgressComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
-
 
 ACCD_BodyFragment::ACCD_BodyFragment()
 {
@@ -44,6 +45,37 @@ void ACCD_BodyFragment::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	if (MeshComp)
+	{
+		MeshComp->OnComponentHit.AddDynamic(this, &ACCD_BodyFragment::OnMeshHit);
+	}
+}
+
+void ACCD_BodyFragment::OnMeshHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	FVector NormalImpulse, const FHitResult& Hit)
+{
+	UE_LOG(LogTemp, Warning, TEXT("%s - OnMeshHit: ImpulseSize = %f"), *GetName(), NormalImpulse.Size());
+	
+	if (!HitSound || !HitEffect || !DecalStainActorClass) return;
+	if (GetWorld()->GetTimeSeconds() - LastHitTime < HitCoolDown) return;
+	
+	// 충격 강도 계산
+	float ImpulseSize = NormalImpulse.Size();
+	if (ImpulseSize < HitSoundThreshold) return;
+	
+	// 충격 강도에 따라 사운드 볼륨 조절
+	float TargetVolume = FMath::GetMappedRangeValueClamped(FVector2D(HitSoundThreshold, HitSoundThreshold + 2000.f), FVector2D(0.2f, 0.8f), ImpulseSize);
+	UGameplayStatics::PlaySoundAtLocation(this, HitSound, Hit.ImpactPoint, TargetVolume, 1, 0, HitSoundAttenuation);
+	LastHitTime = GetWorld()->GetTimeSeconds();
+	
+	// 충격 강도에 따라 이펙트 발생
+	if (ImpulseSize < HitEffectThreshold) return;
+	FHitResult HitResult = Hit;
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	FRotator SpawnRot = HitResult.ImpactNormal.Rotation();
+	SpawnRot.Pitch -= 90.0f;
+	GetWorld()->SpawnActor<ADecal_StainActor_Base>(DecalStainActorClass, HitResult.Location, SpawnRot, SpawnParams);
 }
 
 void ACCD_BodyFragment::InitFragment(USkeletalMesh* InMesh, FVector Impulse)
@@ -61,7 +93,8 @@ void ACCD_BodyFragment::OnRep_SkeletalMesh()
 	if (RepSkeletalMesh)
 	{
 		MeshComp->SetSkeletalMesh(RepSkeletalMesh);
-		MeshComp->SetSimulatePhysics(true);
 		MeshComp->SetCollisionProfileName(TEXT("PhysicsActor"));
+		MeshComp->SetSimulatePhysics(true);
+		MeshComp->SetNotifyRigidBodyCollision(true);
 	}
 }

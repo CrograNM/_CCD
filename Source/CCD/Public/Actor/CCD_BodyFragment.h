@@ -5,6 +5,7 @@
 #include "GameFramework/Actor.h"
 #include "CCD_BodyFragment.generated.h"
 
+class ADecal_StainActor_Base;
 class USkeletalMeshComponent;
 class UProgressComponent;
 class UBurnableComponent;
@@ -39,4 +40,33 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UBurnableComponent> BurnableComp;	
 	
+	// --- Hit, Sound, VFX ---
+	UPROPERTY(EditAnywhere, Category = "Design")
+	float HitSoundThreshold = 100.0f;
+	
+	UPROPERTY(EditAnywhere, Category = "Design")
+    float HitEffectThreshold = 100.0f;
+    
+	UPROPERTY(EditAnywhere, Category = "Design")
+	float HitCoolDown = 0.25f;
+	
+	UPROPERTY(EditAnywhere, Category = "Design | SFX")
+	TObjectPtr<USoundBase> HitSound;
+	
+	UPROPERTY(EditAnywhere, Category = "Design | SFX")
+	TObjectPtr<USoundAttenuation> HitSoundAttenuation;
+	
+	UPROPERTY(EditAnywhere, Category = "Design | VFX")
+	TObjectPtr<class UNiagaraSystem> HitEffect;
+	
+	// Spawn Decal
+	UPROPERTY(EditDefaultsOnly, Category = "Design | VFX")
+	TSubclassOf<ADecal_StainActor_Base> DecalStainActorClass;
+	
+	float LastHitTime = 0.0f;
+
+	// 충돌 이벤트 함수
+	UFUNCTION()
+	void OnMeshHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, 
+		UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 };
