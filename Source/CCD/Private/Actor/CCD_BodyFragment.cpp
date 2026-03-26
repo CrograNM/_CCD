@@ -56,45 +56,40 @@ void ACCD_BodyFragment::OnMeshHit(UPrimitiveComponent* HitComponent, AActor* Oth
 	FVector NormalImpulse, const FHitResult& Hit)
 {
 	// 기본 유효성 검사
-	if (!HitSound || !DecalStainActorClass) return;
+	if (!HitSound || !DecalStainActorClass || !HitEffect) return;
     
-	// 충격량 계산 및 임계값 체크
-	float ImpulseSize = NormalImpulse.Size();
-	
-	if (ImpulseSize < HitSoundThreshold) return;
-
 	// 쿨다운 체크
 	if (GetWorld()->GetTimeSeconds() - LastHitTime < HitCoolDown) return;
 	
-	UE_LOG(LogTemp, Warning, TEXT("%s - 충돌 발생 ImpulseSize = %f"), *GetName(), ImpulseSize);
-    
-	// 사운드 재생
-	float TargetVolume = FMath::GetMappedRangeValueClamped(FVector2D(HitSoundThreshold, HitSoundThreshold + 2000.f), FVector2D(0.2f, 0.8f), ImpulseSize);
-	UGameplayStatics::PlaySoundAtLocation(this, HitSound, Hit.ImpactPoint, TargetVolume, 1, 0, HitSoundAttenuation);
-    
-	if (HitEffect)
-	{
-		FRotator SpawnRot = Hit.ImpactNormal.Rotation();
-		SpawnRot.Pitch -= 90.0f;
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), HitEffect, Hit.Location, SpawnRot);
-	}
+	// 충격량 계산 및 임계값 체크
+	const float ImpulseSize = NormalImpulse.Size();
 	
-	LastHitTime = GetWorld()->GetTimeSeconds();
+	// ----- 사운드 재생 충격량 필터링 -----
+	if (ImpulseSize < HitSoundThreshold) return;
+	
+	// 사운드 재생
+	const float TargetVolume = FMath::GetMappedRangeValueClamped(FVector2D(HitSoundThreshold, HitSoundThreshold + 2000.f), FVector2D(0.2f, 0.8f), ImpulseSize);
+	UGameplayStatics::PlaySoundAtLocation(this, HitSound, Hit.ImpactPoint, TargetVolume, 1, 0, HitSoundAttenuation);
+	LastHitTime = GetWorld()->GetTimeSeconds(); 
+	
+	// ----- VFX & 데칼 충격량 필터링 -----
+	if (ImpulseSize < HitEffectThreshold) return;
+	
+	// VFX 생성
+	FRotator SpawnRot = Hit.ImpactNormal.Rotation();
+	SpawnRot.Pitch -= 90.0f;
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), HitEffect, Hit.Location, SpawnRot);
     
 	// 핏자국 생성
-	if (ImpulseSize >= HitEffectThreshold && CurrentStainCount < MaxStainCount)
+	if (CurrentStainCount < MaxStainCount)
 	{
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		FRotator SpawnRot = Hit.ImpactNormal.Rotation();
-		SpawnRot.Pitch -= 90.0f;
-       
 		if (GetWorld()->SpawnActor<ADecal_StainActor_Base>(DecalStainActorClass, Hit.Location, SpawnRot, SpawnParams))
 		{
 			CurrentStainCount++;
 		}
 	}
-	
 }
 
 void ACCD_BodyFragment::InitFragment(USkeletalMesh* InMesh, FVector Impulse)
