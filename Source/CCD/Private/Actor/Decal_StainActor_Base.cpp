@@ -29,9 +29,9 @@ ADecal_StainActor_Base::ADecal_StainActor_Base()
 
 void ADecal_StainActor_Base::BeginPlay()
 {
-	ValidateSurface(); // 스폰 시점에 해당 위치가 유효한지 검사
-	
 	Super::BeginPlay();
+	
+	ValidateSurface(); // 스폰 시점에 해당 위치가 유효한지 검사
 	
 	SetActorTickEnabled(false); // 초기에는 Tick 비활성화 -> 양동이에서 스폰 시 조건에 맞춰 활성화
 	
@@ -119,8 +119,8 @@ void ADecal_StainActor_Base::ValidateSurface()
 {
 	// 스폰 시점에 데칼의 투영 방향으로 짧은 트레이스 수행
 	FHitResult Hit;
-	FVector Start = GetActorLocation();
-	FVector End = Start + (GetActorForwardVector() * 20.0f);
+	FVector Start = GetActorLocation() - (GetActorForwardVector() * 10.0f);
+	FVector End = Start + (GetActorForwardVector() * 50.0f);
 
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);

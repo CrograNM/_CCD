@@ -18,6 +18,7 @@ public:
 	
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	// 매니저를 매번 찾지 않도록 저장
 	class AProgressManager* ProgressManager;
@@ -31,5 +32,8 @@ public:
 	void UpdateProgressValue(float NewValue);
 	
 	// 액터가 소각되거나 대걸레질이 완료되었을 때 호출
-	void Notify_ProgressOver() const;
+	void Notify_ProgressOver();
+	
+private:
+	bool bIsTaskFinished = false;
 };

@@ -355,7 +355,7 @@ void ACCDCharacter::HandleDeath()
 		
 				if (ADecal_StainActor_Base* SpawnedDecal = GetWorld()->SpawnActor<ADecal_StainActor_Base>(
 					BloodStainActorClass, 
-					HitResult.Location + FVector(0.f, 0.f, FMath::RandRange(-0.1f, 0.1f)), 
+					HitResult.Location + HitResult.ImpactNormal * 1.5f, 
 					SpawnRot, 
 					SpawnParams))
 				{

@@ -155,7 +155,10 @@ void AWaterBucketActor::SpillWater()
 		SpawnRot.Pitch -= 90.0f; // 데칼은 기본적으로 X축 방향으로 쏘므로 아래를 향하게 조정
 		
 		if (ADecal_StainActor_Base* SpawnedDecal = GetWorld()->SpawnActor<ADecal_StainActor_Base>(
-			DecalStainActorClass, HitResult.Location, SpawnRot, SpawnParams))
+			DecalStainActorClass, 
+			HitResult.Location + HitResult.ImpactNormal * 1.5f,
+			SpawnRot, 
+			SpawnParams))
 		{
 			if (UWashableComponent* DecalWashComp = SpawnedDecal->FindComponentByClass<UWashableComponent>())
 			{
