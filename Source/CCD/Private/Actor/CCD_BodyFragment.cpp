@@ -85,7 +85,10 @@ void ACCD_BodyFragment::OnMeshHit(UPrimitiveComponent* HitComponent, AActor* Oth
 	{
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		if (GetWorld()->SpawnActor<ADecal_StainActor_Base>(DecalStainActorClass, Hit.Location, SpawnRot, SpawnParams))
+		if (GetWorld()->SpawnActor<ADecal_StainActor_Base>(DecalStainActorClass, 
+			Hit.Location + Hit.ImpactNormal * 1.5f,
+			SpawnRot, 
+			SpawnParams))
 		{
 			CurrentStainCount++;
 		}

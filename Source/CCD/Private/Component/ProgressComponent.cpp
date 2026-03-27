@@ -20,11 +20,20 @@ void UProgressComponent::BeginPlay()
 	AActor* ManagerActor = UGameplayStatics::GetActorOfClass(GetWorld(), AProgressManager::StaticClass());
 	ProgressManager = Cast<AProgressManager>(ManagerActor);
 
-	if (ProgressManager)
+	if (ProgressManager && GetOwner()->HasAuthority())
 	{
-		// 시작하자마자 매니저의 최대치를 내 점수만큼 올림
-		if (!GetOwner()->HasAuthority()) return;
 		ProgressManager->AddMaxProgress(ProgressValue);
+	}
+}
+
+void UProgressComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	
+	if (GetOwner()->HasAuthority() && ProgressManager && !bIsTaskFinished)
+	{
+		ProgressManager->AddMaxProgress(-ProgressValue);
+		UE_LOG(LogTemp, Warning, TEXT("Progress Rolled Back: Actor %s destroyed before completion."), *GetOwner()->GetName());
 	}
 }
 
@@ -61,12 +70,13 @@ void UProgressComponent::UpdateProgressValue(float NewValue)
 }
 
 // 액터가 소각되거나 대걸레질이 완료되었을 때 호출
-void UProgressComponent::Notify_ProgressOver() const
+void UProgressComponent::Notify_ProgressOver()
 {
 	if (!GetOwner()->HasAuthority()) return;
 	
 	if (ProgressManager)
 	{
+		bIsTaskFinished = true;
 		ProgressManager->AddCurrentProgress(ProgressValue);
 	}
 }
