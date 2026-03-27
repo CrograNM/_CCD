@@ -49,6 +49,9 @@ protected:
 	UPROPERTY(Replicated)
 	bool bIsRunning = false;
 	
+	UPROPERTY(ReplicatedUsing = OnRep_IsExhausted)
+	bool bIsExhausted = false;
+	
 	UPROPERTY(EditAnywhere, Category = "Stats | Speed")
 	float RunSpeed = 500.f;
 	UPROPERTY(EditAnywhere, Category = "Stats | Speed")
@@ -60,11 +63,34 @@ protected:
 	float StaminaConsumptionRate = 20.f; // 초당 소모량
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats | Stamina")
 	float MaxStamina = 100.f;
+
+	UPROPERTY(EditAnywhere, Category = "Stats | Stamina")
+	float ExhaustionDelay = 3.0f;
+	
+	UPROPERTY(EditAnywhere, Category = "Stats | Sound")
+	TObjectPtr<USoundBase> ExhaustedSound;
+	
+	UPROPERTY(EditAnywhere, Category = "Stats | Effects")
+	float VignetteInterpSpeed = 2.0f;
+	
+	UPROPERTY()
+	TObjectPtr<UAudioComponent> ExhaustedAudioComp;
+	
+	FTimerHandle ExhaustionTimerHandle;
+	
+	// 탈진 시각 보간용 변수
+	float CurrentVignetteIntensity = 0.0f;
+	float TargetVignetteIntensity = 0.0f;
 	
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentStamina, VisibleAnywhere, BlueprintReadOnly, Category = "Stats | Stamina")
 	float CurrentStamina;
 	UFUNCTION()
 	void OnRep_CurrentStamina();
+	
+	UFUNCTION()
+	void OnRep_IsExhausted();
+	
+	void ResetExhaustion();
 	
 	/** --- 시야 판정, 쿨타임 --- */
 	UPROPERTY(ReplicatedUsing = OnRep_IsEyeClosed)

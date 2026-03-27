@@ -1,8 +1,11 @@
 
 #include "Component/CCD_StatComponent.h"
 
+#include "Camera/CameraComponent.h"
+#include "Components/AudioComponent.h"
 #include "Player/CCDCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
 UCCD_StatComponent::UCCD_StatComponent()
@@ -37,12 +40,17 @@ void UCCD_StatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 			if (CurrentStamina <= 0.f)
 			{
 				SetIsRunning(false);
+				bIsExhausted = true;
+				
+				OnRep_IsExhausted();
+				
+				GetWorld()->GetTimerManager().SetTimer(ExhaustionTimerHandle, this, &UCCD_StatComponent::ResetExhaustion, ExhaustionDelay, false);
 			}
 		}
 		else
 		{
 			// 걷기 혹은 정지 중: 스태미나 회복
-			if (CurrentStamina < MaxStamina)
+			if (!bIsExhausted && CurrentStamina < MaxStamina)
 			{
 				CurrentStamina = FMath::Clamp(CurrentStamina + (StaminaRegenRate * DeltaTime), 0.f, MaxStamina);
 			}
@@ -63,6 +71,18 @@ void UCCD_StatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 			CloseEye();
 		}
 	}
+	
+	if (OwnerCharacter && OwnerCharacter->IsLocallyControlled())
+	{
+		CurrentVignetteIntensity = FMath::FInterpTo(CurrentVignetteIntensity, TargetVignetteIntensity, DeltaTime, VignetteInterpSpeed);
+
+		// 카메라 컴포넌트에 적용
+		if (UCameraComponent* FPCamera = OwnerCharacter->GetFirstPersonCamera())
+		{
+			FPCamera->PostProcessSettings.bOverride_VignetteIntensity = true;
+			FPCamera->PostProcessSettings.VignetteIntensity = CurrentVignetteIntensity;
+		}
+	}
 }
 
 void UCCD_StatComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -70,6 +90,7 @@ void UCCD_StatComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(UCCD_StatComponent, bIsRunning);
 	DOREPLIFETIME(UCCD_StatComponent, CurrentStamina);
+	DOREPLIFETIME(UCCD_StatComponent, bIsExhausted);
 	DOREPLIFETIME(UCCD_StatComponent, bIsEyeClosed);
 	DOREPLIFETIME(UCCD_StatComponent, EyeCooldownTime);
 }
@@ -78,18 +99,72 @@ void UCCD_StatComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 void UCCD_StatComponent::SetIsRunning(const bool bNewIsRunning)
 {
 	if (!OwnerCharacter) return;
+	
+	if (bNewIsRunning && bIsExhausted) return;
+	
 	OwnerCharacter->GetCharacterMovement()->MaxWalkSpeed = bNewIsRunning ? RunSpeed : WalkSpeed;
 	Server_SetSpeed(bNewIsRunning);
 }
 void UCCD_StatComponent::Server_SetSpeed_Implementation(const bool bNewIsRunning)
 {
-	bIsRunning = bNewIsRunning;
+	if (bNewIsRunning && bIsExhausted)
+	{
+		bIsRunning = false;
+	}
+	else
+	{
+		bIsRunning = bNewIsRunning;
+	}
 	OwnerCharacter->GetCharacterMovement()->MaxWalkSpeed = bNewIsRunning ? RunSpeed : WalkSpeed;
 }
 void UCCD_StatComponent::OnRep_CurrentStamina()
 {
 	if (OwnerCharacter && OwnerCharacter->IsLocallyControlled())
 		OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
+}
+
+void UCCD_StatComponent::OnRep_IsExhausted()
+{
+	// 로컬 플레이어의 화면에서만 효과가 나타나도록 체크
+	if (OwnerCharacter && OwnerCharacter->IsLocallyControlled())
+	{
+		UCameraComponent* FPCamera = OwnerCharacter->GetFirstPersonCamera();
+		if (!FPCamera) return;
+
+		TargetVignetteIntensity = bIsExhausted ? 0.8f : 0.0f;
+		
+		if (bIsExhausted)
+		{
+
+			FPCamera->PostProcessSettings.bOverride_VignetteIntensity = true;
+			FPCamera->PostProcessSettings.VignetteIntensity = 0.8f;
+			
+			FPCamera->PostProcessSettings.bOverride_SceneFringeIntensity = true;
+			FPCamera->PostProcessSettings.SceneFringeIntensity = 5.0f; 
+			
+			if (ExhaustedSound && !ExhaustedAudioComp)
+			{
+				ExhaustedAudioComp = UGameplayStatics::SpawnSoundAttached(ExhaustedSound, OwnerCharacter->GetMesh());
+			}
+			if (ExhaustedAudioComp) ExhaustedAudioComp->Play();
+		}
+		else
+		{
+			FPCamera->PostProcessSettings.VignetteIntensity = 0.0f;
+			FPCamera->PostProcessSettings.SceneFringeIntensity = 0.0f;
+
+			if (ExhaustedAudioComp)
+			{
+				ExhaustedAudioComp->FadeOut(1.0f, 0.0f);
+			}
+		}
+	}
+}
+
+void UCCD_StatComponent::ResetExhaustion()
+{
+	bIsExhausted = false;
+	OnRep_IsExhausted();
 }
 
 // --- 시야 판정, 쿨타임 ---
