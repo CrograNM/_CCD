@@ -53,4 +53,9 @@ public:
 	
 private:
 	float FadeTimeAccumulator = 0.0f;
+	
+	void ValidateSurface(); // 스폰 시점에 해당 위치가 유효한지 검사
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Decal | Validation")
+	TArray<FName> AllowedSurfaceTags;
 };
