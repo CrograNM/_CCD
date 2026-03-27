@@ -24,6 +24,13 @@ public:
 	// Death - 강제로 물체 놓기 
 	void ForceRelease(); 
 	
+	void SetRotationMode(bool bActive);
+	bool IsRotationMode() const { return bIsRotationMode; }
+	
+	void AddRotationInput(float Pitch, float Yaw);
+	
+	UPrimitiveComponent* GetGrabbedComponent() const { return GrabbedComponent; }
+	
 protected:
 	virtual void BeginPlay() override;
 	
@@ -58,4 +65,11 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<class ACCDCharacter> OwnerCharacter;
+	
+	// 회전 모드 여부
+	bool bIsRotationMode = false;
+	
+	// 마우스 이동으로 누적된 회전값
+	UPROPERTY()
+	FRotator CustomRotationOffset = FRotator::ZeroRotator;
 };

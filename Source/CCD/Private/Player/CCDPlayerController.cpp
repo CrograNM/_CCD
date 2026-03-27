@@ -11,6 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Widget/SpectatorWidget.h"
 #include "Camera/PlayerCameraManager.h"
+#include "Component/CCD_InteractionComponent.h"
 #include "Component/CCD_StatComponent.h"
 #include "Engine/Scene.h"
 #include "GameData/CCDGameInstance.h"
@@ -112,10 +113,24 @@ void ACCDPlayerController::Input_Move(const FInputActionValue& Value)
 void ACCDPlayerController::Input_Look(const FInputActionValue& Value)
 {
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
+	
+	ACCDCharacter* TargetCharacter = Cast<ACCDCharacter>(GetPawn());
+    
+	// 캐릭터가 있고, 상호작용 컴포넌트가 회전 모드라면 시선 회전을 중단
+	if (TargetCharacter)
+	{
+		if (UCCD_InteractionComponent* InteractionComp = TargetCharacter->FindComponentByClass<UCCD_InteractionComponent>())
+		{
+			if (InteractionComp->IsRotationMode())
+			{
+				return;
+			}
+		}
+	}
 
+	// 회전 모드가 아닐 때만 기존 시선 회전 로직을 수행
 	if (LookAxisVector.X != 0.0f || LookAxisVector.Y != 0.0f)
 	{
-		// 마우스 입력을 컨트롤러 회전에 반영
 		AddYawInput(LookAxisVector.X);
 		AddPitchInput(LookAxisVector.Y);
 	}

@@ -44,28 +44,36 @@ void UCCD_InteractionComponent::GetLifetimeReplicatedProps(TArray<FLifetimePrope
 	DOREPLIFETIME(UCCD_InteractionComponent, GrabbedComponent);
 }
 
+void UCCD_InteractionComponent::AddRotationInput(float Pitch, float Yaw)
+{
+	float Sensitivity = 2.0f;
+	CustomRotationOffset.Pitch -= Pitch * Sensitivity;
+	CustomRotationOffset.Yaw += Yaw * Sensitivity;
+}
+
 void UCCD_InteractionComponent::PhysicsHandleUpdate(float DeltaTime)
 {
-	if (!PhysicsHandle || !GrabbedComponent) return;
+	if (!PhysicsHandle || !GrabbedComponent || !OwnerCharacter) return;
     
-	// 진짜 목표 지점
-	float TargetDistance = 200.f; // 이 수치를 조절하여 물체와의 거리 변경 가능
-	FVector RealTargetLocation = OwnerCharacter->GetFirstPersonCamera()->GetComponentLocation() + (OwnerCharacter->GetFirstPersonCamera()->GetForwardVector() * TargetDistance);
-	//FRotator RealTargetRotation = OwnerCharacter->GetFirstPersonCamera()->GetComponentRotation();
+	float TargetDistance = 200.f; 
+	UCameraComponent* PlayerCam = OwnerCharacter->GetFirstPersonCamera();
+	FVector RealTargetLocation = PlayerCam->GetComponentLocation() + (PlayerCam->GetForwardVector() * TargetDistance);
 	
-	float CurrentCameraYaw = OwnerCharacter->GetFirstPersonCamera()->GetComponentRotation().Yaw;
-	FRotator RealTargetRotation = FRotator(0.f, CurrentCameraYaw + GrabRelativeRotation.Yaw, 0.f);
+	FQuat CameraQuat = PlayerCam->GetComponentRotation().Quaternion();
+	FQuat RelativeQuat = GrabRelativeRotation.Quaternion();
+	FQuat CustomQuat = CustomRotationOffset.Quaternion();
 	
-	// 현재 핸들 위치와 회전 가져오기
+	FQuat CombinedQuat = CameraQuat * RelativeQuat * CustomQuat;
+	FRotator RealTargetRotation = CombinedQuat.Rotator();
+	
 	FVector CurrentLocation {};
 	FRotator CurrentRotation {};
 	PhysicsHandle->GetTargetLocationAndRotation(CurrentLocation, CurrentRotation);
-	
-	// 보간 계산
-	float FollowSpeed = 10.0f; // 이 수치를 조절하여 따라가는 속도 변경 가능
+    
+	float FollowSpeed = 10.0f; 
 	FVector NewLocation = FMath::VInterpTo(CurrentLocation, RealTargetLocation, DeltaTime, FollowSpeed);
 	FRotator NewRotation = FMath::RInterpTo(CurrentRotation, RealTargetRotation, DeltaTime, FollowSpeed);
-	
+    
 	PhysicsHandle->SetTargetLocationAndRotation(NewLocation, NewRotation);
 }
 
@@ -186,6 +194,9 @@ void UCCD_InteractionComponent::ReleaseObject_Impl()
 	if (!PhysicsHandle || !GrabbedComponent) return;
 	OwnerCharacter->SetIsActionInProgress(false); // 상호작용 중 상태 설정
 	
+	bIsRotationMode = false;
+	CustomRotationOffset = FRotator::ZeroRotator;
+	
 	PhysicsHandle->ReleaseComponent();
 	
 	if (GrabbedComponent)
@@ -200,4 +211,20 @@ void UCCD_InteractionComponent::ReleaseObject_Impl()
 	GrabbedComponent = nullptr;
 	
 	SetComponentTickEnabled(false);
+}
+
+void UCCD_InteractionComponent::SetRotationMode(bool bActive)
+{
+	if (bActive)
+	{
+		if (GrabbedComponent == nullptr)
+		{
+			bIsRotationMode = false;
+			return;
+		}
+		
+		CustomRotationOffset = FRotator::ZeroRotator;
+	}
+
+	bIsRotationMode = bActive;
 }

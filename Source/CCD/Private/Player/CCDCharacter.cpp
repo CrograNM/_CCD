@@ -1,6 +1,7 @@
 
 #include "Player/CCDCharacter.h"
 
+#include "EnhancedInputComponent.h"
 #include "Player/CCDPlayerController.h"
 #include "Actor/CCD_BodyFragment.h"
 #include "Actor/Decal_StainActor_Base.h"
@@ -25,6 +26,8 @@
 #include "GeometryCollection/GeometryCollectionComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "EnhancedInputSubsystems.h"
+#include "InputActionValue.h"
 
 /** --- 생성자 및 기본 함수 --- */
 ACCDCharacter::ACCDCharacter()
@@ -87,7 +90,19 @@ void ACCDCharacter::Tick(float DeltaTime)
 void ACCDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+	
+	UEnhancedInputComponent* EIC = Cast<UEnhancedInputComponent>(PlayerInputComponent);
+	if (EIC)
+	{
+		// 1. 마우스 이동 (LookAction은 에디터에서 할당된 InputAction)
+		EIC->BindAction(LookAction, ETriggerEvent::Triggered, this, &ACCDCharacter::Look);
+
+		// 2. 마우스 좌클릭 (IA_RotateMode 등의 이름으로 에디터에서 생성 필요)
+		EIC->BindAction(RotateAction, ETriggerEvent::Started, this, &ACCDCharacter::OnRotationPressed);
+		EIC->BindAction(RotateAction, ETriggerEvent::Completed, this, &ACCDCharacter::OnRotationReleased);
+	}
 }
+
 void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	// 변수 복제 등록
@@ -477,3 +492,32 @@ void ACCDCharacter::Server_Trigger096Panic_Implementation(ACCD_096* Target096)
 	}
 }
 
+void ACCDCharacter::Look(const FInputActionValue& Value)
+{
+	FVector2D LookAxisVector = Value.Get<FVector2D>();
+
+	// 물건을 들고 있고 + 좌클릭 중이라면 물체를 회전
+	if (InteractionComp && InteractionComp->IsRotationMode())
+	{
+		InteractionComp->AddRotationInput(LookAxisVector.Y, LookAxisVector.X);
+	}
+	else
+	{
+		// 평소에는 캐릭터 시선 처리
+		AddControllerYawInput(LookAxisVector.X);
+		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void ACCDCharacter::OnRotationPressed()
+{
+	if (InteractionComp && InteractionComp->GetGrabbedComponent()) 
+	{
+		InteractionComp->SetRotationMode(true);
+	}
+}
+
+void ACCDCharacter::OnRotationReleased()
+{
+	if (InteractionComp) InteractionComp->SetRotationMode(false);
+}

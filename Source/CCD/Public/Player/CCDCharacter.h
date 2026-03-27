@@ -15,6 +15,7 @@ class UCCD_ViewComponent;
 class UCCD_EquipmentComponent;
 class AGeometryCollectionActor;
 class ACCD_BodyFragment;
+class UInputAction;
 
 UCLASS()
 class CCD_API ACCDCharacter : public ACharacter
@@ -178,4 +179,19 @@ protected:
     
     UFUNCTION(Server, Reliable)
     void Server_Trigger096Panic(ACCD_096* Target096);
+    
+    // 마우스 이동 입력을 담당
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputAction> LookAction;
+    
+    // 마우스 좌클릭 입력을 담당
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputAction> RotateAction;
+    
+    // 마우스 이동
+    void Look(const struct FInputActionValue& Value);
+    
+    // 마우스 좌클릭 (회전 모드)
+    void OnRotationPressed();
+    void OnRotationReleased();
 };
