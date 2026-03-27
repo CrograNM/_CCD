@@ -23,10 +23,14 @@ ADecal_StainActor_Base::ADecal_StainActor_Base()
 	
 	// 부모 데칼 컴포넌트의 복제 설정
 	GetDecal()->SetIsReplicated(true);
+	
+	AllowedSurfaceTags = { FName("Floor"), FName("Wall") };
 }
 
 void ADecal_StainActor_Base::BeginPlay()
 {
+	ValidateSurface(); // 스폰 시점에 해당 위치가 유효한지 검사
+	
 	Super::BeginPlay();
 	
 	SetActorTickEnabled(false); // 초기에는 Tick 비활성화 -> 양동이에서 스폰 시 조건에 맞춰 활성화
@@ -108,5 +112,48 @@ void ADecal_StainActor_Base::OnRep_DecalColor()
 	if (DecalDMI)
 	{
 		DecalDMI->SetVectorParameterValue(TEXT("BaseColor Tint"), DecalColor);
+	}
+}
+
+void ADecal_StainActor_Base::ValidateSurface()
+{
+	// 스폰 시점에 데칼의 투영 방향으로 짧은 트레이스 수행
+	FHitResult Hit;
+	FVector Start = GetActorLocation();
+	FVector End = Start + (GetActorForwardVector() * 20.0f);
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_WorldStatic, Params))
+	{
+		AActor* HitActor = Hit.GetActor();
+		if (HitActor)
+		{
+			// --- 태그 검사 ---
+			bool bHasValidTag = false;
+			
+			// 에디터에서 설정한 허용 태그 리스트를 순회하며 검사
+			for (const FName& Tag : AllowedSurfaceTags)
+			{
+				if (HitActor->ActorHasTag(Tag))
+				{
+					bHasValidTag = true;
+					break;
+				}
+			}
+
+			// 태그가 없거나 유효하지 않으면 즉시 파괴
+			if (!bHasValidTag)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Decal Spawn Denied: Actor %s does not have valid tags."), *HitActor->GetName());
+				Destroy();
+				return;
+			}
+		}
+	}
+	else
+	{
+		Destroy();
 	}
 }
