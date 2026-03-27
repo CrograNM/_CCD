@@ -23,6 +23,8 @@ ADecal_StainActor_Base::ADecal_StainActor_Base()
 	
 	// 부모 데칼 컴포넌트의 복제 설정
 	GetDecal()->SetIsReplicated(true);
+	
+	AllowedSurfaceTags = { FName("Floor"), FName("Wall") };
 }
 
 void ADecal_StainActor_Base::BeginPlay()

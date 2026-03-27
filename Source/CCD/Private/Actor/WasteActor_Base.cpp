@@ -51,7 +51,6 @@ void AWasteActor_Base::UpdatePhysicsReplicates(bool inReplicates)
 void AWasteActor_Base::OnMeshHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	if (!HitSound) return;
-	UE_LOG(LogTemp, Warning, TEXT("%s - OnMeshHit: ImpulseSize = %f"), *GetName(), NormalImpulse.Size());
 	// 충격 강도 계산
 	float ImpulseSize = NormalImpulse.Size();
 
