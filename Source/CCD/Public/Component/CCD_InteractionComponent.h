@@ -44,6 +44,12 @@ protected:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_ReleaseObject();
 	
+	UFUNCTION(Server, Unreliable)
+	void Server_AddRotationInput(float Pitch, float Yaw);
+	
+	UFUNCTION(Server, Reliable)
+	void Server_SetRotationMode(bool bActive);
+	
 private:
 	/** --- 내부 컴포넌트 및 변수 --- */
 	UPROPERTY()
@@ -70,6 +76,6 @@ private:
 	bool bIsRotationMode = false;
 	
 	// 마우스 이동으로 누적된 회전값
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	FRotator CustomRotationOffset = FRotator::ZeroRotator;
 };

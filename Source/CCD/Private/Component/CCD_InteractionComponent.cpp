@@ -41,7 +41,9 @@ void UCCD_InteractionComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 void UCCD_InteractionComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
 	DOREPLIFETIME(UCCD_InteractionComponent, GrabbedComponent);
+	DOREPLIFETIME(UCCD_InteractionComponent, CustomRotationOffset);
 }
 
 void UCCD_InteractionComponent::AddRotationInput(float Pitch, float Yaw)
@@ -49,6 +51,16 @@ void UCCD_InteractionComponent::AddRotationInput(float Pitch, float Yaw)
 	float Sensitivity = 2.0f;
 	CustomRotationOffset.Pitch -= Pitch * Sensitivity;
 	CustomRotationOffset.Yaw += Yaw * Sensitivity;
+	
+	if (GetOwnerRole() < ROLE_Authority)
+	{
+		Server_AddRotationInput(Pitch, Yaw);
+	}
+}
+
+void UCCD_InteractionComponent::Server_AddRotationInput_Implementation(float Pitch, float Yaw)
+{
+	AddRotationInput(Pitch, Yaw);
 }
 
 void UCCD_InteractionComponent::PhysicsHandleUpdate(float DeltaTime)
@@ -215,6 +227,11 @@ void UCCD_InteractionComponent::ReleaseObject_Impl()
 
 void UCCD_InteractionComponent::SetRotationMode(bool bActive)
 {
+	if (GetOwnerRole() < ROLE_Authority)
+	{
+		Server_SetRotationMode(bActive);
+	}
+	
 	if (bActive)
 	{
 		if (GrabbedComponent == nullptr)
@@ -227,4 +244,9 @@ void UCCD_InteractionComponent::SetRotationMode(bool bActive)
 	}
 
 	bIsRotationMode = bActive;
+}
+
+void UCCD_InteractionComponent::Server_SetRotationMode_Implementation(bool bActive)
+{
+	SetRotationMode(bActive);
 }
