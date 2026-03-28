@@ -67,6 +67,9 @@ void ACCD_EMopActor::PerformMopTrace()
 	{
 		AActor* HitActor = HitResult.GetActor();
 		if (!HitActor) return;
+		
+		// 세척 효과 재생 (일단 맞은 액터가 있으면)
+		Multicast_PlayWashEffect(HitResult.ImpactPoint, HitResult.ImpactNormal);
 
 		// 물양동이 처리
 		if (AWaterBucketActor* Bucket = Cast<AWaterBucketActor>(HitActor))
@@ -79,10 +82,9 @@ void ACCD_EMopActor::PerformMopTrace()
 		}
 
 		// 데칼 세척 처리
+		if (MopPollution_Blood + MopPollution_Excrement >= 1.0f) return;
 		if (UWashableComponent* WashComp = HitActor->FindComponentByClass<UWashableComponent>())
 		{
-			if (MopPollution_Blood + MopPollution_Excrement >= 1.0f) return;
-
 			WashComp->TakeWashDamage(50.f);
 			
 			const float PollutionAdded = 1.0f / MaxUseCount;
@@ -94,8 +96,6 @@ void ACCD_EMopActor::PerformMopTrace()
 			UpdateMopMaterial();
 		}
 		
-		// 세척 효과 재생 (모든 클라이언트에서)
-		Multicast_PlayWashEffect(HitResult.ImpactPoint, HitResult.ImpactNormal);
 	}
 	else {
 		// 대걸레 허공 휘두르기 사운드 재생
