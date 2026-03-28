@@ -88,7 +88,7 @@ void ACCD_EMopActor::PerformMopTrace()
 			const float PollutionAdded = 1.0f / MaxUseCount;
 			if (WashComp->GetWashableType() == ECCD_WashableType::EWT_Blood) 
 				MopPollution_Blood += PollutionAdded;
-			else 
+			else if (WashComp->GetWashableType() == ECCD_WashableType::EWT_Excrement) 
 				MopPollution_Excrement += PollutionAdded;
 			
 			UpdateMopMaterial();

@@ -73,4 +73,8 @@ protected:
 	// 모든 클라이언트에서 소리를 재생하기 위한 RPC
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlayWashSoundEffect();
+	
+private:
+	UPROPERTY(EditAnywhere, Category = "Design")
+	int32 MaxUseCount = 5;
 };
