@@ -58,4 +58,7 @@ protected:
 private:
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> DynamicMopMaterial;
+	
+	UPROPERTY(EditAnywhere, Category = "Design")
+	int32 MaxUseCount = 5;	// 세척 없이 사용 가능한 최대 횟수
 };
