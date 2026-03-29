@@ -32,3 +32,6 @@ PlayRate = GetAnimPlayRate(200, 10, 0.22, -100, 0.61)
 
 print("\n=== Run Backward ===")
 PlayRate = GetAnimPlayRate(500, 20, 0.24, -120, 0.43)
+
+print("\n=== Run Forward ===")
+PlayRate = GetAnimPlayRate(500, -50, 0.17, 130, 0.32)
