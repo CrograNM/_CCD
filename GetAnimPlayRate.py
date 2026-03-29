@@ -26,3 +26,9 @@ PlayRate = GetAnimPlayRate(200, 20, 0.24, -120, 0.81)
 
 print("\n=== Walk Left/Right ===")
 PlayRate = GetAnimPlayRate(200, -80, 0.3, 110, 0.74)
+
+print("\n=== Jog Backward ===")
+PlayRate = GetAnimPlayRate(200, 10, 0.22, -100, 0.61)
+
+print("\n=== Run Backward ===")
+PlayRate = GetAnimPlayRate(500, 20, 0.24, -120, 0.43)
