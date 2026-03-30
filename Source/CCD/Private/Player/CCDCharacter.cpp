@@ -351,15 +351,16 @@ void ACCDCharacter::HandleDeath()
 	// 핏자국 데칼 스폰
 	if (BloodStainActorClass)
 	{
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+		
 		for (int i = 0; i < 3; ++i)
 		{
 			FHitResult HitResult;
 			FVector Start = GetActorLocation() + FVector(0.f, 0.f, BloodSpawnHeight);
 			FVector End = Start + FVector(FMath::RandRange(-BloodSpawnRange, BloodSpawnRange), FMath::RandRange(-BloodSpawnRange, BloodSpawnRange), -500.0f - BloodSpawnHeight);
-			FCollisionQueryParams Params;
-			Params.AddIgnoredActor(this);
-	
-			if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+			
+			if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, Params))
 			{
 				FActorSpawnParameters SpawnParams;
 				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;

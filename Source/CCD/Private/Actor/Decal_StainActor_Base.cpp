@@ -117,43 +117,50 @@ void ADecal_StainActor_Base::OnRep_DecalColor()
 
 void ADecal_StainActor_Base::ValidateSurface()
 {
-	// 스폰 시점에 데칼의 투영 방향으로 짧은 트레이스 수행
-	FHitResult Hit;
-	FVector Start = GetActorLocation() - (GetActorForwardVector() * 10.0f);
-	FVector End = Start + (GetActorForwardVector() * 50.0f);
-
 	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
-
-	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_WorldStatic, Params))
+	Params.AddIgnoredActor(this); // 기본적으로 자기 자신 무시
+	
+	for (int i = 0; i < 3; ++i)
 	{
-		AActor* HitActor = Hit.GetActor();
-		if (HitActor)
-		{
-			// --- 태그 검사 ---
-			bool bHasValidTag = false;
-			
-			// 에디터에서 설정한 허용 태그 리스트를 순회하며 검사
-			for (const FName& Tag : AllowedSurfaceTags)
-			{
-				if (HitActor->ActorHasTag(Tag))
-				{
-					bHasValidTag = true;
-					break;
-				}
-			}
+		// 스폰 시점에 데칼의 투영 방향으로 짧은 트레이스 수행
+		FHitResult Hit;
+		FVector Start = GetActorLocation() - (GetActorForwardVector() * 10.0f);
+		FVector End = Start + (GetActorForwardVector() * 50.0f);
 
-			// 태그가 없거나 유효하지 않으면 즉시 파괴
-			if (!bHasValidTag)
+		if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_WorldStatic, Params))
+		{
+			AActor* HitActor = Hit.GetActor();
+			if (HitActor)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Decal Spawn Denied: Actor %s does not have valid tags."), *HitActor->GetName());
-				Destroy();
-				return;
+				// --- 태그 검사 ---
+				bool bHasValidTag = false;
+			
+				// 에디터에서 설정한 허용 태그 리스트를 순회하며 검사
+				for (const FName& Tag : AllowedSurfaceTags)
+				{
+					if (HitActor->ActorHasTag(Tag))
+					{
+						bHasValidTag = true;
+						break;
+					}
+				}
+
+				// 태그 검사에 성공하면 유효한 표면으로 간주하여 데칼 유지, 실패하면 다음 시도
+				if (bHasValidTag) 
+					return;
+				
+				Params.AddIgnoredActor(HitActor);
+				// UE_LOG(LogTemp, Warning, TEXT("%s - LineTrace hit actor %s, but no tags. Attempt %d/3"), *GetName(), *HitActor->GetName(), i + 1);
 			}
 		}
+		else
+		{
+			// UE_LOG(LogTemp, Warning, TEXT("%s - LineTrace No Hit"), *GetName());
+			break; 
+		}
 	}
-	else
-	{
-		Destroy();
-	}
+	
+	// 3회 시도 후에도 유효한 표면이 감지되지 않으면 데칼 제거
+	UE_LOG(LogTemp, Warning, TEXT("%s - Invalid surface. Destroying decal."), *GetName());
+	Destroy();
 }

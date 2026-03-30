@@ -27,5 +27,5 @@ void UCCDPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	ForwardSpeed = LocalVelocity.X;
 	RightSpeed = LocalVelocity.Y;
 	
-	UE_LOG(LogTemp, Log, TEXT("Forward: %f, Right: %f, Total: %f"), ForwardSpeed, RightSpeed, Velocity.Size());
+	// UE_LOG(LogTemp, Log, TEXT("Forward: %f, Right: %f, Total: %f"), ForwardSpeed, RightSpeed, Velocity.Size());
 }
