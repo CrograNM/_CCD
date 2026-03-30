@@ -55,7 +55,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Stats | Speed")
 	float RunSpeed = 500.f;
 	UPROPERTY(EditAnywhere, Category = "Stats | Speed")
-	float WalkSpeed = 200.f;
+	float WalkSpeed = 250.f;
 	
 	UPROPERTY(EditAnywhere, Category = "Stats | Stamina")
 	float StaminaRegenRate = 15.f; // 초당 회복량
