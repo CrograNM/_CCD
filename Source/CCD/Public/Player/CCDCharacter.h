@@ -90,9 +90,13 @@ public:
     FORCEINLINE UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
     FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
     FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+    
     FORCEINLINE void SetRemoteControlRotation(FRotator NewRotation) { RemoteControlRotation = NewRotation;}
+    UFUNCTION(BlueprintCallable)
+    FORCEINLINE FRotator GetRemoteControlRotation() const { return RemoteControlRotation; }
     
     FORCEINLINE UCCD_ViewComponent* GetViewComp() const { return ViewComp; }
+    FORCEINLINE UCCD_EquipmentComponent* GetEquipmentComp() const { return EquipmentComp; }
     
     UFUNCTION(BlueprintCallable)
     FORCEINLINE bool IsDead() const { return bIsDead; }

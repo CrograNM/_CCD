@@ -20,6 +20,7 @@ void UCCDPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	
 	if (!OwnerCharacter) return;
 
+	// ----- Character -> Speed(X, Y) -----
 	const FVector Velocity = OwnerCharacter->GetVelocity();
 	const FRotator Rotation = OwnerCharacter->GetActorRotation();
 	const FVector LocalVelocity = Rotation.UnrotateVector(Velocity);
@@ -28,4 +29,10 @@ void UCCDPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	RightSpeed = LocalVelocity.Y;
 	
 	// UE_LOG(LogTemp, Log, TEXT("Forward: %f, Right: %f, Total: %f"), ForwardSpeed, RightSpeed, Velocity.Size());
+
+	// ----- Character -> Equipment State -----
+	EquipmentState = OwnerCharacter->GetEquipmentComp()->GetEquipmentState();
+	
+	// ----- Is Falling -----
+	bIsFalling = OwnerCharacter->GetCharacterMovement()->IsFalling();
 }
