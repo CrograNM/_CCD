@@ -109,6 +109,60 @@ void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ACCDCharacter, RemoteControlRotation);
 	DOREPLIFETIME(ACCDCharacter, bIsDead);
+	DOREPLIFETIME(ACCDCharacter, bIsEmoting);
+	DOREPLIFETIME(ACCDCharacter, bPendingEmote);
+	DOREPLIFETIME(ACCDCharacter, bIsActionInProgress);
+	DOREPLIFETIME(ACCDCharacter, bIsUnequipping);
+	DOREPLIFETIME(ACCDCharacter, CurrentEmoteSection);
+}
+
+void ACCDCharacter::PerformEmote(FName EmoteSection)
+{
+	Server_PerformEmote(EmoteSection);
+}
+
+void ACCDCharacter::Server_PerformEmote_Implementation(FName EmoteSection)
+{
+	if (!EmoteMontage || bIsDead) return;
+	
+	CurrentEmoteSection = (EmoteSection == NAME_None) ? TEXT("GangnamStyle") : EmoteSection;
+	
+	// 장비 장착 여부에 따라 -> 바로 재생 or 장비 해제 후 재생
+	if (EquipmentComp && EquipmentComp->GetEquipmentState() != ECCD_EquipmentState::EES_Hands)
+	{
+		bPendingEmote = true; // 장비 해제 후 이모트 재생 예약
+		SwitchEquipment(ECCD_EquipmentState::EES_Hands);
+	}
+	else
+	{
+		// 맨손이라면 즉시 이모트 재생
+		Server_PlayEmoteMontage(CurrentEmoteSection);
+	}
+}
+
+void ACCDCharacter::Server_PlayEmoteMontage_Implementation(FName EmoteSection)
+{
+	bIsActionInProgress = true; // 액션 진행중 플래그 설정
+	bIsEmoting = true; // 이모트 상태 설정
+	Multicast_PlayEmoteMontage(EmoteSection, 1.0f);
+	
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && EmoteMontage)
+	{
+		FOnMontageEnded EmoteEndedDelegate;
+		EmoteEndedDelegate.BindUObject(this, &ACCDCharacter::OnEmoteMontageEnded);
+		AnimInstance->Montage_SetEndDelegate(EmoteEndedDelegate, EmoteMontage);
+	}
+}
+
+void ACCDCharacter::Multicast_PlayEmoteMontage_Implementation(FName SectionName, float PlayRate)
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && EmoteMontage)
+	{
+		AnimInstance->Montage_Play(EmoteMontage, PlayRate);
+		AnimInstance->Montage_JumpToSection(SectionName, EmoteMontage);
+	}
 }
 
 /** --- 입력 바인딩 : 상호작용, 1-3인칭 전환, 장비 전환 및 사용 --- */
@@ -240,10 +294,9 @@ void ACCDCharacter::Multicast_PlayEquipMontage_Implementation(FName SectionName,
 }
 void ACCDCharacter::Multicast_StopMontage_Implementation()
 {
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && EquipMontage)
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
 	{
-		AnimInstance->Montage_Stop(0.2f, EquipMontage);
+		AnimInstance->StopAllMontages(0.2f);
 	}
 }
 void ACCDCharacter::OnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted)
@@ -252,12 +305,31 @@ void ACCDCharacter::OnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted
 	
 	bIsActionInProgress = false; // 액션 상태 해제
 	
-	// 만약 장비 교체 중이었다면 기존 로직 수행
+	// 장비 해제(Unequipping) 단계가 끝났을 때
 	if (bIsUnequipping)
 	{
 		EquipmentComp->ProceedToEquip(EquipmentComp->GetPendingEquipmentState());
 	}
+	
+	// 이모트 예약 헀다면 (장비 교체 -> 이후 이모트 재생)
+	if (bPendingEmote)
+	{
+		bPendingEmote = false; // 예약 해제
+		Server_PlayEmoteMontage(CurrentEmoteSection);
+	}
 }
+void ACCDCharacter::OnEmoteMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (!HasAuthority()) return;
+	bIsActionInProgress = false; // 액션 상태 해제
+	bIsEmoting = false; // 이모트 상태 해제
+}
+
+void ACCDCharacter::Server_StopMontage_Implementation()
+{
+	Multicast_StopMontage();
+}
+
 void ACCDCharacter::BindMontageEndedDelegate()
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();

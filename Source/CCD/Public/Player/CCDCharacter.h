@@ -28,7 +28,7 @@ public:
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-    
+  
     /** --- 입력 바인딩 함수 --- */
     UFUNCTION(BlueprintCallable, Category = "Interact")
     void PerformInteract();
@@ -65,18 +65,36 @@ public:
     void Server_Revive();
     
     /** --- 애니메이션 및 동기화 --- */
+    UFUNCTION(BlueprintCallable, Category = "Animation | Emote")
+    void PerformEmote(FName EmoteSection);
+    
+    UFUNCTION(Server, Reliable)
+    void Server_PerformEmote(FName EmoteSection);
+    
+    UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Animation | Emote")
+    void Server_PlayEmoteMontage(FName EmoteSection);
+    
+    UFUNCTION(NetMulticast, Reliable, Category = "Animation | Emote")
+    void Multicast_PlayEmoteMontage(FName SectionName, float PlayRate);
+    
     UFUNCTION(NetMulticast, Reliable, Category = "Animation")
     void Multicast_PlayEquipMontage(FName SectionName, float PlayRate);
-
+    
     UFUNCTION(NetMulticast, Reliable, Category = "Animation")
     void Multicast_StopMontage();
     
     UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Animation")
+    void Server_StopMontage();
+    
+    UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Animation")
     void Server_PlayActionOfMop();
     
+    /** --- Montage End CallBack Binding --- */
+    void BindMontageEndedDelegate();
     UFUNCTION()
     void OnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted);
-    void BindMontageEndedDelegate();
+    UFUNCTION()
+    void OnEmoteMontageEnded(UAnimMontage* Montage, bool bInterrupted);
     
     /** --- Getter / Setter --- */
     FORCEINLINE TObjectPtr<UAnimMontage> GetEquipMontage() const { return EquipMontage; }
@@ -87,12 +105,19 @@ public:
     FORCEINLINE bool GetIsActionInProgress() const { return bIsActionInProgress; }
     FORCEINLINE void SetIsActionInProgress(bool bNewIsActionInProgress) { bIsActionInProgress = bNewIsActionInProgress; }
 
+    FORCEINLINE bool GetIsEmoting() const { return bIsEmoting; }
+    FORCEINLINE void SetIsEmoting(bool bNewIsEmoting) { bIsEmoting = bNewIsEmoting; }
+    
     FORCEINLINE UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
     FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
     FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+    
     FORCEINLINE void SetRemoteControlRotation(FRotator NewRotation) { RemoteControlRotation = NewRotation;}
+    UFUNCTION(BlueprintCallable)
+    FORCEINLINE FRotator GetRemoteControlRotation() const { return RemoteControlRotation; }
     
     FORCEINLINE UCCD_ViewComponent* GetViewComp() const { return ViewComp; }
+    FORCEINLINE UCCD_EquipmentComponent* GetEquipmentComp() const { return EquipmentComp; }
     
     UFUNCTION(BlueprintCallable)
     FORCEINLINE bool IsDead() const { return bIsDead; }
@@ -100,7 +125,7 @@ public:
     bool GetIsObserveActivated() const { return StatComp ? StatComp->GetIsObserveActivated() : false; }
     
     void CheckForSCP096();
-    
+
 protected:
     virtual void BeginPlay() override;
     
@@ -136,12 +161,28 @@ protected:
     /** --- 기타 --- */
     UPROPERTY(Replicated)
     FRotator RemoteControlRotation;
+    
+    UPROPERTY(Replicated)
     bool bIsUnequipping = false;
+    
+    UPROPERTY(Replicated)
     bool bIsActionInProgress = false; // 애니메이션, 상호작용 등 액션 진행 중인지 여부
-
+    
+    UPROPERTY(Replicated)
+    bool bIsEmoting = false; // 이모트 중인지 여부
+    
+    UPROPERTY(Replicated)
+    bool bPendingEmote = false; // 장비 교체 중에 이모트 재생 요청이 들어왔는지 여부 (장비 교체 -> 이후 이모트 재생)
+    
+    UPROPERTY(Replicated)
+    FName CurrentEmoteSection; // 현재 재생 중인 이모트 섹션 이름 (없으면 NAME_None)
+    
     UPROPERTY(EditAnywhere, Category = "Animation")
     TObjectPtr<UAnimMontage> EquipMontage;
-
+    
+    UPROPERTY(EditAnywhere, Category = "Animation")
+    TObjectPtr<UAnimMontage> EmoteMontage;
+    
     UPROPERTY(EditAnywhere, Category = "Design")
     float InteractRange = 300.f;
     
