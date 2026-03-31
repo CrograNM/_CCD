@@ -111,6 +111,40 @@ void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(ACCDCharacter, bIsDead);
 }
 
+void ACCDCharacter::PerformEmote(FName EmoteSection)
+{
+	if (!EmoteMontage || bIsDead) return;
+	
+	// 1. 특정 UI 등에서 애니메이션 종류 (SectionName) 선택 가능하도록 하고 받아옴
+	EmoteSection = TEXT("GangnamStyle"); // 일단은 고정으로 처리
+	
+	// 2. 현재 장비 상태 모두 해제
+	if (EquipmentComp && EquipmentComp->GetEquipmentState() != ECCD_EquipmentState::EES_Hands)
+	{
+		SwitchEquipment(ECCD_EquipmentState::EES_Hands);
+	}
+	
+	// 3. 특정 몽타주 재생 (서버 요청, 멀티캐스트 실행)
+	Server_PlayEmoteMontage(EmoteSection);
+}
+
+void ACCDCharacter::Server_PlayEmoteMontage_Implementation(FName EmoteSection)
+{
+	bIsActionInProgress = true; // 액션 진행중 플래그 설정
+	Multicast_PlayEmoteMontage(EmoteSection, 1.0f);
+	BindMontageEndedDelegate(); // 몽타주 종료 델리게이트 바인딩
+}
+
+void ACCDCharacter::Multicast_PlayEmoteMontage_Implementation(FName SectionName, float PlayRate)
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && EmoteMontage)
+	{
+		AnimInstance->Montage_Play(EmoteMontage, PlayRate);
+		AnimInstance->Montage_JumpToSection(SectionName, EmoteMontage);
+	}
+}
+
 /** --- 입력 바인딩 : 상호작용, 1-3인칭 전환, 장비 전환 및 사용 --- */
 void ACCDCharacter::PerformInteract()
 {
@@ -240,10 +274,9 @@ void ACCDCharacter::Multicast_PlayEquipMontage_Implementation(FName SectionName,
 }
 void ACCDCharacter::Multicast_StopMontage_Implementation()
 {
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && EquipMontage)
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
 	{
-		AnimInstance->Montage_Stop(0.2f, EquipMontage);
+		AnimInstance->StopAllMontages(0.2f);
 	}
 }
 void ACCDCharacter::OnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted)
@@ -257,6 +290,11 @@ void ACCDCharacter::OnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted
 	{
 		EquipmentComp->ProceedToEquip(EquipmentComp->GetPendingEquipmentState());
 	}
+}
+void ACCDCharacter::OnEmoteMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (!HasAuthority()) return;
+	bIsActionInProgress = false; // 액션 상태 해제
 }
 void ACCDCharacter::BindMontageEndedDelegate()
 {

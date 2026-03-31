@@ -28,7 +28,7 @@ public:
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-    
+  
     /** --- 입력 바인딩 함수 --- */
     UFUNCTION(BlueprintCallable, Category = "Interact")
     void PerformInteract();
@@ -65,18 +65,30 @@ public:
     void Server_Revive();
     
     /** --- 애니메이션 및 동기화 --- */
+    UFUNCTION(BlueprintCallable, Category = "Animation | Emote")
+    void PerformEmote(FName EmoteSection);
+    
+    UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Animation | Emote")
+    void Server_PlayEmoteMontage(FName EmoteSection);
+    
+    UFUNCTION(NetMulticast, Reliable, Category = "Animation | Emote")
+    void Multicast_PlayEmoteMontage(FName SectionName, float PlayRate);
+    
     UFUNCTION(NetMulticast, Reliable, Category = "Animation")
     void Multicast_PlayEquipMontage(FName SectionName, float PlayRate);
-
+    
     UFUNCTION(NetMulticast, Reliable, Category = "Animation")
     void Multicast_StopMontage();
     
     UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Animation")
     void Server_PlayActionOfMop();
     
+    /** --- Montage End CallBack Binding --- */
+    void BindMontageEndedDelegate();
     UFUNCTION()
     void OnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted);
-    void BindMontageEndedDelegate();
+    UFUNCTION()
+    void OnEmoteMontageEnded(UAnimMontage* Montage, bool bInterrupted);
     
     /** --- Getter / Setter --- */
     FORCEINLINE TObjectPtr<UAnimMontage> GetEquipMontage() const { return EquipMontage; }
@@ -104,7 +116,7 @@ public:
     bool GetIsObserveActivated() const { return StatComp ? StatComp->GetIsObserveActivated() : false; }
     
     void CheckForSCP096();
-    
+
 protected:
     virtual void BeginPlay() override;
     
@@ -145,7 +157,10 @@ protected:
 
     UPROPERTY(EditAnywhere, Category = "Animation")
     TObjectPtr<UAnimMontage> EquipMontage;
-
+    
+    UPROPERTY(EditAnywhere, Category = "Animation")
+    TObjectPtr<UAnimMontage> EmoteMontage;
+    
     UPROPERTY(EditAnywhere, Category = "Design")
     float InteractRange = 300.f;
     
