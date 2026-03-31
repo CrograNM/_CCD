@@ -81,6 +81,9 @@ public:
     void Multicast_StopMontage();
     
     UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Animation")
+    void Server_StopMontage();
+    
+    UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Animation")
     void Server_PlayActionOfMop();
     
     /** --- Montage End CallBack Binding --- */
@@ -99,6 +102,9 @@ public:
     FORCEINLINE bool GetIsActionInProgress() const { return bIsActionInProgress; }
     FORCEINLINE void SetIsActionInProgress(bool bNewIsActionInProgress) { bIsActionInProgress = bNewIsActionInProgress; }
 
+    FORCEINLINE bool GetIsEmoting() const { return bIsEmoting; }
+    FORCEINLINE void SetIsEmoting(bool bNewIsEmoting) { bIsEmoting = bNewIsEmoting; }
+    
     FORCEINLINE UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
     FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
     FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
@@ -154,6 +160,7 @@ protected:
     FRotator RemoteControlRotation;
     bool bIsUnequipping = false;
     bool bIsActionInProgress = false; // 애니메이션, 상호작용 등 액션 진행 중인지 여부
+    bool bIsEmoting = false; // 이모트 중인지 여부
 
     UPROPERTY(EditAnywhere, Category = "Animation")
     TObjectPtr<UAnimMontage> EquipMontage;

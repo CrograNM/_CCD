@@ -131,8 +131,16 @@ void ACCDCharacter::PerformEmote(FName EmoteSection)
 void ACCDCharacter::Server_PlayEmoteMontage_Implementation(FName EmoteSection)
 {
 	bIsActionInProgress = true; // 액션 진행중 플래그 설정
+	bIsEmoting = true; // 이모트 상태 설정
 	Multicast_PlayEmoteMontage(EmoteSection, 1.0f);
-	BindMontageEndedDelegate(); // 몽타주 종료 델리게이트 바인딩
+	
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && EmoteMontage)
+	{
+		FOnMontageEnded EmoteEndedDelegate;
+		EmoteEndedDelegate.BindUObject(this, &ACCDCharacter::OnEmoteMontageEnded);
+		AnimInstance->Montage_SetEndDelegate(EmoteEndedDelegate, EmoteMontage);
+	}
 }
 
 void ACCDCharacter::Multicast_PlayEmoteMontage_Implementation(FName SectionName, float PlayRate)
@@ -295,7 +303,14 @@ void ACCDCharacter::OnEmoteMontageEnded(UAnimMontage* Montage, bool bInterrupted
 {
 	if (!HasAuthority()) return;
 	bIsActionInProgress = false; // 액션 상태 해제
+	bIsEmoting = false; // 이모트 상태 해제
 }
+
+void ACCDCharacter::Server_StopMontage_Implementation()
+{
+	Multicast_StopMontage();
+}
+
 void ACCDCharacter::BindMontageEndedDelegate()
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();

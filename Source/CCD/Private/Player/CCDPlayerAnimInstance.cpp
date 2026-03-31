@@ -35,4 +35,14 @@ void UCCDPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	
 	// ----- Is Falling -----
 	bIsFalling = OwnerCharacter->GetCharacterMovement()->IsFalling();
+	
+	// ----- Character -> Is Emoting -----
+	// 움직임이 감지될 경우 이모트 상태를 자동으로 해제하도록 처리 (예: 이동 시작 시 이모트 취소)
+	bIsEmoting = OwnerCharacter->GetIsEmoting();
+	if (Velocity.Size() > 0.1f && bIsEmoting)
+	{
+		bIsEmoting = false;
+		OwnerCharacter->SetIsEmoting(false); // 캐릭터의 이모트 상태도 동기화하여 해제
+		OwnerCharacter->Server_StopMontage();
+	}
 }

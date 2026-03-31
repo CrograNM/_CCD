@@ -33,4 +33,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Equipment")
 	ECCD_EquipmentState EquipmentState;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Emote")
+	bool bIsEmoting = false;
 };
