@@ -68,6 +68,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Animation | Emote")
     void PerformEmote(FName EmoteSection);
     
+    UFUNCTION(Server, Reliable)
+    void Server_PerformEmote(FName EmoteSection);
+    
     UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Animation | Emote")
     void Server_PlayEmoteMontage(FName EmoteSection);
     
@@ -85,9 +88,6 @@ public:
     
     UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Animation")
     void Server_PlayActionOfMop();
-    
-    UPROPERTY()
-    FName CurrentEmoteSection; // 현재 재생 중인 이모트 섹션 이름 (없으면 NAME_None)
     
     /** --- Montage End CallBack Binding --- */
     void BindMontageEndedDelegate();
@@ -161,13 +161,21 @@ protected:
     /** --- 기타 --- */
     UPROPERTY(Replicated)
     FRotator RemoteControlRotation;
+    
+    UPROPERTY(Replicated)
     bool bIsUnequipping = false;
+    
+    UPROPERTY(Replicated)
     bool bIsActionInProgress = false; // 애니메이션, 상호작용 등 액션 진행 중인지 여부
     
     UPROPERTY(Replicated)
     bool bIsEmoting = false; // 이모트 중인지 여부
+    
     UPROPERTY(Replicated)
     bool bPendingEmote = false; // 장비 교체 중에 이모트 재생 요청이 들어왔는지 여부 (장비 교체 -> 이후 이모트 재생)
+    
+    UPROPERTY(Replicated)
+    FName CurrentEmoteSection; // 현재 재생 중인 이모트 섹션 이름 (없으면 NAME_None)
     
     UPROPERTY(EditAnywhere, Category = "Animation")
     TObjectPtr<UAnimMontage> EquipMontage;
