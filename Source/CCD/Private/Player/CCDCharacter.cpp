@@ -109,6 +109,8 @@ void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ACCDCharacter, RemoteControlRotation);
 	DOREPLIFETIME(ACCDCharacter, bIsDead);
+	DOREPLIFETIME(ACCDCharacter, bIsEmoting);
+	DOREPLIFETIME(ACCDCharacter, bPendingEmote);
 }
 
 void ACCDCharacter::PerformEmote(FName EmoteSection)
@@ -117,15 +119,18 @@ void ACCDCharacter::PerformEmote(FName EmoteSection)
 	
 	// 1. 특정 UI 등에서 애니메이션 종류 (SectionName) 선택 가능하도록 하고 받아옴
 	EmoteSection = TEXT("GangnamStyle"); // 일단은 고정으로 처리
+	CurrentEmoteSection = EmoteSection;
 	
 	// 2. 현재 장비 상태 모두 해제
 	if (EquipmentComp && EquipmentComp->GetEquipmentState() != ECCD_EquipmentState::EES_Hands)
 	{
+		bPendingEmote = true; // 장비 교체 중에 이모트 재생 요청이 들어왔음을 표시
 		SwitchEquipment(ECCD_EquipmentState::EES_Hands);
 	}
-	
-	// 3. 특정 몽타주 재생 (서버 요청, 멀티캐스트 실행)
-	Server_PlayEmoteMontage(EmoteSection);
+	else
+	{
+		Server_PlayEmoteMontage(CurrentEmoteSection);
+	}
 }
 
 void ACCDCharacter::Server_PlayEmoteMontage_Implementation(FName EmoteSection)
@@ -297,6 +302,13 @@ void ACCDCharacter::OnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted
 	if (bIsUnequipping)
 	{
 		EquipmentComp->ProceedToEquip(EquipmentComp->GetPendingEquipmentState());
+	}
+	
+	// 이모트 예약 헀다면 (장비 교체 -> 이후 이모트 재생)
+	if (bPendingEmote)
+	{
+		Server_PlayEmoteMontage(CurrentEmoteSection);
+		bPendingEmote = false; // 예약 해제
 	}
 }
 void ACCDCharacter::OnEmoteMontageEnded(UAnimMontage* Montage, bool bInterrupted)
