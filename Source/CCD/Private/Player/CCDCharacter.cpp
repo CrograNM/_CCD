@@ -124,8 +124,26 @@ void ACCDCharacter::PerformEmote(FName EmoteSection)
 void ACCDCharacter::Server_PerformEmote_Implementation(FName EmoteSection)
 {
 	if (!EmoteMontage || bIsDead) return;
+	if (bIsEmoting && CurrentEmoteSection == EmoteSection) return;
+		
+	CurrentEmoteSection = EmoteSection;
+	UE_LOG(LogTemp, Warning, TEXT("[ACCDCharacter] Server_PerformEmote called with section: %s"), *CurrentEmoteSection.ToString());
 	
-	CurrentEmoteSection = (EmoteSection == NAME_None) ? TEXT("GangnamStyle") : EmoteSection;
+	// 상태 초기화: 새로운 명령이 들어왔으므로 기존 예약이나 액션은 강제 중단
+	if (bIsActionInProgress || bIsEmoting || bPendingEmote)
+	{
+		bPendingEmote = false;
+		Server_StopMontage(); 
+        
+		bIsActionInProgress = false;
+		bIsEmoting = false;
+		bIsUnequipping = false;
+	}
+	if (EmoteMontage && EmoteMontage->GetSectionIndex(EmoteSection) == INDEX_NONE)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Server_PerformEmote: Invalid Emote Section [%s] requested!"), *EmoteSection.ToString());
+		return;
+	}
 	
 	// 장비 장착 여부에 따라 -> 바로 재생 or 장비 해제 후 재생
 	if (EquipmentComp && EquipmentComp->GetEquipmentState() != ECCD_EquipmentState::EES_Hands)
@@ -142,16 +160,26 @@ void ACCDCharacter::Server_PerformEmote_Implementation(FName EmoteSection)
 
 void ACCDCharacter::Server_PlayEmoteMontage_Implementation(FName EmoteSection)
 {
-	bIsActionInProgress = true; // 액션 진행중 플래그 설정
-	bIsEmoting = true; // 이모트 상태 설정
-	Multicast_PlayEmoteMontage(EmoteSection, 1.0f);
-	
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && EmoteMontage)
+	if (EmoteMontage && EmoteMontage->GetSectionIndex(EmoteSection) != INDEX_NONE)
 	{
-		FOnMontageEnded EmoteEndedDelegate;
-		EmoteEndedDelegate.BindUObject(this, &ACCDCharacter::OnEmoteMontageEnded);
-		AnimInstance->Montage_SetEndDelegate(EmoteEndedDelegate, EmoteMontage);
+		bIsActionInProgress = true; // 액션 진행중 플래그 설정
+		bIsEmoting = true; // 이모트 상태 설정
+		Multicast_PlayEmoteMontage(EmoteSection, 1.0f);
+	
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance && EmoteMontage)
+		{
+			FOnMontageEnded EmoteEndedDelegate;
+			EmoteEndedDelegate.BindUObject(this, &ACCDCharacter::OnEmoteMontageEnded);
+			AnimInstance->Montage_SetEndDelegate(EmoteEndedDelegate, EmoteMontage);
+		}
+	}
+	else
+	{
+		// 섹션이 없으면 상태 초기화
+		bIsActionInProgress = false;
+		bIsEmoting = false;
+		UE_LOG(LogTemp, Error, TEXT("Server_PlayEmoteMontage: Invalid Emote Section [%s] requested!"), *EmoteSection.ToString());
 	}
 }
 
@@ -160,8 +188,15 @@ void ACCDCharacter::Multicast_PlayEmoteMontage_Implementation(FName SectionName,
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && EmoteMontage)
 	{
-		AnimInstance->Montage_Play(EmoteMontage, PlayRate);
-		AnimInstance->Montage_JumpToSection(SectionName, EmoteMontage);
+		if (EmoteMontage->GetSectionIndex(SectionName) != INDEX_NONE)
+		{
+			AnimInstance->Montage_Play(EmoteMontage, PlayRate);
+			AnimInstance->Montage_JumpToSection(SectionName, EmoteMontage);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Emote Section [%s] not found in EmoteMontage!"), *SectionName.ToString());
+		}
 	}
 }
 
@@ -304,6 +339,7 @@ void ACCDCharacter::OnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted
 	if (!HasAuthority()) return;
 	
 	bIsActionInProgress = false; // 액션 상태 해제
+	if (bInterrupted) bIsUnequipping = false;
 	
 	// 장비 해제(Unequipping) 단계가 끝났을 때
 	if (bIsUnequipping)
