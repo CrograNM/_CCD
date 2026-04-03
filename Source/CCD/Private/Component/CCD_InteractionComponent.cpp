@@ -110,6 +110,7 @@ void UCCD_InteractionComponent::ForceRelease()
 void UCCD_InteractionComponent::Server_PerformInteract_Implementation()
 {
 	if (!OwnerCharacter) return;
+	
 	if (GrabbedComponent)
 	{
 		Multicast_ReleaseObject();
@@ -139,7 +140,7 @@ void UCCD_InteractionComponent::Server_PerformInteract_Implementation()
 			{
 				if (RootPrim->IsSimulatingPhysics())
 				{
-					Multicast_GrabObject(RootPrim, HitResult.ImpactPoint);
+					Multicast_GrabObject(RootPrim, RootPrim->GetComponentLocation());
 					UE_LOG(LogTemp, Warning, TEXT("[Hand] Grabbed with : %s"), *HitActor->GetName());
 				}
 				else
