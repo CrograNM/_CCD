@@ -28,6 +28,7 @@
 #include "Net/UnrealNetwork.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "MovieSceneSequenceID.h"
 
 /** --- 생성자 및 기본 함수 --- */
 ACCDCharacter::ACCDCharacter()
@@ -70,10 +71,25 @@ ACCDCharacter::ACCDCharacter()
 	PhysicsHandle->InterpolationSpeed = 20.0f; // 핸들 자체의 내부 보간 속도
 	
 	NoiseEmitter = CreateDefaultSubobject<UPawnNoiseEmitterComponent>(TEXT("NoiseEmitter"));
+	
+	// --- 1인칭 팔 메쉬 ---
+	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh1P"));
+	Mesh1P->SetupAttachment(FirstPersonCamera);		// 카메라에 붙여야 카메라 회전에 따라 팔이 자연스럽게 움직입니다.
+	Mesh1P->bOnlyOwnerSee = true;						// 자신(Owner)에게만 보임
+	Mesh1P->bCastDynamicShadow = false;					// 팔 자체 그림자는 필요 없음 (전신 메쉬가 대신 맺어줌)
+	Mesh1P->CastShadow = false;
+	// 기존 메쉬 설정 변경
+	GetMesh()->SetOwnerNoSee(true);            // 자신에게는 전신 메쉬가 안 보이게 함
+	GetMesh()->bCastHiddenShadow = true;       // 메쉬가 숨겨져 있어도 그림자는 맺히게 함 (중요)
 }
 void ACCDCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	if (Mesh1P && GetMesh())
+	{
+		Mesh1P->SetLeaderPoseComponent(GetMesh());
+	}
 }
 
 void ACCDCharacter::Tick(float DeltaTime)

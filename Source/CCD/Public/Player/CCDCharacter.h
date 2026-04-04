@@ -125,9 +125,14 @@ public:
     bool GetIsObserveActivated() const { return StatComp ? StatComp->GetIsObserveActivated() : false; }
     
     void CheckForSCP096();
+    
+    FORCEINLINE TObjectPtr<USkeletalMeshComponent> GetMesh1P() const { return Mesh1P; }
 
 protected:
     virtual void BeginPlay() override;
+    
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh")
+    TObjectPtr<USkeletalMeshComponent> Mesh1P; // FPS용 1인칭 메쉬
     
     /** --- 컴포넌트 --- */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")

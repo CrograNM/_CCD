@@ -17,6 +17,7 @@ void UCCD_EquipmentComponent::BeginPlay()
 	OwnerCharacter = Cast<ACCDCharacter>(GetOwner());
 	if (OwnerCharacter)
 	{
+		
 		InitializeEquipment(); // 장비 초기화 실행
 	}
 }
@@ -63,6 +64,17 @@ void UCCD_EquipmentComponent::OnRep_EquipmentState(ECCD_EquipmentState PreviousS
 void UCCD_EquipmentComponent::HandleEquipmentEffects(ECCD_EquipmentState NewState)
 {
 	if (!OwnerCharacter) return;
+	
+	USceneComponent* BestMesh;
+	if ((OwnerCharacter->IsLocallyControlled()))
+	{
+		BestMesh = OwnerCharacter->GetMesh1P();
+	}
+	else
+	{
+		BestMesh = OwnerCharacter->GetMesh();
+	}
+
 	UAnimInstance* AnimInstance = OwnerCharacter->GetMesh()->GetAnimInstance();
 	if (AnimInstance && AnimInstance->Montage_IsPlaying(OwnerCharacter->GetEquipMontage())) return;
 	
@@ -85,7 +97,7 @@ void UCCD_EquipmentComponent::HandleEquipmentEffects(ECCD_EquipmentState NewStat
 			TargetSocket = (ToolType == NewState) ? TEXT("ScannerSocket_Hand") : TEXT("ScannerSocket_Hip");
 		}
 
-		ToolActor->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TargetSocket);
+		ToolActor->AttachToComponent(BestMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TargetSocket);
 		ToolActor->SetEquipmentActive(ToolType == NewState);
 	}
 }
@@ -113,6 +125,16 @@ void UCCD_EquipmentComponent::HandleEquipNotify()
 {
 	if (!OwnerCharacter) return;
 	if (!OwnerCharacter->HasAuthority()) return;
+	
+	USceneComponent* BestMesh;
+	if ((OwnerCharacter->IsLocallyControlled()))
+	{
+		BestMesh = OwnerCharacter->GetMesh1P();
+	}
+	else
+	{
+		BestMesh = OwnerCharacter->GetMesh();
+	}
 
 	// 1. 장비를 집어넣는 중(Unequipping)인 경우
 	if (OwnerCharacter->GetIsUnequipping()) 
@@ -123,7 +145,7 @@ void UCCD_EquipmentComponent::HandleEquipNotify()
 
 			// 모든 장비를 보관용 소켓으로 이동시킵니다.
 			FName StowSocket = (Elem.Key == ECCD_EquipmentState::EES_Mop) ? TEXT("MopSocket_Back") : TEXT("ScannerSocket_Hip");
-			Elem.Value->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, StowSocket);
+			Elem.Value->AttachToComponent(BestMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, StowSocket);
 			Elem.Value->SetEquipmentActive(false);
 		}
 		EquipmentState = ECCD_EquipmentState::EES_Hands; // 상태를 맨손으로 확정
@@ -138,7 +160,7 @@ void UCCD_EquipmentComponent::HandleEquipNotify()
 			{
 				// 대기 중인 장비(Pending)를 손 소켓으로 이동시킵니다.
 				FName HandSocket = (PendingEquipmentState == ECCD_EquipmentState::EES_Mop) ? TEXT("MopSocket_Hand") : TEXT("ScannerSocket_Hand");
-				TargetTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, HandSocket);
+				TargetTool->AttachToComponent(BestMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, HandSocket);
 				TargetTool->SetEquipmentActive(true);
 			}
 		}
@@ -176,6 +198,16 @@ void UCCD_EquipmentComponent::InitializeEquipment()
 {
 	if (!GetWorld() || !OwnerCharacter) return;
 
+	USceneComponent* BestMesh;
+	if ((OwnerCharacter->IsLocallyControlled()))
+	{
+		BestMesh = OwnerCharacter->GetMesh1P();
+	}
+	else
+	{
+		BestMesh = OwnerCharacter->GetMesh();
+	}
+	
 	// 설정된 모든 클래스 정보를 순회합니다.
 	for (auto& Elem : ToolClassMap)
 	{
@@ -202,7 +234,7 @@ void UCCD_EquipmentComponent::InitializeEquipment()
 
 				// 초기 위치 설정 (일단 등이나 허리 소켓에 붙여둡니다)
 				FName StowSocket = (State == ECCD_EquipmentState::EES_Mop) ? TEXT("MopSocket_Back") : TEXT("ScannerSocket_Hip");
-				NewTool->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, StowSocket);
+				NewTool->AttachToComponent(BestMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, StowSocket);
 			}
 		}
 	}
