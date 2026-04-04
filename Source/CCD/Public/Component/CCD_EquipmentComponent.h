@@ -4,6 +4,11 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 
+#include "CCD_EquipmentComponent.generated.h"
+
+class ACCDCharacter;
+class ACCD_EquipActor_Base;
+
 UENUM(BlueprintType)
 enum class ECCD_EquipmentState : uint8
 {
@@ -12,10 +17,17 @@ enum class ECCD_EquipmentState : uint8
 	EES_Mop     UMETA(DisplayName = "Mop")		// 대걸레
 };
 
-#include "CCD_EquipmentComponent.generated.h"
+USTRUCT(BlueprintType)
+struct FEquipToolInfo
+{
+	GENERATED_BODY()
 
-class ACCDCharacter;
-class ACCD_EquipActor_Base;
+	UPROPERTY()
+	ECCD_EquipmentState State = ECCD_EquipmentState::EES_Hands;
+
+	UPROPERTY()
+	TObjectPtr<ACCD_EquipActor_Base> ToolActor = nullptr;
+};
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class CCD_API UCCD_EquipmentComponent : public UActorComponent
@@ -59,6 +71,8 @@ protected:
 	/** --- 변수 : 장비 상태 --- */
 	UPROPERTY(ReplicatedUsing = OnRep_EquipmentState)
 	ECCD_EquipmentState EquipmentState = ECCD_EquipmentState::EES_Hands;
+	
+	UPROPERTY(Replicated)
 	ECCD_EquipmentState PendingEquipmentState = ECCD_EquipmentState::EES_Hands;
 	
 	/** --- 네트워크 RPC --- */
@@ -77,6 +91,12 @@ protected:
 
 	UPROPERTY()
 	TMap<ECCD_EquipmentState, TObjectPtr<ACCD_EquipActor_Base>> SpawnedToolMap;
+	
+	UPROPERTY(ReplicatedUsing = OnRep_ReplicatedTools)
+	TArray<FEquipToolInfo> ReplicatedTools;
+
+	UFUNCTION()
+	void OnRep_ReplicatedTools();
 
 private:
 	UPROPERTY()
