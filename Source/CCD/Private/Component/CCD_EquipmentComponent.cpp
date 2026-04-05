@@ -67,14 +67,17 @@ void UCCD_EquipmentComponent::HandleEquipmentEffects(ECCD_EquipmentState NewStat
 	if (!OwnerCharacter) return;
 	
 	USceneComponent* BestMesh;
-	const bool bIsLocal = OwnerCharacter->IsLocallyControlled();
-	if (bIsLocal)
+	if (OwnerCharacter->IsLocallyControlled())
 	{
 		BestMesh = OwnerCharacter->GetMesh1P();
+		FString Auth = OwnerCharacter->HasAuthority() ? TEXT("Server") : TEXT("Client");
+		UE_LOG(LogTemp, Warning, TEXT("%s : [EquipComp] Using Mesh1P for Local player"), *Auth);
 	}
 	else
 	{
 		BestMesh = OwnerCharacter->GetMesh();
+		FString Auth = OwnerCharacter->HasAuthority() ? TEXT("Server") : TEXT("Client");
+		UE_LOG(LogTemp, Warning, TEXT("%s : [EquipComp] Using Mesh for Proxy player"), *Auth);
 	}
 	if (!BestMesh || SpawnedToolMap.Num() == 0) return;
 	
@@ -155,8 +158,8 @@ void UCCD_EquipmentComponent::HandleEquipNotify()
 		HandleEquipmentEffects(EquipmentState);
 	}
 	
-	// 클라이언트라면? 
-	if (!GetOwner()->HasAuthority() && OwnerCharacter && OwnerCharacter->IsLocallyControlled())
+	// 클라이언트 : 서버의 복제본이 도착하기 전 애니메이션 타이밍에 맞춰 미리 부착
+	else 
 	{
 		// 로컬 플레이어는 서버 응답을 기다리지 않고 애니메이션 싱크에 맞춰 미리 부착
 		ECCD_EquipmentState PredictState = OwnerCharacter->GetIsUnequipping() ? ECCD_EquipmentState::EES_Hands : PendingEquipmentState;

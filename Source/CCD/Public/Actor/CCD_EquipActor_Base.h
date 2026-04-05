@@ -13,6 +13,7 @@ class CCD_API ACCD_EquipActor_Base : public AActor
 
 public:
 	ACCD_EquipActor_Base();
+	virtual void OnRep_AttachmentReplication() override;
 	
 	// 장비 사용 시 호출
 	virtual void ExecuteAction() {}
@@ -29,6 +30,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	bool IsOwnedByLocalPlayer() const;
+	
 	// 소유자 캐릭터 참조
 	UPROPERTY(BlueprintReadOnly, Category = "Equipment")
 	TObjectPtr<ACCDCharacter> OwnerCharacter;
