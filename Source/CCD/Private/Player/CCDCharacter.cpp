@@ -91,6 +91,15 @@ void ACCDCharacter::SetMesh1PVisibility(bool bVisible)
 	}
 }
 
+bool ACCDCharacter::GetIsGrabbed() const
+{
+	if (InteractionComp)
+	{
+		return InteractionComp->GetGrabbedComponent() != nullptr;
+	}
+	return false;
+}
+
 void ACCDCharacter::BeginPlay()
 {
 	Super::BeginPlay();

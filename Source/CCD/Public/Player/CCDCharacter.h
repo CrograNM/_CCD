@@ -128,6 +128,8 @@ public:
     
     FORCEINLINE TObjectPtr<USkeletalMeshComponent> GetMesh1P() const { return Mesh1P; }
     void SetMesh1PVisibility(bool bVisible);
+    
+    bool GetIsGrabbed() const;
 
 protected:
     virtual void BeginPlay() override;

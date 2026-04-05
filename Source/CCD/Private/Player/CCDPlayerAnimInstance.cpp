@@ -45,4 +45,7 @@ void UCCDPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		OwnerCharacter->SetIsEmoting(false); // 캐릭터의 이모트 상태도 동기화하여 해제
 		OwnerCharacter->Server_StopMontage();
 	}
+	
+	// ----- Character -> Is Grabbing -----
+	bIsGrabbing = OwnerCharacter->GetIsGrabbed();
 }

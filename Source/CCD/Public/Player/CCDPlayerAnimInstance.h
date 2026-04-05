@@ -35,4 +35,7 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Emote")
 	bool bIsEmoting = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Grab")
+	bool bIsGrabbing = false;
 };
