@@ -11,14 +11,11 @@ ACCD_EquipActor_Base::ACCD_EquipActor_Base()
 
 void ACCD_EquipActor_Base::OnRep_AttachmentReplication()
 {
-	// 로컬 플레이어(Owner)라면 서버의 3인칭 부착 정보를 무시
-	if (IsOwnedByLocalPlayer())
+	if (HasAuthority())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[EquipActor] Ignoring attachment replication for local player"));
+		Super::OnRep_AttachmentReplication();
 		return;
 	}
-	// 다른 플레이어(Proxy)라면 정상적으로 서버의 부착 정보를 따름
-	Super::OnRep_AttachmentReplication();
 }
 
 void ACCD_EquipActor_Base::BeginPlay()
