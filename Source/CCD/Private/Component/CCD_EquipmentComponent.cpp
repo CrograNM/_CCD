@@ -2,6 +2,7 @@
 #include "Component/CCD_EquipmentComponent.h"
 #include "Player/CCDCharacter.h"
 #include "Actor/CCD_EquipActor_Base.h"
+#include "Component/CCD_ViewComponent.h"
 #include "Net/UnrealNetwork.h"
 
 UCCD_EquipmentComponent::UCCD_EquipmentComponent()
@@ -66,18 +67,11 @@ void UCCD_EquipmentComponent::HandleEquipmentEffects(ECCD_EquipmentState NewStat
 {
 	if (!OwnerCharacter) return;
 	
-	USceneComponent* BestMesh;
+	USceneComponent* BestMesh = OwnerCharacter->GetMesh();
 	if (OwnerCharacter->IsLocallyControlled())
 	{
-		BestMesh = OwnerCharacter->GetMesh1P();
-		FString Auth = OwnerCharacter->HasAuthority() ? TEXT("Server") : TEXT("Client");
-		UE_LOG(LogTemp, Warning, TEXT("%s : [EquipComp] Using Mesh1P for Local player"), *Auth);
-	}
-	else
-	{
-		BestMesh = OwnerCharacter->GetMesh();
-		FString Auth = OwnerCharacter->HasAuthority() ? TEXT("Server") : TEXT("Client");
-		UE_LOG(LogTemp, Warning, TEXT("%s : [EquipComp] Using Mesh for Proxy player"), *Auth);
+		if (OwnerCharacter->GetViewComp() && OwnerCharacter->GetViewComp()->GetIsFirstPerson())
+			BestMesh = OwnerCharacter->GetMesh1P();
 	}
 	if (!BestMesh || SpawnedToolMap.Num() == 0) return;
 	

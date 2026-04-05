@@ -127,6 +127,7 @@ public:
     void CheckForSCP096();
     
     FORCEINLINE TObjectPtr<USkeletalMeshComponent> GetMesh1P() const { return Mesh1P; }
+    void SetMesh1PVisibility(bool bVisible);
 
 protected:
     virtual void BeginPlay() override;

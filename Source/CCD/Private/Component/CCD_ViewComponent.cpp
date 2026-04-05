@@ -2,6 +2,7 @@
 #include "Component/CCD_ViewComponent.h"
 #include "Player/CCDCharacter.h"
 #include "Camera/CameraComponent.h"
+#include "Component/CCD_EquipmentComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -67,6 +68,12 @@ void UCCD_ViewComponent::ToggleView()
 	bIsFirstPerson = !bIsFirstPerson;
 	ApplyViewMode(bIsFirstPerson);
 	Server_ToggleView(bIsFirstPerson);
+	
+	if (OwnerCharacter && OwnerCharacter->IsLocallyControlled())
+	{
+		OwnerCharacter->GetEquipmentComp()->HandleEquipmentEffects(OwnerCharacter->GetEquipmentComp()->GetEquipmentState());
+		OwnerCharacter->SetMesh1PVisibility(bIsFirstPerson);
+	}
 }
 
 void UCCD_ViewComponent::ApplyViewMode(bool bFirstPerson)

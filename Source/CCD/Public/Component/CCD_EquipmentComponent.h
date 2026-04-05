@@ -64,6 +64,9 @@ public:
 	// 초기화 함수
 	void InitializeEquipment(); 
 	
+	/** --- 내부 로직 --- */
+	void HandleEquipmentEffects(ECCD_EquipmentState NewState);
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -81,9 +84,6 @@ protected:
 
 	UFUNCTION()
 	void OnRep_EquipmentState(ECCD_EquipmentState PreviousState);
-
-	/** --- 내부 로직 --- */
-	void HandleEquipmentEffects(ECCD_EquipmentState NewState);
 	
 	/** --- 장비 자동 스폰 및 저장소 --- */
 	UPROPERTY(EditAnywhere, Category = "Equipment | Setup")

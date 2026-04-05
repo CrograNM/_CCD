@@ -82,6 +82,15 @@ ACCDCharacter::ACCDCharacter()
 	GetMesh()->SetOwnerNoSee(true);            // 자신에게는 전신 메쉬가 안 보이게 함
 	GetMesh()->bCastHiddenShadow = true;       // 메쉬가 숨겨져 있어도 그림자는 맺히게 함 (중요)
 }
+
+void ACCDCharacter::SetMesh1PVisibility(bool bVisible)
+{
+	if (Mesh1P)
+	{
+		Mesh1P->SetVisibility(bVisible);
+	}
+}
+
 void ACCDCharacter::BeginPlay()
 {
 	Super::BeginPlay();
