@@ -26,7 +26,8 @@ void UCCD_InteractionComponent::BeginPlay()
 	{
 		PhysicsHandle = OwnerCharacter->FindComponentByClass<UPhysicsHandleComponent>();
 		
-		GetWorld()->GetTimerManager().SetTimer(HighlightTimerHandle, this, &UCCD_InteractionComponent::UpdateHighlight, 0.1f, true);
+		if (OwnerCharacter->IsLocallyControlled())
+			GetWorld()->GetTimerManager().SetTimer(HighlightTimerHandle, this, &UCCD_InteractionComponent::UpdateHighlight, 0.1f, true);
 	}
 }
 
