@@ -124,8 +124,8 @@ void ADecal_StainActor_Base::ValidateSurface()
 	{
 		// 스폰 시점에 데칼의 투영 방향으로 짧은 트레이스 수행
 		FHitResult Hit;
-		FVector Start = GetActorLocation() - (GetActorForwardVector() * 10.0f);
-		FVector End = Start + (GetActorForwardVector() * 50.0f);
+		FVector Start = GetActorLocation() - (GetActorForwardVector() * 20.0f);
+		FVector End = Start + (GetActorForwardVector() * 100.0f);
 
 		if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_WorldStatic, Params))
 		{
@@ -145,9 +145,19 @@ void ADecal_StainActor_Base::ValidateSurface()
 					}
 				}
 
-				// 태그 검사에 성공하면 유효한 표면으로 간주하여 데칼 유지, 실패하면 다음 시도
-				if (bHasValidTag) 
+				// 태그 검사에 성공 -> 해당 표면으로 위치 및 회전 보정 후 종료
+				if (bHasValidTag)
+				{
+					FVector NewLocation = Hit.ImpactPoint + (Hit.ImpactNormal * 0.5f);
+					FRotator NewRotation = Hit.ImpactNormal.Rotation();
+					
+					// 노멀의 반대 방향으로 데칼이 투영되도록 회전 조정 (데칼의 기본 방향이 X축이므로)
+					NewRotation.Pitch -= 180.0f;
+					
+					SetActorLocationAndRotation(NewLocation, NewRotation);
+					
 					return;
+				}
 				
 				Params.AddIgnoredActor(HitActor);
 				// UE_LOG(LogTemp, Warning, TEXT("%s - LineTrace hit actor %s, but no tags. Attempt %d/3"), *GetName(), *HitActor->GetName(), i + 1);

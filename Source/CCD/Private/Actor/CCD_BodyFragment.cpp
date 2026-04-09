@@ -104,7 +104,11 @@ void ACCD_BodyFragment::OnMeshHit(UPrimitiveComponent* HitComponent, AActor* Oth
 			// 데칼 액터의 스케일 적용
 			SpawnedDecal->SetActorScale3D(FVector(TargetScale));
             
-			CurrentStainThreshold += ImpulseSize;
+			// 충격량 총량 업데이트 (최대값으로 클램핑)
+			float ClampedImpulse = ImpulseSize;
+			if (ClampedImpulse > MaxImpulseForStainSize) 
+				ClampedImpulse = MaxImpulseForStainSize;
+			CurrentStainThreshold += ClampedImpulse;
 		}
 	}
 }
