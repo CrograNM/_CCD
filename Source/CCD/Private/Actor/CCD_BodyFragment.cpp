@@ -81,16 +81,30 @@ void ACCD_BodyFragment::OnMeshHit(UPrimitiveComponent* HitComponent, AActor* Oth
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), HitEffect, Hit.Location, SpawnRot);
     
 	// 핏자국 생성
-	if (CurrentStainCount < MaxStainCount)
+	if (CurrentStainThreshold < MaxStainThreshold)
 	{
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		if (GetWorld()->SpawnActor<ADecal_StainActor_Base>(DecalStainActorClass, 
+		
+		ADecal_StainActor_Base* SpawnedDecal = GetWorld()->SpawnActor<ADecal_StainActor_Base>(
+			DecalStainActorClass, 
 			Hit.Location + Hit.ImpactNormal * 1.5f,
 			SpawnRot, 
-			SpawnParams))
+			SpawnParams);
+
+		if (SpawnedDecal)
 		{
-			CurrentStainCount++;
+			// 충격량에 따른 스케일 계산 (MinStainSize ~ MaxStainSize)
+			const float TargetScale = FMath::GetMappedRangeValueClamped(
+				FVector2D(MinImpulseForStainSize, MaxImpulseForStainSize), 
+				FVector2D(MinStainSize, MaxStainSize), 
+				ImpulseSize
+			);
+
+			// 데칼 액터의 스케일 적용
+			SpawnedDecal->SetActorScale3D(FVector(TargetScale));
+            
+			CurrentStainThreshold += ImpulseSize;
 		}
 	}
 }

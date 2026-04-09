@@ -60,9 +60,17 @@ protected:
 	TObjectPtr<class UNiagaraSystem> HitEffect;
 	
 	UPROPERTY(EditAnywhere, Category = "Design | VFX")
-	int32 MaxStainCount = 5; // 최대 생성 가능한 핏자국 개수
+	float MinStainSize = 0.3f;
+	UPROPERTY(EditAnywhere, Category = "Design | VFX")
+	float MaxStainSize = 1.0f;
+	UPROPERTY(EditAnywhere, Category = "Design | VFX")
+	float MinImpulseForStainSize = 100.0f;
+	UPROPERTY(EditAnywhere, Category = "Design | VFX")
+	float MaxImpulseForStainSize = 2000.0f;
 	
-	int32 CurrentStainCount = 0; // 현재 생성된 핏자국 개수
+	UPROPERTY(EditAnywhere, Category = "Design | VFX")
+	float MaxStainThreshold = 10000.0f; // 최대 생성 가능한 핏자국 (충격량으로 계산)
+	float CurrentStainThreshold = 0.0f; // 현재 생성된 핏자국의 총량 (충격량으로 계산)
 	
 	// Spawn Decal
 	UPROPERTY(EditDefaultsOnly, Category = "Design | VFX")
