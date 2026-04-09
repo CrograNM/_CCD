@@ -25,6 +25,8 @@ void UCCD_InteractionComponent::BeginPlay()
 	if (OwnerCharacter)
 	{
 		PhysicsHandle = OwnerCharacter->FindComponentByClass<UPhysicsHandleComponent>();
+		
+		GetWorld()->GetTimerManager().SetTimer(HighlightTimerHandle, this, &UCCD_InteractionComponent::UpdateHighlight, 0.1f, true);
 	}
 }
 
@@ -61,6 +63,72 @@ void UCCD_InteractionComponent::AddRotationInput(float Pitch, float Yaw)
 void UCCD_InteractionComponent::Server_AddRotationInput_Implementation(float Pitch, float Yaw)
 {
 	AddRotationInput(Pitch, Yaw);
+}
+
+void UCCD_InteractionComponent::UpdateHighlight()
+{
+	// 물건을 들고 있는 중에는 하이라이트 기능을 끔
+	if (GrabbedComponent || !OwnerCharacter)
+	{
+		if (LastHighlightedComponent)
+		{
+			SetHighlightEffect(LastHighlightedComponent, false);
+			LastHighlightedComponent = nullptr;
+		}
+		return;
+	}
+
+	UCameraComponent* ActiveCam = OwnerCharacter->GetFirstPersonCamera();
+	if (!ActiveCam) return;
+
+	FVector TraceStart = ActiveCam->GetComponentLocation();
+	FVector TraceEnd = TraceStart + (ActiveCam->GetForwardVector() * InteractRange);
+
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(GetOwner());
+
+	UPrimitiveComponent* CurrentHitComponent = nullptr;
+
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_Visibility, Params))
+	{
+		// 인터페이스를 구현했거나 BurnableComponent가 있는 액터인지 확인 (필터링)
+		AActor* HitActor = HitResult.GetActor();
+		if (HitActor && (HitActor->FindComponentByClass<UBurnableComponent>() || 
+			HitActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass())))
+		{
+			CurrentHitComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent());
+		}
+	}
+
+	// 대상이 바뀌었을 때만 업데이트
+	if (CurrentHitComponent != LastHighlightedComponent)
+	{
+		if (LastHighlightedComponent)
+		{
+			SetHighlightEffect(LastHighlightedComponent, false);
+		}
+
+		if (CurrentHitComponent)
+		{
+			SetHighlightEffect(CurrentHitComponent, true);
+		}
+
+		LastHighlightedComponent = CurrentHitComponent;
+	}
+}
+
+void UCCD_InteractionComponent::SetHighlightEffect(UPrimitiveComponent* InComponent, bool bEnable)
+{
+	if (!InComponent) return;
+
+	UE_LOG(LogTemp, Warning, TEXT("[Highlight] %s highlight on %s"), bEnable ? TEXT("Enable") : TEXT("Disable"), *InComponent->GetName());
+	
+	// CustomDepth를 사용하여 하이라이트 출력 (PostProcess에서 CustomDepth 기반 외곽선 머티리얼 필요)
+	InComponent->SetRenderCustomDepth(bEnable);
+	
+	// 필요 시 스텐실 값도 설정 가능 (예: 외곽선 색상 구분용)
+	// InComponent->SetCustomDepthStencilValue(bEnable ? 1 : 0);
 }
 
 void UCCD_InteractionComponent::PhysicsHandleUpdate(float DeltaTime)

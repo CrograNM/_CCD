@@ -51,6 +51,13 @@ protected:
 	void Server_SetRotationMode(bool bActive);
 	
 private:
+	/** --- 하이라이트 관련 --- */
+	FTimerHandle HighlightTimerHandle;
+	UPROPERTY()
+	TObjectPtr<UPrimitiveComponent> LastHighlightedComponent;
+	void UpdateHighlight();
+	void SetHighlightEffect(UPrimitiveComponent* InComponent, bool bEnable);
+	
 	/** --- 내부 컴포넌트 및 변수 --- */
 	UPROPERTY()
 	TObjectPtr<UPhysicsHandleComponent> PhysicsHandle;
