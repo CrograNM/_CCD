@@ -75,10 +75,16 @@ void ACCD_BodyFragment::OnMeshHit(UPrimitiveComponent* HitComponent, AActor* Oth
 	// ----- VFX & 데칼 충격량 필터링 -----
 	if (ImpulseSize < HitEffectThreshold) return;
 	
+	// 충격량에 따른 스케일 계산 (MinStainSize ~ MaxStainSize)
+    const float TargetScale = FMath::GetMappedRangeValueClamped(
+    		FVector2D(MinImpulseForStainSize, MaxImpulseForStainSize), 
+    		FVector2D(MinStainSize, MaxStainSize), 
+    		ImpulseSize);
+    			
 	// VFX 생성
 	FRotator SpawnRot = Hit.ImpactNormal.Rotation();
 	SpawnRot.Pitch -= 90.0f;
-	UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), HitEffect, Hit.Location, SpawnRot);
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), HitEffect, Hit.Location, SpawnRot, FVector(TargetScale * 2.0f));
     
 	// 핏자국 생성
 	if (CurrentStainThreshold < MaxStainThreshold)
@@ -94,13 +100,6 @@ void ACCD_BodyFragment::OnMeshHit(UPrimitiveComponent* HitComponent, AActor* Oth
 
 		if (SpawnedDecal)
 		{
-			// 충격량에 따른 스케일 계산 (MinStainSize ~ MaxStainSize)
-			const float TargetScale = FMath::GetMappedRangeValueClamped(
-				FVector2D(MinImpulseForStainSize, MaxImpulseForStainSize), 
-				FVector2D(MinStainSize, MaxStainSize), 
-				ImpulseSize
-			);
-
 			// 데칼 액터의 스케일 적용
 			SpawnedDecal->SetActorScale3D(FVector(TargetScale));
             
