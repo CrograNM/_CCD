@@ -130,6 +130,8 @@ public:
     void SetMesh1PVisibility(bool bVisible);
     
     bool GetIsGrabbed() const;
+    
+    FORCEINLINE TSubclassOf<ADecal_StainActor_Base> GetBloodStainActorClass() const { return BloodStainActorClass; }
 
 protected:
     virtual void BeginPlay() override;

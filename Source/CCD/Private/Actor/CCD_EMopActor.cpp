@@ -5,6 +5,7 @@
 
 #include "Player/CCDCharacter.h"
 #include "NiagaraFunctionLibrary.h"
+#include "Actor/Decal_StainActor_Base.h"
 #include "Actor/WaterBucketActor.h"
 #include "Component/WashableComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -80,9 +81,33 @@ void ACCD_EMopActor::PerformMopTrace()
 			}
 			return;
 		}
+		
+		float TotalPollution = MopPollution_Blood + MopPollution_Excrement;
 
+		if (TotalPollution >= 1.0f) 
+		{
+			TSubclassOf<ADecal_StainActor_Base> StainClass = OwnerCharacter->GetBloodStainActorClass();
+			// 최대 오염도일 때 핏자국 생성
+			if (StainClass)
+			{
+				FActorSpawnParameters SpawnParams;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+				// 바닥 노멀에 맞춘 회전값 설정
+				FRotator SpawnRot = HitResult.ImpactNormal.Rotation();
+				SpawnRot.Pitch -= 90.0f;
+
+				// 핏자국 액터 스폰
+				GetWorld()->SpawnActor<ADecal_StainActor_Base>(
+					StainClass, 
+					HitResult.Location + HitResult.ImpactNormal * 1.5f, 
+					SpawnRot, 
+					SpawnParams);
+			}
+			return;
+		}
+		
 		// 데칼 세척 처리
-		if (MopPollution_Blood + MopPollution_Excrement >= 1.0f) return;
 		if (UWashableComponent* WashComp = HitActor->FindComponentByClass<UWashableComponent>())
 		{
 			WashComp->TakeWashDamage(50.f);
