@@ -48,6 +48,7 @@ void ACCD_EMopActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ACCD_EMopActor, MopPollution_Blood);
 	DOREPLIFETIME(ACCD_EMopActor, MopPollution_Excrement);
+	DOREPLIFETIME(ACCD_EMopActor, SpilledStainCount);
 }
 
 void ACCD_EMopActor::PerformMopTrace()
@@ -77,6 +78,7 @@ void ACCD_EMopActor::PerformMopTrace()
 		{
 			if (Bucket->WashMop(MopPollution_Blood, MopPollution_Excrement))
 			{
+				SpilledStainCount = 0;
 				UpdateMopMaterial();
 			}
 			return;
@@ -103,6 +105,19 @@ void ACCD_EMopActor::PerformMopTrace()
 					HitResult.Location + HitResult.ImpactNormal * 1.5f, 
 					SpawnRot, 
 					SpawnParams);
+				
+				SpilledStainCount++;
+				
+				if (SpilledStainCount >= 3)
+				{
+					// 각 오염도를 약 1회 사용분만큼 차감
+					float Reduction = 1.0f / MaxUseCount; 
+					MopPollution_Blood = FMath::Max(0.0f, MopPollution_Blood - Reduction);
+					MopPollution_Excrement = FMath::Max(0.0f, MopPollution_Excrement - Reduction);
+                    
+					SpilledStainCount = 0;
+					UpdateMopMaterial();
+				}
 			}
 			return;
 		}

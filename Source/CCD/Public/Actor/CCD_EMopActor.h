@@ -55,6 +55,10 @@ protected:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlayMopSwingSound();
 	
+	// 오염 걸레질로 인한 핏자국을 생성한 횟수
+	UPROPERTY(Replicated)
+	int32 SpilledStainCount = 0;
+	
 private:
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> DynamicMopMaterial;
