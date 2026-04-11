@@ -4,6 +4,7 @@
 #include "CCD_EquipActor_Base.h"
 #include "CCD_EMopActor.generated.h"
 
+class ADecal_StainActor_Base;
 class USkeletalMeshComponent;
 
 UCLASS()
@@ -40,6 +41,9 @@ protected:
 
 	void UpdateMopMaterial();
 	
+	UPROPERTY(EditDefaultsOnly, Category = "Design")
+    TSubclassOf<ADecal_StainActor_Base> MopStain;
+    
 	UPROPERTY(EditAnywhere, Category = "Design | Sound")
 	TObjectPtr<USoundBase> MopSwingSound;
 	
