@@ -48,6 +48,11 @@ void ACCD_BodyFragment::BeginPlay()
 	
 	if (MeshComp)
 	{
+		if (HasAuthority())
+		{	
+			RepSkeletalMesh = MeshComp->GetSkeletalMeshAsset();
+			OnRep_SkeletalMesh();
+		}
 		MeshComp->OnComponentHit.AddDynamic(this, &ACCD_BodyFragment::OnMeshHit);
 	}
 }
