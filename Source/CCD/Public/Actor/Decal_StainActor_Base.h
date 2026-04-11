@@ -5,6 +5,8 @@
 #include "Engine/DecalActor.h"
 #include "Decal_StainActor_Base.generated.h"
 
+#define ECC_DecalSurface ECC_GameTraceChannel1
+
 class UProgressComponent;
 class UWashableComponent;
 class UMaterialInstanceDynamic;

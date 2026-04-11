@@ -120,14 +120,15 @@ void ADecal_StainActor_Base::ValidateSurface()
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this); // 기본적으로 자기 자신 무시
 	
-	for (int i = 0; i < 3; ++i)
+	const int MaxAttempts = 1; // 최대 시도 횟수
+	for (int i = 0; i < MaxAttempts; ++i)
 	{
 		// 스폰 시점에 데칼의 투영 방향으로 짧은 트레이스 수행
 		FHitResult Hit;
 		FVector Start = GetActorLocation() - (GetActorForwardVector() * 20.0f);
 		FVector End = Start + (GetActorForwardVector() * 100.0f);
 
-		if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_WorldStatic, Params))
+		if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_DecalSurface, Params))
 		{
 			AActor* HitActor = Hit.GetActor();
 			if (HitActor)
