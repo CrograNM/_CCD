@@ -88,9 +88,8 @@ void ACCD_EMopActor::PerformMopTrace()
 
 		if (TotalPollution >= 1.0f) 
 		{
-			TSubclassOf<ADecal_StainActor_Base> StainClass = OwnerCharacter->GetBloodStainActorClass();
 			// 최대 오염도일 때 핏자국 생성
-			if (StainClass)
+			if (MopStain)
 			{
 				FActorSpawnParameters SpawnParams;
 				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -101,7 +100,7 @@ void ACCD_EMopActor::PerformMopTrace()
 
 				// 핏자국 액터 스폰
 				GetWorld()->SpawnActor<ADecal_StainActor_Base>(
-					StainClass, 
+					MopStain, 
 					HitResult.Location + HitResult.ImpactNormal * 1.5f, 
 					SpawnRot, 
 					SpawnParams);
