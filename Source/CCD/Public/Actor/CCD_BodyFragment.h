@@ -5,6 +5,8 @@
 #include "GameFramework/Actor.h"
 #include "CCD_BodyFragment.generated.h"
 
+#define ECC_DecalSurface ECC_GameTraceChannel1
+
 class ADecal_StainActor_Base;
 class USkeletalMeshComponent;
 class UProgressComponent;
