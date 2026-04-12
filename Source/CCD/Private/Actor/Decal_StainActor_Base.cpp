@@ -120,6 +120,8 @@ void ADecal_StainActor_Base::ValidateSurface()
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this); // 기본적으로 자기 자신 무시
 	
+	const FVector OriginalUpVector = GetActorUpVector(); // 현재 액터의 회전 정보 보관
+	
 	const int MaxAttempts = 1; // 최대 시도 횟수
 	for (int i = 0; i < MaxAttempts; ++i)
 	{
@@ -149,14 +151,10 @@ void ADecal_StainActor_Base::ValidateSurface()
 				// 태그 검사에 성공 -> 해당 표면으로 위치 및 회전 보정 후 종료
 				if (bHasValidTag)
 				{
+					FVector ForwardVector = -Hit.ImpactNormal;
+					FRotator NewRotation = FRotationMatrix::MakeFromXZ(ForwardVector, OriginalUpVector).Rotator();
 					FVector NewLocation = Hit.ImpactPoint + (Hit.ImpactNormal * 0.5f);
-					FRotator NewRotation = Hit.ImpactNormal.Rotation();
-					
-					// 노멀의 반대 방향으로 데칼이 투영되도록 회전 조정 (데칼의 기본 방향이 X축이므로)
-					NewRotation.Pitch -= 180.0f;
-					
 					SetActorLocationAndRotation(NewLocation, NewRotation);
-					
 					return;
 				}
 				
