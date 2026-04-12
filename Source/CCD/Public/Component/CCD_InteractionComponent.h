@@ -35,9 +35,12 @@ protected:
 	virtual void BeginPlay() override;
 	
 	/** --- 서버 권한 로직 (RPC) --- */
+	// UFUNCTION(Server, Reliable)
+	// void Server_PerformInteract();
+	
 	UFUNCTION(Server, Reliable)
-	void Server_PerformInteract();
-
+	void Server_PerformInteract(AActor* TargetActor, FVector_NetQuantize HitLocation);
+	
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_GrabObject(UPrimitiveComponent* ComponentToGrab, FVector GrabLocation);
 
@@ -68,9 +71,12 @@ private:
 	UPROPERTY()
 	FRotator GrabRelativeRotation;
 
-	UPROPERTY(EditAnywhere, Category = "Design")
+	UPROPERTY(EditAnywhere, Category = "Design | Interaction")
 	float InteractRange = 300.f;
 
+	UPROPERTY(EditAnywhere, Category = "Design | Interaction")
+	float InteractionTolerance = 300.f;
+	
 	// 헬퍼 함수
 	void PhysicsHandleUpdate(float DeltaTime);
 	void GrabObject_Impl(UPrimitiveComponent* ComponentToGrab, FVector GrabLocation);
