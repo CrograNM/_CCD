@@ -99,15 +99,21 @@ void ACCD_EMopActor::PerformMopTrace()
 				SpawnRot.Pitch -= 90.0f;
 
 				// 핏자국 액터 스폰
-				GetWorld()->SpawnActor<ADecal_StainActor_Base>(
+				ADecal_StainActor_Base* SpawnedDecal = GetWorld()->SpawnActor<ADecal_StainActor_Base>(
 					MopStain, 
 					HitResult.Location + HitResult.ImpactNormal * 1.5f, 
 					SpawnRot, 
 					SpawnParams);
+				if (SpawnedDecal)
+				{
+					if (UWashableComponent* WashComp = SpawnedDecal->FindComponentByClass<UWashableComponent>())
+					{
+						WashComp->TakeWashDamage(50.f);
+					}
+				}
 				
 				SpilledStainCount++;
-				
-				if (SpilledStainCount >= 3)
+				if (SpilledStainCount >= 1)
 				{
 					// 각 오염도를 약 1회 사용분만큼 차감
 					float Reduction = 1.0f / MaxUseCount; 

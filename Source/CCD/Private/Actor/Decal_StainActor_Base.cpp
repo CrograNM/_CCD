@@ -30,8 +30,7 @@ ADecal_StainActor_Base::ADecal_StainActor_Base()
 	StepTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("StepTrigger"));
 	StepTrigger->SetupAttachment(RootComponent);
 	StepTrigger->SetCollisionProfileName(TEXT("Trigger"));
-	// 데칼 크기에 맞춰 적절히 조절 (예: 50x50x20)
-	StepTrigger->SetBoxExtent(FVector(50.f, 50.f, 20.f)); 
+	StepTrigger->SetBoxExtent(FVector(10.f, 100.f, 100.f)); 
     
 	StepTrigger->OnComponentBeginOverlap.AddDynamic(this, &ADecal_StainActor_Base::OnStepTriggerBeginOverlap);
 	
