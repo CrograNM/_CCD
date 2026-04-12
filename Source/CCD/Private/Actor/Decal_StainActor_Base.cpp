@@ -117,6 +117,8 @@ void ADecal_StainActor_Base::OnRep_DecalColor()
 
 void ADecal_StainActor_Base::ValidateSurface()
 {
+	if (HasAuthority()) return; // 서버에서만 검사 수행 (클라이언트는 서버의 결과를 기다림)
+	
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this); // 기본적으로 자기 자신 무시
 	
