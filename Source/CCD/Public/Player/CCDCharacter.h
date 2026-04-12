@@ -200,37 +200,34 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Animation")
     TObjectPtr<UAnimMontage> EmoteMontage;
     
-    UPROPERTY(EditAnywhere, Category = "Design")
-    float InteractRange = 300.f;
-    
     /** --- 사망 상태 관리 --- */
     UPROPERTY(ReplicatedUsing = OnRep_IsDead)
     bool bIsDead = false;
     
     // 사망 시 조각에 가할 충격의 세기
-    UPROPERTY(EditAnywhere, Category = "Death")
+    UPROPERTY(EditAnywhere, Category = "Design | Death")
     float DeathImpulseStrength = 500.0f;
     
-    UPROPERTY(EditAnywhere, Category = "Death")
+    UPROPERTY(EditAnywhere, Category = "Design | Death")
     TSubclassOf<ACCD_BodyFragment> DeathFragmentClass;
 
-    UPROPERTY(EditAnywhere, Category = "Death")
+    UPROPERTY(EditAnywhere, Category = "Design | Death")
     TArray<TObjectPtr<USkeletalMesh>> FragmentMeshList;
     
-    UPROPERTY(EditAnywhere, Category = "Death")
+    UPROPERTY(EditAnywhere, Category = "Design | Death")
     float BloodSpawnHeight = 150.f;
     
-    UPROPERTY(EditAnywhere, Category = "Death")
+    UPROPERTY(EditAnywhere, Category = "Design | Death")
     float BloodSpawnRange = 300.f;
     
-    UPROPERTY(EditDefaultsOnly, Category = "Death")
+    UPROPERTY(EditDefaultsOnly, Category = "Design | Death")
     TSubclassOf<ADecal_StainActor_Base> BloodStainActorClass;
     
     UPROPERTY(Replicated)
     int32 RemainingFootprints = 0;
 
     // 발자국으로 사용할 데칼 클래스
-    UPROPERTY(EditDefaultsOnly, Category = "Death")
+    UPROPERTY(EditDefaultsOnly, Category = "Design | VFX")
     TSubclassOf<ADecal_StainActor_Base> FootprintDecalClass;
     
     UFUNCTION(Server, Reliable)
