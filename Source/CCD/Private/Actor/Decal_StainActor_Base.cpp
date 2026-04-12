@@ -3,8 +3,10 @@
 
 #include "Component/ProgressComponent.h"
 #include "Component/WashableComponent.h"
+#include "Components/BoxComponent.h"
 #include "Components/DecalComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Player/CCDCharacter.h"
 
 ADecal_StainActor_Base::ADecal_StainActor_Base()
 {
@@ -23,6 +25,15 @@ ADecal_StainActor_Base::ADecal_StainActor_Base()
 	
 	// 부모 데칼 컴포넌트의 복제 설정
 	GetDecal()->SetIsReplicated(true);
+	
+	// 트리거 설정
+	StepTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("StepTrigger"));
+	StepTrigger->SetupAttachment(RootComponent);
+	StepTrigger->SetCollisionProfileName(TEXT("Trigger"));
+	// 데칼 크기에 맞춰 적절히 조절 (예: 50x50x20)
+	StepTrigger->SetBoxExtent(FVector(50.f, 50.f, 20.f)); 
+    
+	StepTrigger->OnComponentBeginOverlap.AddDynamic(this, &ADecal_StainActor_Base::OnStepTriggerBeginOverlap);
 	
 	AllowedSurfaceTags = { FName("Floor"), FName("Wall") };
 }
@@ -174,4 +185,20 @@ void ADecal_StainActor_Base::ValidateSurface()
 	// 3회 시도 후에도 유효한 표면이 감지되지 않으면 데칼 제거
 	UE_LOG(LogTemp, Warning, TEXT("%s - Invalid surface. Destroying decal."), *GetName());
 	Destroy();
+}
+
+void ADecal_StainActor_Base::OnStepTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (!HasAuthority()) return; // 서버에서만 처리
+	
+	if (!bCanStainFeet) return;
+
+	// 물(Water) 데칼인 경우에는 피가 묻지 않도록 처리 (선택 사항)
+	if (WashableComp->GetWashableType() == ECCD_WashableType::EWT_Water) return;
+
+	if (ACCDCharacter* Character = Cast<ACCDCharacter>(OtherActor))
+	{
+		// 캐릭터에게 피가 묻었음을 알림
+		Character->AddBloodToFeet(6);
+	}
 }

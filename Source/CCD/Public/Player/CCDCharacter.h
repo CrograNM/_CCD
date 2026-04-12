@@ -133,6 +133,13 @@ public:
     
     FORCEINLINE TSubclassOf<ADecal_StainActor_Base> GetBloodStainActorClass() const { return BloodStainActorClass; }
 
+    // 피 묻은 발자국 설정
+    void AddBloodToFeet(int32 StepCount);
+
+    // AnimNotify에서 호출할 함수
+    UFUNCTION(BlueprintCallable, Category = "Effects")
+    void TrySpawnFootprint();
+    
 protected:
     virtual void BeginPlay() override;
     
@@ -218,6 +225,16 @@ protected:
     
     UPROPERTY(EditDefaultsOnly, Category = "Death")
     TSubclassOf<ADecal_StainActor_Base> BloodStainActorClass;
+    
+    UPROPERTY(Replicated)
+    int32 RemainingFootprints = 0;
+
+    // 발자국으로 사용할 데칼 클래스
+    UPROPERTY(EditDefaultsOnly, Category = "Death")
+    TSubclassOf<ADecal_StainActor_Base> FootprintDecalClass;
+    
+    UFUNCTION(Server, Reliable)
+    void Server_SpawnFootprint(FVector Location, FRotator Rotation);
     
     UFUNCTION()
     void OnRep_IsDead();

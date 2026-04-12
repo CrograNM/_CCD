@@ -10,6 +10,7 @@
 class UProgressComponent;
 class UWashableComponent;
 class UMaterialInstanceDynamic;
+class UBoxComponent;
 
 UCLASS()
 class CCD_API ADecal_StainActor_Base : public ADecalActor
@@ -33,6 +34,16 @@ protected:
 	// 세척 가능 컴포넌트 -> 상호작용(세척) 처리
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UWashableComponent* WashableComp;
+	
+	// 밟는 것을 감지하기 위한 트리거
+	UPROPERTY(VisibleAnywhere, Category = "Collision")
+	UBoxComponent* StepTrigger;
+	
+	UFUNCTION()
+	void OnStepTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Decal | Effect")
+	bool bCanStainFeet = false;
 	
 public:
 	// 머티리얼 파라미터를 업데이트하는 함수
