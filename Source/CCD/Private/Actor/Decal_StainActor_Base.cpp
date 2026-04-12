@@ -31,7 +31,10 @@ void ADecal_StainActor_Base::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	ValidateSurface(); // 스폰 시점에 해당 위치가 유효한지 검사
+	if (HasAuthority())
+	{
+		ValidateSurface(); // 스폰 시점에 해당 위치가 유효한지 검사
+	}
 	
 	SetActorTickEnabled(false); // 초기에는 Tick 비활성화 -> 양동이에서 스폰 시 조건에 맞춰 활성화
 	
@@ -117,7 +120,7 @@ void ADecal_StainActor_Base::OnRep_DecalColor()
 
 void ADecal_StainActor_Base::ValidateSurface()
 {
-	if (HasAuthority()) return; // 서버에서만 검사 수행 (클라이언트는 서버의 결과를 기다림)
+	if (!HasAuthority()) return;
 	
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this); // 기본적으로 자기 자신 무시
@@ -153,15 +156,20 @@ void ADecal_StainActor_Base::ValidateSurface()
 				// 태그 검사에 성공 -> 해당 표면으로 위치 및 회전 보정 후 종료
 				if (bHasValidTag)
 				{
+					FVector NewLocation = Hit.ImpactPoint + (Hit.ImpactNormal * 0.5f);
+					
 					FVector ForwardVector = -Hit.ImpactNormal;
 					FRotator NewRotation = FRotationMatrix::MakeFromXZ(ForwardVector, OriginalUpVector).Rotator();
-					FVector NewLocation = Hit.ImpactPoint + (Hit.ImpactNormal * 0.5f);
+					
+					// FRotator NewRotation = Hit.ImpactNormal.Rotation();
+					// NewRotation.Pitch -= 180.0f;
+					
 					SetActorLocationAndRotation(NewLocation, NewRotation);
 					return;
 				}
 				
 				Params.AddIgnoredActor(HitActor);
-				// UE_LOG(LogTemp, Warning, TEXT("%s - LineTrace hit actor %s, but no tags. Attempt %d/3"), *GetName(), *HitActor->GetName(), i + 1);
+				// UE_LOG(LogTemp, Warning, TEXT("%s - LineTrace hit actor %s, but no tags. Attempt %d/%d"), *GetName(), *HitActor->GetName(), i + 1, MaxAttempts);
 			}
 		}
 		else
