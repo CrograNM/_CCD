@@ -61,7 +61,7 @@ void ACCD_BodyFragment::OnMeshHit(UPrimitiveComponent* HitComponent, AActor* Oth
 	FVector NormalImpulse, const FHitResult& Hit)
 {
 	// 기본 유효성 검사
-	if (!HitSound || !DecalStainActorClass || !HitEffect) return;
+	if (!HitSound || DecalStainActorClasses.Num() == 0 || !HitEffect) return;
     
 	// 쿨다운 체크
 	if (GetWorld()->GetTimeSeconds() - LastHitTime < HitCoolDown) return;
@@ -89,30 +89,36 @@ void ACCD_BodyFragment::OnMeshHit(UPrimitiveComponent* HitComponent, AActor* Oth
 	// VFX 생성
 	FRotator SpawnRot = Hit.ImpactNormal.Rotation();
 	SpawnRot.Pitch -= 90.0f;
+	
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), HitEffect, Hit.Location, SpawnRot, FVector(TargetScale * 2.0f));
     
 	// 핏자국 생성
+	if (!HasAuthority()) return;
 	if (CurrentStainThreshold < MaxStainThreshold)
 	{
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		
-		ADecal_StainActor_Base* SpawnedDecal = GetWorld()->SpawnActor<ADecal_StainActor_Base>(
-			DecalStainActorClass, 
-			Hit.Location + Hit.ImpactNormal * 1.5f,
-			SpawnRot, 
-			SpawnParams);
 
-		if (SpawnedDecal)
+		const int32 RandomIndex = FMath::RandHelper(DecalStainActorClasses.Num());
+		if (const TSubclassOf<ADecal_StainActor_Base> SelectedDecalClass = DecalStainActorClasses[RandomIndex])
 		{
-			// 데칼 액터의 스케일 적용
-			SpawnedDecal->SetActorScale3D(FVector(TargetScale));
+			ADecal_StainActor_Base* SpawnedDecal = GetWorld()->SpawnActor<ADecal_StainActor_Base>(
+				SelectedDecalClass, 
+				Hit.Location + Hit.ImpactNormal * 1.5f,
+				SpawnRot, 
+				SpawnParams);
+
+			if (SpawnedDecal)
+			{
+				// 데칼 액터의 스케일 적용
+				SpawnedDecal->SetActorScale3D(FVector(TargetScale));
             
-			// 충격량 총량 업데이트 (최대값으로 클램핑)
-			float ClampedImpulse = ImpulseSize;
-			if (ClampedImpulse > MaxImpulseForStainSize) 
-				ClampedImpulse = MaxImpulseForStainSize;
-			CurrentStainThreshold += ClampedImpulse;
+				// 충격량 총량 업데이트 (최대값으로 클램핑)
+				float ClampedImpulse = ImpulseSize;
+				if (ClampedImpulse > MaxImpulseForStainSize) 
+					ClampedImpulse = MaxImpulseForStainSize;
+				CurrentStainThreshold += ClampedImpulse;
+			}
 		}
 	}
 }
