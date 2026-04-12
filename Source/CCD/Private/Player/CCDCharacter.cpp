@@ -674,6 +674,8 @@ void ACCDCharacter::AddBloodToFeet(int32 StepCount)
 
 void ACCDCharacter::TrySpawnFootprint()
 {
+	UE_LOG(LogTemp, Warning, TEXT("TrySpawnFootprint Called. Remaining: %d"), RemainingFootprints);
+	
 	if (RemainingFootprints <= 0) return;
 
 	// 바닥 체크를 위한 Trace
@@ -685,6 +687,7 @@ void ACCDCharacter::TrySpawnFootprint()
 
 	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_WorldStatic, Params))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Floor Detected: %s"), *Hit.GetActor()->GetName());
 		// 서버에 스폰 요청
 		FRotator FootRot = GetActorRotation();
 		// 발자국 데칼이 바닥을 향하도록 회전 보정 (ADecal_StainActor_Base의 로직 참고)
@@ -705,8 +708,9 @@ void ACCDCharacter::Server_SpawnFootprint_Implementation(FVector Location, FRota
 
 	if (ADecal_StainActor_Base* Footprint = GetWorld()->SpawnActor<ADecal_StainActor_Base>(FootprintDecalClass, Location, Rotation, SpawnParams))
 	{
-		// 묻은 피가 점점 연해지게 설정 (선택 사항)
-		float Alpha = (float)RemainingFootprints / 10.0f; // 초기 10회 기준
+		float RawAlpha = (float)RemainingFootprints / 6.0f; 
+		
+		float Alpha = FMath::Clamp(FMath::Sqrt(RawAlpha), 0.5f, 1.0f);
 		Footprint->UpdateDecalOpacity(Alpha);
         
 		RemainingFootprints--;
