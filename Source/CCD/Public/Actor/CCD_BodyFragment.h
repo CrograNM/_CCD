@@ -76,7 +76,7 @@ protected:
 	
 	// Spawn Decal
 	UPROPERTY(EditDefaultsOnly, Category = "Design | VFX")
-	TSubclassOf<ADecal_StainActor_Base> DecalStainActorClass;
+	TArray<TSubclassOf<ADecal_StainActor_Base>> DecalStainActorClasses;
 	
 	float LastHitTime = 0.0f;
 
