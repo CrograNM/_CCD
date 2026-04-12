@@ -559,6 +559,31 @@ void ACCDCharacter::HandleDeath()
 			}
 		}
 	}
+	
+	if (InternalOrganFragmentClasses.Num() > 0)
+	{
+		const int32 RandomIndex = FMath::RandHelper(InternalOrganFragmentClasses.Num());
+		if (const TSubclassOf<ACCD_BodyFragment> SelectedDecalClass = InternalOrganFragmentClasses[RandomIndex])
+		{
+			ACCD_BodyFragment* SpawnedOrgan = GetWorld()->SpawnActor<ACCD_BodyFragment>(
+				SelectedDecalClass, 
+				GetActorLocation(), 
+				GetActorRotation()
+				);
+
+			if (SpawnedOrgan)
+			{
+				USkeletalMesh* FragmentMesh = SpawnedOrgan->GetMeshComp()->GetSkeletalMeshAsset();
+				FBox SphereBounds = FragmentMesh->GetImportedBounds().GetBox();
+				FVector MeshRelativeCenter = SphereBounds.GetCenter();
+				FVector ImpulseDir = MeshRelativeCenter.GetSafeNormal();
+				ImpulseDir.Z += FMath::RandRange(0.1f, 0.3f); // 위로도 약간 튀어오르게 (살짝 랜덤)
+				ImpulseDir.Normalize();
+				FVector FinalImpulse = ImpulseDir * (DeathImpulseStrength + FMath::RandRange(100.0f, 500.0f)); // 충격 세기에 약간의 랜덤 추가
+				SpawnedOrgan->InitFragment(FragmentMesh, FinalImpulse);
+			}
+		}
+	}
 }
 void ACCDCharacter::HandleRevive()
 {

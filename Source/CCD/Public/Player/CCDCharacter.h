@@ -223,6 +223,9 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Design | Death")
     TSubclassOf<ADecal_StainActor_Base> BloodStainActorClass;
     
+    UPROPERTY(EditDefaultsOnly, Category = "Design | Death")
+    TArray<TSubclassOf<ACCD_BodyFragment>> InternalOrganFragmentClasses;
+    
     UPROPERTY(Replicated)
     int32 RemainingFootprints = 0;
 

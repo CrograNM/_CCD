@@ -27,6 +27,8 @@ public:
 	UFUNCTION()
 	void OnRep_SkeletalMesh();
 	
+	TObjectPtr<USkeletalMeshComponent> GetMeshComp() const { return MeshComp; }
+	
 	/** 스폰 후 메쉬를 설정하고 물리 충격을 가하는 함수 */
 	void InitFragment(USkeletalMesh* InMesh, FVector Impulse);
 	
