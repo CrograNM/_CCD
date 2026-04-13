@@ -111,7 +111,7 @@ void UCCD_EquipmentComponent::HandleEquipmentEffects(ECCD_EquipmentState NewStat
 		
 		if (TargetSocket != NAME_None)
 		{
-			ToolActor->AttachToComponent(BestMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TargetSocket);
+			ToolActor->AttachToComponent(BestMesh, FAttachmentTransformRules::SnapToTargetIncludingScale, TargetSocket);
 			ToolActor->SetEquipmentActive(ToolType == NewState);
 		}
 	}
