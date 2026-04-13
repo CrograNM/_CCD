@@ -47,7 +47,19 @@ void UCCD_EquipmentComponent::Server_SetEquipmentState_Implementation(ECCD_Equip
 	{
 		OwnerCharacter->SetIsUnequipping(true);
 		
-		FName Section = (EquipmentState == ECCD_EquipmentState::EES_Mop) ? TEXT("DrawMop") : TEXT("DrawScanner");
+		FName Section;
+		if (EquipmentState == ECCD_EquipmentState::EES_Mop)
+		{
+			Section = TEXT("DrawMop");
+		}
+		else if (EquipmentState == ECCD_EquipmentState::EES_Scanner)
+		{
+			Section = TEXT("DrawScanner");
+		}
+		else if (EquipmentState == ECCD_EquipmentState::EES_BlueStick)
+		{
+			Section = TEXT("DrawBlueStick");
+		}
 		OwnerCharacter->SetIsActionInProgress(true);	
 		OwnerCharacter->Multicast_PlayEquipMontage(Section, -1.5f);
 		OwnerCharacter->BindMontageEndedDelegate();
@@ -92,6 +104,11 @@ void UCCD_EquipmentComponent::HandleEquipmentEffects(ECCD_EquipmentState NewStat
 		{
 			TargetSocket = (ToolType == NewState) ? TEXT("ScannerSocket_Hand") : TEXT("ScannerSocket_Hip");
 		}
+		else if (ToolType == ECCD_EquipmentState::EES_BlueStick)
+		{
+			TargetSocket = (ToolType == NewState) ? TEXT("BlueStickSocket_Hand") : TEXT("BlueStickSocket_Hip");
+		}
+		
 		if (TargetSocket != NAME_None)
 		{
 			ToolActor->AttachToComponent(BestMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TargetSocket);
@@ -127,7 +144,19 @@ void UCCD_EquipmentComponent::ProceedToEquip(ECCD_EquipmentState NewState)
 		return;
 	}
 
-	FName Section = (NewState == ECCD_EquipmentState::EES_Mop) ? TEXT("DrawMop") : TEXT("DrawScanner");
+	FName Section;
+	if (NewState == ECCD_EquipmentState::EES_Mop)
+	{
+		Section = TEXT("DrawMop");
+	}
+	else if (NewState == ECCD_EquipmentState::EES_Scanner)
+	{
+		Section = TEXT("DrawScanner");
+	}
+	else if (NewState == ECCD_EquipmentState::EES_BlueStick)
+	{
+		Section = TEXT("DrawBlueStick");
+	}
 	OwnerCharacter->SetIsActionInProgress(true);
 	OwnerCharacter->Multicast_PlayEquipMontage(Section, 1.5f);
 	OwnerCharacter->BindMontageEndedDelegate();
