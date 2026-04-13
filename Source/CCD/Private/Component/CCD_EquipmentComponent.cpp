@@ -79,6 +79,7 @@ void UCCD_EquipmentComponent::HandleEquipmentEffects(ECCD_EquipmentState NewStat
 {
 	if (!OwnerCharacter) return;
 	
+	// 최적의 메쉬 선택 (1인칭/3인칭)
 	USceneComponent* BestMesh = OwnerCharacter->GetMesh();
 	if (OwnerCharacter->IsLocallyControlled())
 	{
@@ -87,6 +88,7 @@ void UCCD_EquipmentComponent::HandleEquipmentEffects(ECCD_EquipmentState NewStat
 	}
 	if (!BestMesh || SpawnedToolMap.Num() == 0) return;
 	
+	// 모든 장비 액터를 순회하며 현재 상태에 맞게 부착 위치와 활성화 상태를 업데이트
 	for (auto& Elem : SpawnedToolMap)
 	{
 		ECCD_EquipmentState ToolType = Elem.Key;
@@ -114,6 +116,24 @@ void UCCD_EquipmentComponent::HandleEquipmentEffects(ECCD_EquipmentState NewStat
 			ToolActor->AttachToComponent(BestMesh, FAttachmentTransformRules::SnapToTargetIncludingScale, TargetSocket);
 			ToolActor->SetEquipmentActive(ToolType == NewState);
 		}
+	}
+	
+	// --- 교체 시점에 작동하는 로직 사용 (스캐너, 블루스틱 등) ---
+	// 모든 장비 사용 해제
+	for (auto& Elem : SpawnedToolMap)
+	{
+		if (Elem.Value)
+		{
+			Elem.Value->SetEquipmentActive(false);
+			Elem.Value->OnUnequipped();
+		}
+	}
+	
+	// 새 장비 사용
+	if (SpawnedToolMap.Contains(NewState) && SpawnedToolMap[NewState])
+	{
+		SpawnedToolMap[NewState]->SetEquipmentActive(true);
+		SpawnedToolMap[NewState]->OnEquipped();
 	}
 }
 

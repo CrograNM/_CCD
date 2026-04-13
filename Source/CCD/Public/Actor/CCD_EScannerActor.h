@@ -16,6 +16,9 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void ExecuteAction() override;
 	
+	virtual void OnEquipped() override; // 장착 시 호출
+	virtual void OnUnequipped() override; // 해제 시 호출
+	
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_UpdateScannerUI();
 	

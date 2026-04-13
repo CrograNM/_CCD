@@ -37,6 +37,33 @@ void ACCD_EScannerActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProper
 	DOREPLIFETIME(ACCD_EScannerActor, bIsScanning);
 }
 
+void ACCD_EScannerActor::OnEquipped()
+{
+	// 장착 시 자동으로 스캔 시작
+	if (HasAuthority())
+	{
+		bIsScanning = true;
+		OnRep_IsScanning(); // 서버에서도 타이머 작동을 위해 호출
+	}
+}
+
+void ACCD_EScannerActor::OnUnequipped()
+{
+	// 해제 시 스캔 중지 및 UI 숨김
+	if (HasAuthority())
+	{
+		bIsScanning = false;
+		OnRep_IsScanning();
+	}
+    
+	// 클라이언트 UI 즉시 초기화
+	if (ScannerWidgetComp)
+	{
+		ScannerWidgetComp->SetHiddenInGame(true);
+	}
+	ScannerDistance = -1.0f;
+}
+
 void ACCD_EScannerActor::ExecuteAction()
 {
 	if (!HasAuthority()) return;
@@ -64,10 +91,16 @@ void ACCD_EScannerActor::ExecuteAction()
 
 void ACCD_EScannerActor::OnRep_IsScanning()
 {
-	// if (bIsScanning)
-	// {
-	// 	if (ScannerWidgetComp) ScannerWidgetComp->SetHiddenInGame(false);
-	// }
+	if (bIsScanning)
+	{
+		GetWorld()->GetTimerManager().SetTimer(ScannerTimerHandle, this, &ACCD_EScannerActor::PerformScan, 0.5f, true);
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().ClearTimer(ScannerTimerHandle);
+		// UI 업데이트를 위해 거리 초기화 RPC 등을 호출할 수 있음
+		UpdateScannerUI(); 
+	}
 }
 void ACCD_EScannerActor::PerformScan()
 {
@@ -103,6 +136,15 @@ void ACCD_EScannerActor::Multicast_UpdateScannerUI_Implementation()
 
 void ACCD_EScannerActor::UpdateScannerUI()
 {
+	if (!bIsScanning)
+	{
+		if (ScannerWidgetComp)
+		{
+			ScannerWidgetComp->SetHiddenInGame(true);
+		}
+		return;
+	}
+	
 	if (ScannerSound && ScannerDistance >= 0.f) // 유효한 거리 값이 있을 때만 사운드 재생
 	{
 		float CurrentDistance = (ScannerDistance < 0.f) ? MaxScanDistance : ScannerDistance;
