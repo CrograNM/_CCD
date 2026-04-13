@@ -718,7 +718,7 @@ void ACCDCharacter::TrySpawnFootprint()
 		// 발자국 데칼이 바닥을 향하도록 회전 보정 (ADecal_StainActor_Base의 로직 참고)
 		FRotator SpawnRot = Hit.ImpactNormal.Rotation();
 		SpawnRot.Pitch -= 90.0f; 
-		SpawnRot.Yaw = FootRot.Yaw; // 캐릭터가 바라보는 방향 유지
+		SpawnRot.Yaw = FootRot.Yaw + 90.0f; // 캐릭터가 바라보는 방향 유지
 
 		Server_SpawnFootprint(Hit.Location + Hit.ImpactNormal * 1.1f, SpawnRot);
 	}
