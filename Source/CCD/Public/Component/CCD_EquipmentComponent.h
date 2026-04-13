@@ -14,7 +14,8 @@ enum class ECCD_EquipmentState : uint8
 {
 	EES_Hands   UMETA(DisplayName = "Hands"),   // 맨손 (Physics Handle)
 	EES_Scanner UMETA(DisplayName = "Scanner"), // 탐지장치
-	EES_Mop     UMETA(DisplayName = "Mop")		// 대걸레
+	EES_Mop     UMETA(DisplayName = "Mop"),		// 대걸레
+	EES_BlueStick UMETA(DisplayName = "BlueStick"), // 블루스틱(감지봉)
 };
 
 USTRUCT(BlueprintType)
