@@ -32,20 +32,14 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Detection")
 	TObjectPtr<UPointLightComponent> DeviceLight;
 	
+	UPROPERTY(EditAnywhere, Category = "Detection")
+	class UMaterialParameterCollection* UVLightMPC;
+	
 	//UPROPERTY(EditAnywhere, Category = "Design | Sound")
 	//TObjectPtr<USoundBase> OnSound; 
 	
 	//UPROPERTY(EditAnywhere, Category = "Design | Sound")
 	//TObjectPtr<USoundBase> OffSound;
-	
-	// 오버랩 이벤트
-	UFUNCTION()
-	void OnDetectionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, 
-		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION()
-	void OnDetectionEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, 
-		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 	
 private:
 	const int32 DetectionStencilValue = 2; // 감지 시 적용할 스텐실 값 (포스트 프로세스에서 2번을 푸른 빛으로 설정 가정)

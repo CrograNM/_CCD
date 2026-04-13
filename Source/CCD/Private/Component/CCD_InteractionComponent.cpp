@@ -128,7 +128,6 @@ void UCCD_InteractionComponent::SetHighlightEffect(UPrimitiveComponent* InCompon
 	// CustomDepth를 사용하여 하이라이트 출력 (PostProcess에서 CustomDepth 기반 외곽선 머티리얼 필요)
 	InComponent->SetRenderCustomDepth(bEnable);
 	
-	// 필요 시 스텐실 값도 설정 가능 (예: 외곽선 색상 구분용)
 	// InComponent->SetCustomDepthStencilValue(bEnable ? 1 : 0);
 }
 
