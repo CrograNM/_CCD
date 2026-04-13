@@ -138,7 +138,10 @@ public:
 
     // AnimNotify에서 호출할 함수
     UFUNCTION(BlueprintCallable, Category = "Effects")
-    void TrySpawnFootprint();
+    void TrySpawnFootprint(FName FootSocketName);
+    
+    UFUNCTION(Server, Reliable)
+    void Server_SpawnFootprint(FVector Location, FRotator Rotation, bool bIsLeft);
     
 protected:
     virtual void BeginPlay() override;
@@ -231,10 +234,12 @@ protected:
 
     // 발자국으로 사용할 데칼 클래스
     UPROPERTY(EditDefaultsOnly, Category = "Design | VFX")
-    TSubclassOf<ADecal_StainActor_Base> FootprintDecalClass;
+    TSubclassOf<ADecal_StainActor_Base> FootprintLeftDecalClass;
+
+    UPROPERTY(EditDefaultsOnly, Category = "Design | VFX")
+    TSubclassOf<ADecal_StainActor_Base> FootprintRightDecalClass;
     
-    UFUNCTION(Server, Reliable)
-    void Server_SpawnFootprint(FVector Location, FRotator Rotation);
+   
     
     UFUNCTION()
     void OnRep_IsDead();
