@@ -179,12 +179,12 @@ void ADecal_StainActor_Base::ValidateSurface()
 				}
 				
 				Params.AddIgnoredActor(HitActor);
-				// UE_LOG(LogTemp, Warning, TEXT("%s - LineTrace hit actor %s, but no tags. Attempt %d/%d"), *GetName(), *HitActor->GetName(), i + 1, MaxAttempts);
+				UE_LOG(LogTemp, Warning, TEXT("%s - LineTrace hit actor %s, but no tags. Attempt %d/%d"), *GetName(), *HitActor->GetName(), i + 1, MaxAttempts);
 			}
 		}
 		else
 		{
-			// UE_LOG(LogTemp, Warning, TEXT("%s - LineTrace No Hit"), *GetName());
+			UE_LOG(LogTemp, Warning, TEXT("%s - LineTrace No Hit"), *GetName());
 			break; 
 		}
 	}
