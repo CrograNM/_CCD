@@ -18,6 +18,9 @@ public:
 	// 장비 사용 시 호출
 	virtual void ExecuteAction() {}
 	
+	virtual void OnEquipped() {} // 장착 시 호출
+	virtual void OnUnequipped() {} // 해제 시 호출
+	
 	// 애니메이션 노티파이 등에서 정밀한 타이밍에 호출할 로직
 	virtual void OnActionNotify() {}
 
