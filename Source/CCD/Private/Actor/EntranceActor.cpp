@@ -140,8 +140,8 @@ void AEntranceActor::StartLevelTravel()
 			}
 		}
 		
-		FString TravelURL = NextLevelPath + TEXT("?listen");
-		World->ServerTravel(TravelURL);
+		// FString TravelURL = NextLevelPath + TEXT("?listen");
+		World->ServerTravel(NextLevelPath);
 	}
 }
 
