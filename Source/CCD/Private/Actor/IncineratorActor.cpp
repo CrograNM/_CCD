@@ -5,6 +5,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "ActorSequenceComponent.h"
 #include "ActorSequencePlayer.h"
+#include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 
@@ -27,6 +28,11 @@ AIncineratorActor::AIncineratorActor()
 	
 	// 서버에서만 대미지 판정을 하도록 설정
 	BurnArea->SetCollisionProfileName(TEXT("Trigger"));
+	
+	// 오디오 컴포넌트 생성 및 설정
+	BurningAudioComp = CreateDefaultSubobject<UAudioComponent>(TEXT("BurningAudioComp"));
+	BurningAudioComp->SetupAttachment(RootComponent);
+	BurningAudioComp->bAutoActivate = false; // 처음부터 켜지지 않게 설정
 }
 
 void AIncineratorActor::BeginPlay()
@@ -34,6 +40,11 @@ void AIncineratorActor::BeginPlay()
 	Super::BeginPlay();
 	
 	SetActorTickEnabled(false);
+	
+	if (BurningAudioComp && BurningSound)
+	{
+		BurningAudioComp->SetSound(BurningSound);
+	}
 	
 	if (HasAuthority())
 	{
@@ -154,6 +165,20 @@ void AIncineratorActor::OnRep_DoorOpen()
 				UGameplayStatics::PlaySoundAtLocation(this, DoorSound2, GetActorLocation()); 
 			}
 			SequenceComp->GetSequencePlayer()->PlayReverse();
+		}
+	}
+	
+	if (BurningAudioComp)
+	{
+		if (bIsDoorOpen)
+		{
+			// 문이 열리면 작동 중지 - 사운드 정지
+			BurningAudioComp->FadeOut(0.5f, 0.0f);
+		}
+		else
+		{
+			// 문이 닫히면 작동 - 사운드 재생
+			BurningAudioComp->FadeIn(0.5f, 1.0f);
 		}
 	}
 }
