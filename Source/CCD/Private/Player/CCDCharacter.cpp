@@ -701,45 +701,46 @@ void ACCDCharacter::TrySpawnFootprint(FName FootSocketName)
 {
 	if (GetMesh() == nullptr) return;
 	
+	// 소켓(혹은 본)의 월드 위치 가져오기
 	FVector SocketLocation = GetMesh()->GetSocketLocation(FootSocketName);
 	
+	// 상태에 맞는 사운드 재생 (피가 있든 없든 소리는 나야 함)
+	// RemainingFootprints가 0보다 크면 질척이는 소리, 아니면 일반 소리 선택
 	USoundBase* SoundToPlay = (RemainingFootprints > 0) ? BloodyFootstepSound : NormalFootstepSound;
-    
+
 	if (SoundToPlay)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, SoundToPlay, SocketLocation);
 	}
 
-	// 피가 남아있을 때만 발자국 데칼 생성 로직 실행
+	// 피가 묻어있을 때만 발자국 데칼 생성 로직 수행
 	if (RemainingFootprints > 0)
 	{
+		// 소켓 위치 기준 바닥 체크
 		FHitResult Hit;
-		
-		FVector Start = SocketLocation + FVector(0.f, 0.f, 20.f);
-		FVector End = SocketLocation + FVector(0.f, 0.f, -50.f);
+		FVector Start = SocketLocation + FVector(0.f, 0.f, 20.f); // 발등 위에서 시작
+		FVector End = SocketLocation + (FVector::UpVector * -50.f);  // 바닥 아래로
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(this);
 
 		if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_WorldStatic, Params))
 		{
-			// 소켓 이름에 'L'이 포함되었는지 확인하여 왼발/오른발 판정
-			bool bIsLeft = FootSocketName.ToString().Contains(TEXT("L"), ESearchCase::IgnoreCase);
-			
-			Server_SpawnFootprint(
-				Hit.Location + Hit.ImpactNormal * 1.1f, 
-				GetActorRotation() + FRotator(-90, 90, 0), 
-				bIsLeft
-			);
+			bool bIsLeft = FootSocketName.ToString().Contains(TEXT("l"), ESearchCase::IgnoreCase);
+        
+			FRotator CharacterRot = GetActorRotation();
+			FRotator SpawnRot = Hit.ImpactNormal.Rotation();
+			SpawnRot.Pitch -= 90.0f; 
+			SpawnRot.Yaw = CharacterRot.Yaw + 90.0f; 
+		
+			Server_SpawnFootprint(Hit.Location + Hit.ImpactNormal * 1.1f, SpawnRot, bIsLeft);
 		}
 	}
 }
 
 void ACCDCharacter::Server_SpawnFootprint_Implementation(FVector Location, FRotator Rotation, bool bIsLeft)
 {
-	// 공유된 변수 체크
 	if (RemainingFootprints <= 0) return;
-
-	// 왼발/오른발에 맞는 클래스 선택
+	
 	TSubclassOf<ADecal_StainActor_Base> SelectedClass = bIsLeft ? FootprintLeftDecalClass : FootprintRightDecalClass;
 	if (!SelectedClass) return;
 
@@ -748,11 +749,9 @@ void ACCDCharacter::Server_SpawnFootprint_Implementation(FVector Location, FRota
 
 	if (ADecal_StainActor_Base* Footprint = GetWorld()->SpawnActor<ADecal_StainActor_Base>(SelectedClass, Location, Rotation, SpawnParams))
 	{
-		// 갯수가 줄어들수록 투명해지는 로직은 그대로 유지
 		float Alpha = FMath::Clamp(FMath::Sqrt((float)RemainingFootprints / 6.0f), 0.5f, 1.0f);
 		Footprint->UpdateDecalOpacity(Alpha);
-        
-		// 공유 변수 차감
+		
 		RemainingFootprints--;
 	}
 }
