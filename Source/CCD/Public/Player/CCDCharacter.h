@@ -239,6 +239,12 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Design | VFX")
     TSubclassOf<ADecal_StainActor_Base> FootprintRightDecalClass;
     
+    // 발자국 소리 메타 사운드
+    UPROPERTY(EditAnywhere, Category = "Design | Sound")
+    TObjectPtr<USoundBase> NormalFootstepSound;
+
+    UPROPERTY(EditAnywhere, Category = "Design | Sound")
+    TObjectPtr<USoundBase> BloodyFootstepSound;
    
     
     UFUNCTION()
