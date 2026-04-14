@@ -44,20 +44,21 @@ void UCCD_EBlueStickManagerSubsystem::Tick(float DeltaTime)
 	int32 Count = 0;
 	for (int32 i = 0; i < ActiveSticks.Num() && Count < MAX_STICK_COUNT; ++i)
 	{
-		if (ActiveSticks[i].IsValid()) // 켜져있는 스틱만 체크
+		if (!ActiveSticks[i].IsValid()) continue;
+		
+		FName PosParamName = *FString::Printf(TEXT("StickPos_%d"), Count);
+		FName IntensityParamName = *FString::Printf(TEXT("StickIntensity_%d"), Count);
+		Count++;
+		
+		if (ActiveSticks[i]->IsLEDOn())
 		{
-			FName PosParamName = *FString::Printf(TEXT("StickPos_%d"), Count);
-			FName IntensityParamName = *FString::Printf(TEXT("StickIntensity_%d"), Count);
-			if (ActiveSticks[i]->IsLEDOn())
-			{
-				UKismetMaterialLibrary::SetVectorParameterValue(GetWorld(), UVLightMPC, PosParamName, FLinearColor(ActiveSticks[i]->GetActorLocation()));
-				UKismetMaterialLibrary::SetScalarParameterValue(GetWorld(), UVLightMPC, IntensityParamName, 1.0f); // 켜진 스틱 : 1, 꺼진 스틱 : 0으로 제어
-				Count++;
-			}
-			else
-			{
-				UKismetMaterialLibrary::SetScalarParameterValue(GetWorld(), UVLightMPC, IntensityParamName, 0.0f);
-			}
+			UKismetMaterialLibrary::SetVectorParameterValue(GetWorld(), UVLightMPC, PosParamName, FLinearColor(ActiveSticks[i]->GetActorLocation()));
+			UKismetMaterialLibrary::SetScalarParameterValue(GetWorld(), UVLightMPC, IntensityParamName, 1.0f); // 켜진 스틱 : 1, 꺼진 스틱 : 0으로 제어
+		}
+		else
+		{
+			UKismetMaterialLibrary::SetVectorParameterValue(GetWorld(), UVLightMPC, PosParamName, FLinearColor(ActiveSticks[i]->GetActorLocation()));
+			UKismetMaterialLibrary::SetScalarParameterValue(GetWorld(), UVLightMPC, IntensityParamName, 0.0f);
 		}
 	}
 

@@ -25,6 +25,9 @@ ACCD_EBlueStick::ACCD_EBlueStick()
 	DeviceLight->SetupAttachment(RootComponent);
 	DeviceLight->SetLightColor(FLinearColor::Blue);
 	DeviceLight->Intensity = 5000.f;
+	DeviceLight->AttenuationRadius = 500.f;
+	
+	DeviceLight->SetVisibility(false);
 }
 
 void ACCD_EBlueStick::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -74,6 +77,8 @@ void ACCD_EBlueStick::BeginPlay()
 		MeshLightMID = MeshComp->CreateAndSetMaterialInstanceDynamic(0);
 		UpdateMeshLightMID();
 	}
+	
+	UpdateUVLightEffect();
 }
 
 void ACCD_EBlueStick::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -89,6 +94,7 @@ void ACCD_EBlueStick::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void ACCD_EBlueStick::OnRep_IsLEDOn()
 {
+	UpdateUVLightEffect();
 }
 
 void ACCD_EBlueStick::UpdateUVLightEffect()
