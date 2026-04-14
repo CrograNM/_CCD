@@ -439,7 +439,10 @@ void ACCDCharacter::OnRep_IsDead()
 			GetMesh()->SetCollisionProfileName(TEXT("CharacterMesh"));
 		}
 		if (UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(GetRootComponent()))
+		{
 			RootPrim->SetCollisionProfileName(TEXT("Pawn"));
+			RootPrim->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
+		}
 		if (ViewComp) ViewComp->ApplyViewMode(ViewComp->GetIsFirstPerson());
 	}
 	
@@ -616,6 +619,8 @@ void ACCDCharacter::HandleRevive()
 	{
 		bIsInvincible = true;
         
+		RemainingFootprints = 0;
+		
 		// 3초 뒤에 무적 해제
 		GetWorldTimerManager().SetTimer(InvincibilityTimerHandle, this, &ACCDCharacter::DeactivateInvincibility, 3.0f, false);
 		
@@ -719,6 +724,8 @@ void ACCDCharacter::AddBloodToFeet(int32 StepCount)
 
 void ACCDCharacter::TrySpawnFootprint(FName FootSocketName)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Footstep Detected! Socket: %s, Remaining: %d"), 
+		   *FootSocketName.ToString(), RemainingFootprints);
 	if (GetMesh() == nullptr) return;
 	
 	// 소켓(혹은 본)의 월드 위치 가져오기
@@ -745,7 +752,7 @@ void ACCDCharacter::TrySpawnFootprint(FName FootSocketName)
 
 		if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_WorldStatic, Params))
 		{
-			bool bIsLeft = FootSocketName.ToString().Contains(TEXT("l"), ESearchCase::IgnoreCase);
+			bool bIsLeft = FootSocketName.ToString().Contains(TEXT("L"), ESearchCase::IgnoreCase);
         
 			FRotator CharacterRot = GetActorRotation();
 			FRotator SpawnRot = Hit.ImpactNormal.Rotation();
