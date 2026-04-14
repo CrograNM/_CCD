@@ -26,6 +26,11 @@ EBTNodeResult::Type UBTTask_AttackPlayer_173::ExecuteTask(UBehaviorTreeComponent
 		return EBTNodeResult::Failed;
 	}
 	
+	if (Character->IsInvincible())
+	{
+		return EBTNodeResult::Failed; 
+	}
+	
 	if (ACCD_173* SCP173 = Cast<ACCD_173>(AIC->GetPawn()))
 	{
 		SCP173->PlayRandomAttackSound();

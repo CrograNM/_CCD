@@ -64,6 +64,8 @@ public:
     UFUNCTION(Server, Reliable, Category = "Death")
     void Server_Revive();
     
+    FORCEINLINE bool IsInvincible() const { return bIsInvincible; }
+    
     /** --- 애니메이션 및 동기화 --- */
     UFUNCTION(BlueprintCallable, Category = "Animation | Emote")
     void PerformEmote(FName EmoteSection);
@@ -206,6 +208,13 @@ protected:
     /** --- 사망 상태 관리 --- */
     UPROPERTY(ReplicatedUsing = OnRep_IsDead)
     bool bIsDead = false;
+    
+    UPROPERTY(Replicated)
+    bool bIsInvincible = false; // 무적 상태 여부
+
+    FTimerHandle InvincibilityTimerHandle; // 무적 해제용 타이머
+
+    void DeactivateInvincibility(); // 무적 해제 함수
     
     // 사망 시 조각에 가할 충격의 세기
     UPROPERTY(EditAnywhere, Category = "Design | Death")

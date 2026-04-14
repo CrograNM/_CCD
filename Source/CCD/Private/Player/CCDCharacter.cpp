@@ -149,6 +149,7 @@ void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(ACCDCharacter, bIsUnequipping);
 	DOREPLIFETIME(ACCDCharacter, CurrentEmoteSection);
 	DOREPLIFETIME(ACCDCharacter, RemainingFootprints);
+	DOREPLIFETIME(ACCDCharacter, bIsInvincible);
 }
 
 void ACCDCharacter::PerformEmote(FName EmoteSection)
@@ -609,6 +610,25 @@ void ACCDCharacter::HandleRevive()
 	if (EquipmentComp)
 	{
 		EquipmentComp->InitializeEquipment();
+	}
+	
+	if (HasAuthority())
+	{
+		bIsInvincible = true;
+        
+		// 3초 뒤에 무적 해제
+		GetWorldTimerManager().SetTimer(InvincibilityTimerHandle, this, &ACCDCharacter::DeactivateInvincibility, 3.0f, false);
+		
+		UE_LOG(LogTemp, Warning, TEXT("Player is Invincible for 3 seconds"));
+	}
+}
+
+void ACCDCharacter::DeactivateInvincibility()
+{
+	if (HasAuthority())
+	{
+		bIsInvincible = false;
+		UE_LOG(LogTemp, Warning, TEXT("Invincibility Expired."));
 	}
 }
 
