@@ -1,7 +1,7 @@
 
 #include "Actor/CCD_EBlueStick.h"
 
-#include "Component/ProgressComponent.h"
+#include "Actor/CCD_EBlueStickManagerSubsystem.h"
 #include "Components/SphereComponent.h"
 #include "Components/PointLightComponent.h"
 #include "Kismet/KismetMaterialLibrary.h"
@@ -10,8 +10,8 @@
 
 ACCD_EBlueStick::ACCD_EBlueStick()
 {
-	PrimaryActorTick.bCanEverTick = true;
-	PrimaryActorTick.TickInterval = 0.033f;
+	PrimaryActorTick.bCanEverTick = false;
+	// PrimaryActorTick.TickInterval = 0.033f;
 	
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	RootComponent = MeshComp;
@@ -62,12 +62,29 @@ void ACCD_EBlueStick::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	// 월드 서브시스템에 자신 등록 (MPC 업데이트를 위해)
+	if (auto* Subsystem = GetWorld()->GetSubsystem<UCCD_EBlueStickManagerSubsystem>())
+	{
+		Subsystem->RegisterStick(this);
+	}
+	
 	// 머티리얼 인스턴스 생성 (블루프린트에서 StaticMesh에 할당된 재질 인덱스 0번 가정)
 	if (MeshComp)
 	{
 		MeshLightMID = MeshComp->CreateAndSetMaterialInstanceDynamic(0);
 		UpdateMeshLightMID();
 	}
+}
+
+void ACCD_EBlueStick::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	// 월드 서브시스템에서 자신 해제
+	if (auto* Subsystem = GetWorld()->GetSubsystem<UCCD_EBlueStickManagerSubsystem>())
+	{
+		Subsystem->UnregisterStick(this);
+	}
+	
+	Super::EndPlay(EndPlayReason);
 }
 
 void ACCD_EBlueStick::OnRep_IsLEDOn()
@@ -81,15 +98,8 @@ void ACCD_EBlueStick::UpdateUVLightEffect()
 	{
 		DeviceLight->SetVisibility(bIsLEDOn);
 	}
-
-	// 2. MPC를 통한 전역 데칼 효과 제어
-	if (UVLightMPC)
-	{
-		float Intensity = bIsLEDOn ? 1.0f : 0.0f;
-		UKismetMaterialLibrary::SetScalarParameterValue(GetWorld(), UVLightMPC, FName("UV_Global_Intensity"), Intensity);
-	}
 	
-	// 3. 메쉬 머티리얼 인스턴스 업데이트 (자체 발광 효과)
+	// 2. 메쉬 머티리얼 인스턴스 업데이트 (자체 발광 효과)
 	UpdateMeshLightMID();
 }
 
@@ -104,14 +114,5 @@ void ACCD_EBlueStick::UpdateMeshLightMID()
 
 void ACCD_EBlueStick::Tick(float DeltaTime)
 {
-	if (!HasAuthority()) return;
-	
 	Super::Tick(DeltaTime);
-	
-	// 자신의 위치와 감지 반경을 MPC에 업데이트 (전역적으로 데칼들이 참조함)
-	if (UVLightMPC && bIsLEDOn)
-	{
-		UKismetMaterialLibrary::SetVectorParameterValue(GetWorld(), UVLightMPC, FName("LampPosition"), FLinearColor(GetActorLocation()));
-		UKismetMaterialLibrary::SetScalarParameterValue(GetWorld(), UVLightMPC, FName("LampRadius"), DetectionSphere->GetUnscaledSphereRadius());
-	}
 }

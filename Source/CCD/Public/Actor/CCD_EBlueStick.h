@@ -22,8 +22,13 @@ public:
 	virtual void OnEquipped() override;
 	virtual void OnUnequipped() override;
 	
+	bool IsLEDOn() const { return bIsLEDOn; }
+	TObjectPtr<UMaterialParameterCollection> GetUVLightMPC() const { return UVLightMPC; }
+	
 protected:
 	virtual void BeginPlay() override;
+	virtual  void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	
 	// 장비 외형
 	UPROPERTY(VisibleAnywhere, Category = "Equipment")
 	TObjectPtr<UStaticMeshComponent> MeshComp;
@@ -37,7 +42,7 @@ protected:
 	TObjectPtr<UPointLightComponent> DeviceLight;
 	
 	UPROPERTY(EditAnywhere, Category = "Detection")
-	class UMaterialParameterCollection* UVLightMPC;
+	TObjectPtr<class UMaterialParameterCollection> UVLightMPC;
 	
 	UPROPERTY(ReplicatedUsing = OnRep_IsLEDOn)
 	bool bIsLEDOn = false;
@@ -49,7 +54,4 @@ protected:
 	UPROPERTY()
 	UMaterialInstanceDynamic* MeshLightMID; // 메쉬 전용 비주얼 업데이트 머티리얼 인스턴스
 	void UpdateMeshLightMID();
-	
-private:
-	const int32 DetectionStencilValue = 2; // 감지 시 적용할 스텐실 값 (포스트 프로세스에서 2번을 푸른 빛으로 설정 가정)
 };
