@@ -3,6 +3,8 @@
 
 #include "AI/CCD_173.h"
 
+#include "AIController.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "Player/CCDCharacter.h"
 #include "Components/AudioComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -31,6 +33,17 @@ void ACCD_173::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([this]()
+	{
+		if (AAIController* AIC = Cast<AAIController>(GetController()))
+		{
+			if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+			{
+				BB->SetValueAsBool(TEXT("CanMove"), true);
+			}
+		}
+	}), 5.0f, false);
 }
 
 void ACCD_173::Tick(float DeltaTime)
