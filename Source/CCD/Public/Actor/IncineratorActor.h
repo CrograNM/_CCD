@@ -59,11 +59,18 @@ protected:
 	void ApplyBurnDamage(float DeltaTime);
 	
 	// --- VFX/SFX ---
-	UPROPERTY(EditAnywhere, Category = "Effects")
+	UPROPERTY(EditAnywhere, Category = "Design | Effects")
 	TObjectPtr<USoundBase> DoorSound1; // 정방향 애니메이션 재생 시
 	
-	UPROPERTY(EditAnywhere, Category = "Effects")
+	UPROPERTY(EditAnywhere, Category = "Design | Effects")
 	TObjectPtr<USoundBase> DoorSound2; // 역방향 애니메이션 재생 시
+	
+	UPROPERTY(EditAnywhere, Category = "Design | Effects")
+	TObjectPtr<USoundBase> BurningSound; // 소각로 작동 중 지속적으로 재생되는 사운드
+	
+	// 지속적인 소각 사운드를 제어할 컴포넌트 추가
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UAudioComponent> BurningAudioComp;
 	
 public:
 	// 캐릭터가 상호작용(E키) 눌렀을 때 호출됨 -> 소각로 문 열고 닫기
