@@ -749,7 +749,12 @@ void ACCDCharacter::Server_SpawnFootprint_Implementation(FVector Location, FRota
 
 	if (ADecal_StainActor_Base* Footprint = GetWorld()->SpawnActor<ADecal_StainActor_Base>(SelectedClass, Location, Rotation, SpawnParams))
 	{
-		float Alpha = FMath::Clamp(FMath::Sqrt((float)RemainingFootprints / 6.0f), 0.5f, 1.0f);
+		if (UWashableComponent* WashComp = Footprint->FindComponentByClass<UWashableComponent>())
+		{
+			WashComp->TakeWashDamage(50.0f);
+		}
+		
+		float Alpha = FMath::Clamp(FMath::Sqrt((float)RemainingFootprints / 6.0f), 0.3f, 1.0f);
 		Footprint->UpdateDecalOpacity(Alpha);
 		
 		RemainingFootprints--;
