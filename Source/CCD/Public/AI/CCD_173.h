@@ -43,6 +43,29 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Settings")
 	class USoundBase* MoveSound;
 	
+	// 근거리용 잔잔한 사운드
+	UPROPERTY(EditAnywhere, Category = "Settings | Sound")
+	TObjectPtr<USoundBase> NearHorrorSound;
+
+	// 초근거리용 날카로운 사운드
+	UPROPERTY(EditAnywhere, Category = "Settings | Sound")
+	TObjectPtr<USoundBase> CriticalHorrorSound;
+
+	// 거리 임계값
+	UPROPERTY(EditAnywhere, Category = "Settings | Sound")
+	float NearThreshold = 1500.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Settings | Sound")
+	float CriticalThreshold = 500.0f;
+	
+private:
+	// 한 번만 재생되도록 제어하는 플래그
+	bool bNearSoundPlayed = false;
+	bool bCriticalSoundPlayed = false;
+
+	// 다시 멀어졌을 때 플래그를 리셋하기 위한 여유 거리 (히스테리시스)
+	float ResetDistanceMargin = 500.0f;
+	
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

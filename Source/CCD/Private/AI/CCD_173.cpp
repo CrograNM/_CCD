@@ -50,6 +50,37 @@ void ACCD_173::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (GetNetMode() != NM_DedicatedServer)
+	{
+		APlayerController* PC = GetWorld()->GetFirstPlayerController();
+		if (PC && PC->GetPawn())
+		{
+			float Distance = FVector::Dist(GetActorLocation(), PC->GetPawn()->GetActorLocation());
+
+			if (Distance <= CriticalThreshold)
+			{
+				if (!bCriticalSoundPlayed && CriticalHorrorSound)
+				{
+					UGameplayStatics::PlaySound2D(this, CriticalHorrorSound);
+					bCriticalSoundPlayed = true;
+					bNearSoundPlayed = true;
+				}
+			}
+			else if (Distance <= NearThreshold)
+			{
+				if (!bNearSoundPlayed && NearHorrorSound)
+				{
+					UGameplayStatics::PlaySound2D(this, NearHorrorSound);
+					bNearSoundPlayed = true;
+				}
+			}
+			else if (Distance > NearThreshold + ResetDistanceMargin)
+			{
+				bNearSoundPlayed = false;
+				bCriticalSoundPlayed = false;
+			}
+		}
+	}
 }
 
 void ACCD_173::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
