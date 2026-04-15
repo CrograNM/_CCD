@@ -47,7 +47,7 @@ public:
 	void AddCurrentProgress(float Value);
 	
 	// 현재 진행도 갱신 (GameMode에 결과 전달)
-	void UpdateProgress();
+	void UpdateProgressCompletion();
 	
 	void UpdateUI();
 };

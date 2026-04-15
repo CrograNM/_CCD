@@ -3,6 +3,7 @@
 #include "Components/BoxComponent.h"
 #include "ActorSequenceComponent.h"
 #include "ActorSequencePlayer.h"
+#include "GameData/CCDGameState.h"
 #include "Player/CCDCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
@@ -150,16 +151,28 @@ void AEntranceActor::Interact_Implementation(AActor* Interactor)
 	if (!HasAuthority()) return;
 	UE_LOG(LogTemp, Warning, TEXT("[Interact] Entrance"));
 	
+	if (bNeedToCheckProgressOver)
+	{
+		ACCDGameState* GS = GetWorld()->GetGameState<ACCDGameState>();
+		if (!GS || !GS->bIsCleaningFinished) 
+		{
+			UE_LOG(LogTemp, Warning, TEXT("[Entrance] Cleaning Not Finished"));
+			return;
+		}
+	}
+	
 	if (!bCanStart || !IsWaitingAreaFull())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[Entrance] Wait for All Players"));
 		return;
 	}
+	
 	if (bIsLoading)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[Entrance] Already Loading..."));
 		return;
 	}
+	
 	// 중복 상호작용 방지
 	bIsLoading = true;
 	

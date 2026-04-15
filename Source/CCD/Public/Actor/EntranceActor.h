@@ -61,6 +61,9 @@ protected:
 
 	// --- Level Transition ---
 	UPROPERTY(EditAnywhere, Category = "Design | Level")
+	bool bNeedToCheckProgressOver = false; // Lobby : No, InGame : Yes
+	
+	UPROPERTY(EditAnywhere, Category = "Design | Level")
 	FString NextLevelPath; // 이동할 맵 경로 (예: /Game/_CCD/Maps/InGame)
 	FTimerHandle TravelTimerHandle; // 2초 대기를 위한 타이머
 	void StartLevelTravel();

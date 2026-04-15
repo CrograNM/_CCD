@@ -85,9 +85,11 @@ void AProgressManager::UpdateUI()
 			UE_LOG(LogTemp, Warning, TEXT("[UI Updated] Cur: %f, Max: %f, Ratio: %f"), CurrentProgress, MaxProgress, GetProgressRatio());
 		}
 	}
+	
+	UpdateProgressCompletion();
 }
 
-void AProgressManager::UpdateProgress()
+void AProgressManager::UpdateProgressCompletion()
 {
 	// 목표치 달성 확인
 	if (CurrentProgress >= MaxProgress)

@@ -2,6 +2,7 @@
 #include "Player/CCDCharacter.h"
 #include "Player/CCDPlayerController.h"
 #include "Actor/ProgressManager.h"
+#include "GameData/CCDGameState.h"
 #include "Kismet/GameplayStatics.h"
 
 ACCDGameMode::ACCDGameMode()
@@ -24,6 +25,9 @@ void ACCDGameMode::BeginPlay()
 
 void ACCDGameMode::OnCleaningFinished()
 {
-	// 여기서 게임 종료 처리 (예: 결과창 UI 띄우기 등)
-	UE_LOG(LogTemp, Warning, TEXT("모든 청소가 완료되었습니다! 스테이지 클리어!"));
+	if (ACCDGameState* GS = GetGameState<ACCDGameState>())
+	{
+		GS->bIsCleaningFinished = true;
+		GS->OnRep_CleaningFinished(); 
+	}
 }
