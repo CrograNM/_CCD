@@ -8,58 +8,93 @@ void UNarrativeWidget::InitNarrative(const TArray<FString>& InParagraphs)
 
 	ParagraphList = InParagraphs;
 	CurrentParagraphIndex = 0;
-    
-	// 첫 번째 문단 시작
-	NextParagraph();
+	AccumulatedText = TEXT("");
 }
 
-void UNarrativeWidget::NextParagraph()
+void UNarrativeWidget::NextParagraph_Replace()
 {
-	// 이미 글자가 나오는 중이라면 로직을 건너뛰기 (나중에 '한번에 보이기'로 확장)
-	if (bIsAnimating) return;
+	if (bIsAnimating || !ParagraphList.IsValidIndex(CurrentParagraphIndex)) return;
 
+	bIsAppendMode = false;
+	AccumulatedText = TEXT(""); // 이전 기록 삭제
+	CurrentTargetParagraph = ParagraphList[CurrentParagraphIndex];
+	
+	StartTypewriter(false);
+}
+
+void UNarrativeWidget::NextParagraph_Append()
+{
+	// 글자가 나오는 중이라면 즉시 해당 문단 완성
+	if (bIsAnimating)
+	{
+		FinishTypewriterEarly();
+		return;
+	}
 	if (ParagraphList.IsValidIndex(CurrentParagraphIndex))
 	{
-		TargetString = ParagraphList[CurrentParagraphIndex];
-		CurrentCharIndex = 0;
-		bIsAnimating = true;
+		bIsAppendMode = true;
+		CurrentTargetParagraph = ParagraphList[CurrentParagraphIndex];
 
-		// 텍스트 초기화
-		NarrativeText->SetText(FText::GetEmpty());
+		if (!AccumulatedText.IsEmpty())
+		{
+			AccumulatedText += TEXT("\n\n");
+		}
 
-		// 0.2초 간격으로 타이머 설정
-		GetWorld()->GetTimerManager().SetTimer(
-			TypewriterTimerHandle,
-			this,
-			&UNarrativeWidget::PlayTypewriter,
-			0.2f,
-			true
-		);
-
-		CurrentParagraphIndex++;
+		StartTypewriter(bIsAppendMode);
 	}
 	else
 	{
-		// 모든 문단이 끝났을 때의 처리 (예: 타이틀 메뉴로 이동)
-		UE_LOG(LogTemp, Warning, TEXT("모든 문단 출력 완료"));
-		
-		// 위젯 종료
+		// 모든 문단 출력이 끝난 상태에서 클릭 시 위젯 제거
+		UE_LOG(LogTemp, Warning, TEXT("컷씬 종료: 위젯 제거됨"));
 		RemoveFromParent();
 	}
 }
 
+void UNarrativeWidget::StartTypewriter(bool bAppend)
+{
+	CurrentCharIndex = 0;
+	bIsAnimating = true;
+
+	GetWorld()->GetTimerManager().SetTimer(
+		TypewriterTimerHandle,
+		this,
+		&UNarrativeWidget::PlayTypewriter,
+		0.2f,
+		true
+	);
+
+	CurrentParagraphIndex++;
+}
+
 void UNarrativeWidget::PlayTypewriter()
 {
-	if (CurrentCharIndex < TargetString.Len())
+	if (CurrentCharIndex < CurrentTargetParagraph.Len())
 	{
 		CurrentCharIndex++;
-		FString DisplayString = TargetString.Left(CurrentCharIndex);
-		NarrativeText->SetText(FText::FromString(DisplayString));
+		FString TypingPart = CurrentTargetParagraph.Left(CurrentCharIndex);
+		
+		// 누적 텍스트 뒤에 현재 타이핑 부분을 합쳐서 출력
+		const FString FullText = AccumulatedText + TypingPart;
+		NarrativeText->SetText(FText::FromString(FullText));
 	}
 	else
 	{
-		// 현재 문단 출력 완료
-		GetWorld()->GetTimerManager().ClearTimer(TypewriterTimerHandle);
-		bIsAnimating = false;
+		FinishTypewriterEarly();
 	}
+}
+
+void UNarrativeWidget::FinishTypewriterEarly()
+{
+	GetWorld()->GetTimerManager().ClearTimer(TypewriterTimerHandle);
+	
+	// 현재 문단 전체를 화면에 표시
+	NarrativeText->SetText(FText::FromString(AccumulatedText + CurrentTargetParagraph));
+	
+	// 다음 문단을 위해 AccumulatedText 업데이트
+	if (bIsAppendMode)
+	{
+		AccumulatedText += CurrentTargetParagraph;
+	}
+	
+	bIsAnimating = false;
 }
