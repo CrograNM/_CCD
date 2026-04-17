@@ -6,6 +6,8 @@
 #include "Components/TextBlock.h"
 #include "NarrativeWidget.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnNarrativeFinished);
+
 UCLASS()
 class CCD_API UNarrativeWidget : public UUserWidget
 {
@@ -24,13 +26,23 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Narrative")
 	void NextParagraph_Append();
 
+	// 블루프린트에서 바인딩 가능한 이벤트 포인터
+	UPROPERTY(BlueprintAssignable, Category = "Narrative | Events")
+	FOnNarrativeFinished OnNarrativeFinished;
+	
+	UPROPERTY(EditAnywhere, Category = "Design")
+	TObjectPtr<USoundBase> TypeSound; 
+
+	UPROPERTY(EditAnywhere, Category = "Design")
+	float TypeInterval = 0.1f; // 글자 하나당 타이핑 간격 (초)
+	
+	UFUNCTION(BlueprintCallable, Category = "Design")
+	void SetTypeInterval(float NewInterval) { TypeInterval = NewInterval; }
+	
 protected:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* NarrativeText;	// UI에 배치할 TextBlock (이름 매칭 필요)
 	
-	UPROPERTY(EditAnywhere, Category = "Design | Sound")
-	TObjectPtr<USoundBase> TypeSound; 
-
 private:
 	void StartTypewriter(bool bAppend);
 	void PlayTypewriter();		// 글자를 하나씩 추가하는 핵심 로직

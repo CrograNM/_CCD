@@ -14,13 +14,24 @@ void UNarrativeWidget::InitNarrative(const TArray<FString>& InParagraphs)
 
 void UNarrativeWidget::NextParagraph_Replace()
 {
-	if (bIsAnimating || !ParagraphList.IsValidIndex(CurrentParagraphIndex)) return;
+	if (bIsAnimating) 
+	{
+		FinishTypewriterEarly();
+		return;
+	}
 
-	bIsAppendMode = false;
-	AccumulatedText = TEXT(""); // 이전 기록 삭제
-	CurrentTargetParagraph = ParagraphList[CurrentParagraphIndex];
-	
-	StartTypewriter(false);
+	if (ParagraphList.IsValidIndex(CurrentParagraphIndex))
+	{
+		bIsAppendMode = false;
+		AccumulatedText = TEXT(""); 
+		CurrentTargetParagraph = ParagraphList[CurrentParagraphIndex];
+		StartTypewriter(false);
+	}
+	else
+	{
+		// 더 이상 대사가 없으면 이벤트 호출
+		OnNarrativeFinished.Broadcast();
+	}
 }
 
 void UNarrativeWidget::NextParagraph_Append()
@@ -45,9 +56,9 @@ void UNarrativeWidget::NextParagraph_Append()
 	}
 	else
 	{
-		// 모든 문단 출력이 끝난 상태에서 클릭 시 위젯 제거
-		UE_LOG(LogTemp, Warning, TEXT("컷씬 종료: 위젯 제거됨"));
-		RemoveFromParent();
+		// 모든 문단 출력 완료 시 이벤트 브로드캐스트
+		UE_LOG(LogTemp, Log, TEXT("Narrative Finished - Event Broadcasted"));
+		OnNarrativeFinished.Broadcast();
 	}
 }
 
@@ -60,7 +71,7 @@ void UNarrativeWidget::StartTypewriter(bool bAppend)
 		TypewriterTimerHandle,
 		this,
 		&UNarrativeWidget::PlayTypewriter,
-		0.15f,
+		TypeInterval,
 		true
 	);
 
