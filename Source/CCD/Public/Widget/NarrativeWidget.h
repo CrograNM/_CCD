@@ -27,6 +27,9 @@ public:
 protected:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* NarrativeText;	// UI에 배치할 TextBlock (이름 매칭 필요)
+	
+	UPROPERTY(EditAnywhere, Category = "Design | Sound")
+	TObjectPtr<USoundBase> TypeSound; 
 
 private:
 	void StartTypewriter(bool bAppend);

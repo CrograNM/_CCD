@@ -1,6 +1,7 @@
 
 #include "Widget/NarrativeWidget.h"
 #include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
 
 void UNarrativeWidget::InitNarrative(const TArray<FString>& InParagraphs)
 {
@@ -59,7 +60,7 @@ void UNarrativeWidget::StartTypewriter(bool bAppend)
 		TypewriterTimerHandle,
 		this,
 		&UNarrativeWidget::PlayTypewriter,
-		0.2f,
+		0.15f,
 		true
 	);
 
@@ -70,6 +71,12 @@ void UNarrativeWidget::PlayTypewriter()
 {
 	if (CurrentCharIndex < CurrentTargetParagraph.Len())
 	{
+		// 타이핑 사운드 재생
+		if (TypeSound)
+		{
+			UGameplayStatics::PlaySound2D(this, TypeSound);
+		}
+		
 		CurrentCharIndex++;
 		FString TypingPart = CurrentTargetParagraph.Left(CurrentCharIndex);
 		
