@@ -43,6 +43,9 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UBoxComponent> InteractVolume;
+	
+	UPROPERTY(EditAnywhere, Category = "Level Transition|Sound")
+	TObjectPtr<USoundBase> DoorOpenSound;
 
 	// --- 제어 변수 ---
 	UPROPERTY(ReplicatedUsing = OnRep_CanStart)

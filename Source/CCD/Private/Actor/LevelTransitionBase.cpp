@@ -5,6 +5,7 @@
 
 #include "Components/BoxComponent.h"
 #include "GameData/CCDGameState.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Player/CCDCharacter.h"
 
@@ -111,6 +112,11 @@ void ALevelTransitionBase::Interact_Implementation(AActor* Interactor)
 	if (!bCanStart || !IsWaitingAreaFull()) return;
 
 	bIsLoading = true;
+	
+	if (DoorOpenSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, DoorOpenSound, GetActorLocation());
+	}
 
 	FTimerHandle TravelTimerHandle;
 	GetWorldTimerManager().SetTimer(TravelTimerHandle, this, &ALevelTransitionBase::StartLevelTravel, TravelDelay, false);
