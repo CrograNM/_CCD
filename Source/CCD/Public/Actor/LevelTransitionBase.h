@@ -37,23 +37,22 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UBoxComponent> WaitingArea;
-
-	// 상태 표시
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	TObjectPtr<UStaticMeshComponent> StatusLightMesh;
-
-	UPROPERTY()
-	UMaterialInstanceDynamic* StatusLightMaterial;
+	TObjectPtr<UStaticMeshComponent> DoorMesh;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UBoxComponent> InteractVolume;
 
 	// --- 제어 변수 ---
 	UPROPERTY(ReplicatedUsing = OnRep_CanStart)
 	bool bCanStart = false;
 
-	UFUNCTION()
-	void OnRep_CanStart();
-
 	UPROPERTY(Replicated)
 	bool bIsLoading = false;
+	
+	UFUNCTION()
+	void OnRep_CanStart();
 
 	// --- 설정값 ---
 	UPROPERTY(EditAnywhere, Category = "Level Transition")
@@ -64,8 +63,31 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Level Transition")
 	float TravelDelay = 1.5f; // 상호작용 후 이동까지의 유예 시간
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Transition")
+	TObjectPtr<UStaticMesh> DoorMeshAsset;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Transition", meta = (MakeEditWidget = true))
+	FVector DoorRelativeLocation;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Transition")
+	FVector DoorRelativeScale;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Transition")
+	FVector WaitingAreaRelativeScale;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Transition", meta = (MakeEditWidget = true))
+	FVector WaitingAreaRelativeLocation;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Transition")
+	FVector InteractVolumeExtent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Transition", meta = (MakeEditWidget = true))
+	FVector InteractVolumeRelativeLocation;
+	
 	void StartLevelTravel();
+	
+	virtual void OnConstruction(const FTransform& Transform) override;
 
 public:
 	virtual void Interact_Implementation(AActor* Interactor) override;

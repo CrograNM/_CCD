@@ -20,10 +20,22 @@ ALevelTransitionBase::ALevelTransitionBase()
 	WaitingArea = CreateDefaultSubobject<UBoxComponent>(TEXT("WaitingArea"));
 	WaitingArea->SetupAttachment(RootComponent);
 	WaitingArea->SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+	
+	DoorMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DoorMesh"));
+	DoorMesh->SetupAttachment(RootComponent);
 
-	StatusLightMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StatusLightMesh"));
-	StatusLightMesh->SetupAttachment(RootComponent);
-
+	DoorRelativeLocation = FVector::ZeroVector;
+	DoorRelativeScale = FVector(1.0f, 1.0f, 1.0f);
+	WaitingAreaRelativeLocation = FVector::ZeroVector;
+	WaitingAreaRelativeScale = FVector(100.0f, 100.0f, 100.0f);
+	
+	InteractVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("InteractVolume"));
+	InteractVolume->SetupAttachment(RootComponent);
+	
+	InteractVolume->SetCollisionProfileName(TEXT("UI")); // 또는 "BlockAll"이나 커스텀 채널
+	
+	InteractVolumeExtent = FVector(50.0f, 50.0f, 50.0f);
+	InteractVolumeRelativeLocation = FVector::ZeroVector;
 }
 
 void ALevelTransitionBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -37,18 +49,17 @@ void ALevelTransitionBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 void ALevelTransitionBase::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (StatusLightMesh)
-	{
-		StatusLightMaterial = StatusLightMesh->CreateAndSetMaterialInstanceDynamic(0);
-		OnRep_CanStart();
-	}
-
+	
 	if (HasAuthority())
 	{
-		WaitingArea->OnComponentBeginOverlap.AddDynamic(this, &ALevelTransitionBase::OnWaitingAreaOverlapChange);
-		WaitingArea->OnComponentEndOverlap.AddDynamic(this, &ALevelTransitionBase::OnWaitingAreaEndOverlap);
+		if (WaitingArea)
+		{
+			WaitingArea->OnComponentBeginOverlap.AddDynamic(this, &ALevelTransitionBase::OnWaitingAreaOverlapChange);
+			WaitingArea->OnComponentEndOverlap.AddDynamic(this, &ALevelTransitionBase::OnWaitingAreaEndOverlap);
+		}
 	}
+	
+	OnRep_CanStart();
 }
 
 bool ALevelTransitionBase::IsWaitingAreaFull() const
@@ -73,8 +84,7 @@ bool ALevelTransitionBase::IsWaitingAreaFull() const
 
 void ALevelTransitionBase::OnWaitingAreaOverlapChange(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (HasAuthority())
-	{
+	if (HasAuthority()) {
 		bCanStart = IsWaitingAreaFull();
 		OnRep_CanStart();
 	}
@@ -82,20 +92,9 @@ void ALevelTransitionBase::OnWaitingAreaOverlapChange(UPrimitiveComponent* Overl
 
 void ALevelTransitionBase::OnWaitingAreaEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (HasAuthority())
-	{
+	if (HasAuthority()) {
 		bCanStart = IsWaitingAreaFull();
 		OnRep_CanStart();
-	}
-}
-
-void ALevelTransitionBase::OnRep_CanStart()
-{
-	if (StatusLightMaterial)
-	{
-		// 준비 완료(초록): (0, 5, 0), 대기(빨강): (5, 0, 0)
-		FVector Color = bCanStart ? FVector(0.0f, 5.0f, 0.0f) : FVector(5.0f, 0.0f, 0.0f);
-		StatusLightMaterial->SetVectorParameterValue(TEXT("EmissiveColor"), Color);
 	}
 }
 
@@ -134,3 +133,40 @@ void ALevelTransitionBase::StartLevelTravel()
 	GetWorld()->ServerTravel(NextLevelPath);
 }
 
+void ALevelTransitionBase::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+
+	// 문 메쉬 설정 (에셋, 위치, 크기)
+	if (DoorMesh)
+	{
+		if (DoorMeshAsset) DoorMesh->SetStaticMesh(DoorMeshAsset);
+		DoorMesh->SetRelativeLocation(DoorRelativeLocation);
+		DoorMesh->SetRelativeScale3D(DoorRelativeScale);
+	}
+
+	// Waiting Area(Box Component) 설정
+	if (WaitingArea)
+	{
+		WaitingArea->SetBoxExtent(WaitingAreaRelativeScale);
+		WaitingArea->SetRelativeLocation(WaitingAreaRelativeLocation);
+	}
+	
+	if (InteractVolume)
+	{
+		InteractVolume->SetBoxExtent(InteractVolumeExtent);
+		InteractVolume->SetRelativeLocation(InteractVolumeRelativeLocation);
+	}
+}
+
+void ALevelTransitionBase::OnRep_CanStart()
+{
+	if (DoorMesh)
+	{
+		// 모든 플레이어가 모였을 때(bCanStart == true)만 외곽선을 켭니다.
+		DoorMesh->SetRenderCustomDepth(bCanStart);
+		
+		// 스텐실 값은 이전에 설정한 초록색 번호(200)를 그대로 사용합니다.
+		DoorMesh->SetCustomDepthStencilValue(200);
+	}
+}
