@@ -8,6 +8,8 @@
 #include "FindSessionsCallbackProxy.h"
 #include "CCDGameInstance.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCustomFindSessionsComplete, const TArray<FBlueprintSessionResult>&, Results, bool, bWasSuccessful);
+
 UCLASS()
 class CCD_API UCCDGameInstance : public UGameInstance
 {
@@ -29,6 +31,8 @@ public:
 	
 	/** --- Session --- **/
 	UFUNCTION(BlueprintCallable, Category = "Multiplayer")
+	void FindSessionsCustom(int32 MaxResults, bool bIsLAN, bool bUseLobbies);
+	UFUNCTION(BlueprintCallable, Category = "Multiplayer")
 	void HostSession(FString RoomName, bool bIsLAN, FString Path);
 	UFUNCTION(BlueprintCallable, Category = "Multiplayer")
 	void LeaveSession();
@@ -37,6 +41,10 @@ public:
 	
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
 	void OnDestroySessionComplete(FName SessionName, bool bWasSuccessful);
+	
+	void OnFindSessionsComplete(bool bWasSuccessful);
+	UPROPERTY(BlueprintAssignable, Category = "Multiplayer")
+	FOnCustomFindSessionsComplete OnCustomFindSessionsComplete;
 	
 private:
 	void HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);
@@ -51,4 +59,9 @@ private:
 	FDelegateHandle CreateSessionCompleteDelegateHandle;
 	FOnDestroySessionCompleteDelegate DestroySessionCompleteDelegate;
 	FDelegateHandle DestroySessionCompleteDelegateHandle;
+	
+	FDelegateHandle FindSessionsCompleteDelegateHandle;
+	
+	// 세션 검색 설정을 저장할 포인터
+	TSharedPtr<class FOnlineSessionSearch> SessionSearch;
 };

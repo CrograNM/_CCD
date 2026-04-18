@@ -6,6 +6,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Engine/Engine.h"
 
+const FString UniqueBuildID = TEXT("ContainmentCleanupDetail_v0.0.1");
+
 void UCCDGameInstance::Init()
 {
 	Super::Init();
@@ -66,6 +68,43 @@ FString UCCDGameInstance::GetSteamNameIfAvailable() const
 	return TEXT("");
 }
 
+void UCCDGameInstance::FindSessionsCustom(int32 MaxResults, bool bIsLAN, bool bUseLobbies)
+{
+	const IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
+	if (!Subsystem)
+	{
+		OnCustomFindSessionsComplete.Broadcast(TArray<FBlueprintSessionResult>(), false);
+		return;
+	}
+
+	IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
+	if (SessionInterface.IsValid())
+	{
+		SessionSearch = MakeShareable(new FOnlineSessionSearch());
+		
+		SessionSearch->MaxSearchResults = MaxResults;
+		SessionSearch->bIsLanQuery = bIsLAN;
+		
+		SessionSearch->QuerySettings.Set(FName(TEXT("PRESENCE")), true, EOnlineComparisonOp::Equals);
+		SessionSearch->QuerySettings.Set(FName(TEXT("LOBBIES")), bUseLobbies, EOnlineComparisonOp::Equals);
+		SessionSearch->QuerySettings.Set(FName(TEXT("BUILD_ID")), UniqueBuildID, EOnlineComparisonOp::Equals);
+		
+		// 완료 콜백 등록
+		FindSessionsCompleteDelegateHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(
+			FOnFindSessionsCompleteDelegate::CreateUObject(this, &UCCDGameInstance::OnFindSessionsComplete));
+
+		UE_LOG(LogTemp, Warning, TEXT("Starting Custom Session Search... (Max: %d)"), MaxResults);
+		
+		if (!SessionInterface->FindSessions(0, SessionSearch.ToSharedRef()))
+		{
+			// 검색 시작 실패 시 즉시 빈 결과 반환
+			SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
+			OnCustomFindSessionsComplete.Broadcast(TArray<FBlueprintSessionResult>(), false);
+			UE_LOG(LogTemp, Error, TEXT("Failed to start session search!"));
+		}
+	}
+}
+
 void UCCDGameInstance::HostSession(FString RoomName, bool bIsLAN, FString Path)
 {
 	// 로비 맵 경로가 전달되면 업데이트, 그렇지 않으면 기본값 사용
@@ -89,6 +128,7 @@ void UCCDGameInstance::HostSession(FString RoomName, bool bIsLAN, FString Path)
 		SessionSettings.bAllowJoinViaPresence = !bIsLAN;
 		
 		SessionSettings.Set(FName(TEXT("RoomName")), RoomName, EOnlineDataAdvertisementType::ViaOnlineService);
+		SessionSettings.Set(FName(TEXT("BUILD_ID")), UniqueBuildID, EOnlineDataAdvertisementType::ViaOnlineService);
 		
 		SessionInterface->CreateSession(0, NAME_GameSession, SessionSettings);
 	}
@@ -202,8 +242,55 @@ void UCCDGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSucc
 	UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
 }
 
+void UCCDGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
+{
+	const IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
+	if (Subsystem)
+	{
+		IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
+		if (SessionInterface.IsValid())
+		{
+			SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
+		}
+	}
+	
+	if (bWasSuccessful && SessionSearch.IsValid())
+	{
+		// 필터링 전, 스팀이 던져준 '순수 결과 개수' 확인
+		UE_LOG(LogTemp, Warning, TEXT("Steam returned %d raw results before filtering."), SessionSearch->SearchResults.Num());
+        
+		for (auto& Result : SessionSearch->SearchResults)
+		{
+			// 검색된 방의 소유자 이름이라도 찍어보기
+			UE_LOG(LogTemp, Log, TEXT("Found Session by: %s"), *Result.Session.OwningUserName);
+		}
+	}
+
+	TArray<FBlueprintSessionResult> BlueprintResults;
+
+	if (bWasSuccessful && SessionSearch.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Search Complete. Found %d Sessions."), SessionSearch->SearchResults.Num());
+
+		for (auto& Result : SessionSearch->SearchResults)
+		{
+			// 기본 Find Sessions 노드에서 사용하는 구조체로 변환
+			FBlueprintSessionResult BPResult;
+			BPResult.OnlineResult = Result;
+			BlueprintResults.Add(BPResult);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Session Search Failed."));
+	}
+
+	// 블루프린트로 결과 방송
+	OnCustomFindSessionsComplete.Broadcast(BlueprintResults, bWasSuccessful);
+}
+
 void UCCDGameInstance::HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType,
-	const FString& ErrorString)
+                                            const FString& ErrorString)
 {
 	UE_LOG(LogTemp, Error, TEXT("Network Disconnected: %s. Cleaning up local session..."), *ErrorString);
 	
