@@ -46,6 +46,12 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Multiplayer")
 	FOnCustomFindSessionsComplete OnCustomFindSessionsComplete;
 	
+	UFUNCTION(BlueprintPure, Category = "Steam")
+	bool IsSteamActive() const;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "GameFlow")
+	bool bHasPlayedPrologue = false;
+	
 private:
 	void HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);
 	

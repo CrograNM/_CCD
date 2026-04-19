@@ -293,6 +293,12 @@ void UCCDGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 	OnCustomFindSessionsComplete.Broadcast(BlueprintResults, bWasSuccessful);
 }
 
+bool UCCDGameInstance::IsSteamActive() const
+{
+	const IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
+	return (Subsystem && Subsystem->GetSubsystemName() == FName(TEXT("Steam")));
+}
+
 void UCCDGameInstance::HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType,
                                             const FString& ErrorString)
 {
