@@ -46,6 +46,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Multiplayer")
 	FOnCustomFindSessionsComplete OnCustomFindSessionsComplete;
 	
+	UFUNCTION(BlueprintPure, Category = "Steam")
+	bool IsSteamActive() const;
+	
 private:
 	void HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);
 	
