@@ -24,6 +24,7 @@ public class CCD : ModuleRules
 			"OnlineSubsystem",
 			"OnlineSubsystemSteam",
 			"OnlineSubsystemUtils",
+			"OnlineBase",
 			"PCG"
 		});
 

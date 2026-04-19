@@ -1,6 +1,7 @@
 
 #include "GameData/CCDGameInstance.h"
 
+#include "Online/OnlineSessionNames.h"
 #include "OnlineSubsystemUtils.h"
 #include "GameData/CCDSaveGame.h"
 #include "Kismet/GameplayStatics.h"
@@ -85,8 +86,10 @@ void UCCDGameInstance::FindSessionsCustom(int32 MaxResults, bool bIsLAN, bool bU
 		SessionSearch->MaxSearchResults = MaxResults;
 		SessionSearch->bIsLanQuery = bIsLAN;
 		
-		SessionSearch->QuerySettings.Set(FName(TEXT("PRESENCE")), true, EOnlineComparisonOp::Equals);
-		SessionSearch->QuerySettings.Set(FName(TEXT("LOBBIES")), bUseLobbies, EOnlineComparisonOp::Equals);
+		if(bUseLobbies)
+		{
+			SessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
+		}
 		SessionSearch->QuerySettings.Set(FName(TEXT("BUILD_ID")), UniqueBuildID, EOnlineComparisonOp::Equals);
 		
 		// 완료 콜백 등록
@@ -123,6 +126,7 @@ void UCCDGameInstance::HostSession(FString RoomName, bool bIsLAN, FString Path)
 		SessionSettings.bShouldAdvertise = true;
 		SessionSettings.bAllowJoinInProgress = true;
 		SessionSettings.bIsLANMatch = bIsLAN;
+		
 		SessionSettings.bUsesPresence = !bIsLAN;
 		SessionSettings.bUseLobbiesIfAvailable = !bIsLAN;
 		SessionSettings.bAllowJoinViaPresence = !bIsLAN;
