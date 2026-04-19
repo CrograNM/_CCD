@@ -49,6 +49,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Steam")
 	bool IsSteamActive() const;
 	
+	UPROPERTY(BlueprintReadWrite, Category = "GameFlow")
+	bool bHasPlayedPrologue = false;
+	
 private:
 	void HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);
 	
