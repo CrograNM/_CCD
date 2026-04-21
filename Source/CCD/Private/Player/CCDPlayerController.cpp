@@ -19,6 +19,7 @@
 #include "Widget/CCD_MainWidget.h"
 #include "Widget/EyeAnimWidget.h"
 #include "Widget/EyeCooldownWidget.h"
+#include "Widget/LivesWidget.h"
 #include "Widget/NoiseWidget.h"
 #include "Widget/StaminaWidget.h"
 
@@ -299,6 +300,15 @@ void ACCDPlayerController::SwitchToMainUI()
 		if (MainWidgetInstance)
 		{
 			MainWidgetInstance->AddToViewport();
+		}
+	}
+	
+	if (LivesWidgetClass && !LivesWidgetInstance)
+	{
+		LivesWidgetInstance = CreateWidget<ULivesWidget>(this, LivesWidgetClass);
+		if (LivesWidgetInstance)
+		{
+			LivesWidgetInstance->AddToViewport();
 		}
 	}
 	

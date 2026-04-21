@@ -83,6 +83,12 @@ protected:
 	UPROPERTY()
 	TObjectPtr<USpectatorWidget> SpectatorWidgetInstance = nullptr;
 	
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<class ULivesWidget> LivesWidgetClass;
+
+	UPROPERTY()
+	TObjectPtr<class ULivesWidget> LivesWidgetInstance = nullptr;
+	
 	// 위젯 연결
 	void BindUIWithPawn(APawn* InPawn);
 	

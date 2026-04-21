@@ -7,14 +7,8 @@ void ACCDGameState::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ACCDGameState, bIsCleaningFinished);
-	DOREPLIFETIME(ACCDGameState, SharedLives);
 }
 
 void ACCDGameState::OnRep_CleaningFinished()
 {
-}
-
-void ACCDGameState::OnRep_SharedLives()
-{
-	
 }
