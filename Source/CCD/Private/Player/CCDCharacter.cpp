@@ -29,6 +29,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "MovieSceneSequenceID.h"
+#include "GameData/CCDGameMode.h"
 
 /** --- 생성자 및 기본 함수 --- */
 ACCDCharacter::ACCDCharacter()
@@ -90,7 +91,6 @@ void ACCDCharacter::SetMesh1PVisibility(bool bVisible)
 		Mesh1P->SetVisibility(bVisible);
 	}
 }
-
 bool ACCDCharacter::GetIsGrabbed() const
 {
 	if (InteractionComp)
@@ -98,6 +98,17 @@ bool ACCDCharacter::GetIsGrabbed() const
 		return InteractionComp->GetGrabbedComponent() != nullptr;
 	}
 	return false;
+}
+FString ACCDCharacter::GetPlayerCustomName() const
+{
+	if (ACCDPlayerState* PS = GetPlayerState<ACCDPlayerState>())
+	{
+		FString CustomName = PS->CustomName;
+		if (IsLocallyControlled()) CustomName += TEXT(" (You)");
+		
+		return CustomName;
+	}
+	return TEXT("Unknown Player");
 }
 
 void ACCDCharacter::BeginPlay()
@@ -109,7 +120,6 @@ void ACCDCharacter::BeginPlay()
 		Mesh1P->SetLeaderPoseComponent(GetMesh());
 	}
 }
-
 void ACCDCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -120,7 +130,6 @@ void ACCDCharacter::Tick(float DeltaTime)
 		CheckForSCP096();
 	}
 }
-
 void ACCDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -136,7 +145,6 @@ void ACCDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		EIC->BindAction(RotateAction, ETriggerEvent::Completed, this, &ACCDCharacter::OnRotationReleased);
 	}
 }
-
 void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	// 변수 복제 등록
@@ -156,7 +164,6 @@ void ACCDCharacter::PerformEmote(FName EmoteSection)
 {
 	Server_PerformEmote(EmoteSection);
 }
-
 void ACCDCharacter::Server_PerformEmote_Implementation(FName EmoteSection)
 {
 	if (!EmoteMontage || bIsDead) return;
@@ -193,7 +200,6 @@ void ACCDCharacter::Server_PerformEmote_Implementation(FName EmoteSection)
 		Server_PlayEmoteMontage(CurrentEmoteSection);
 	}
 }
-
 void ACCDCharacter::Server_PlayEmoteMontage_Implementation(FName EmoteSection)
 {
 	if (EmoteMontage && EmoteMontage->GetSectionIndex(EmoteSection) != INDEX_NONE)
@@ -218,7 +224,6 @@ void ACCDCharacter::Server_PlayEmoteMontage_Implementation(FName EmoteSection)
 		UE_LOG(LogTemp, Error, TEXT("Server_PlayEmoteMontage: Invalid Emote Section [%s] requested!"), *EmoteSection.ToString());
 	}
 }
-
 void ACCDCharacter::Multicast_PlayEmoteMontage_Implementation(FName SectionName, float PlayRate)
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -276,7 +281,6 @@ void ACCDCharacter::CloseEye()
 	if (bIsDead) return;
 	if (StatComp) StatComp->CloseEye();
 }
-
 void ACCDCharacter::DestroyAllEquipment() const
 {
 	if (!HasAuthority()) return;
@@ -300,6 +304,12 @@ void ACCDCharacter::Server_Die_Implementation()
 	}
 	HandleDeath();	
 	OnRep_IsDead(); 
+	
+	GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &ACCDCharacter::CheckAndRespawn, RespawnDelay, false);
+	if (ACCDPlayerController* PC = Cast<ACCDPlayerController>(GetController()))
+	{
+		PC->ApplyDeath(true, RespawnDelay);
+	}
 }
 void ACCDCharacter::Revive()
 {
@@ -324,6 +334,17 @@ void ACCDCharacter::Server_Revive_Implementation()
 		}
 	}
 	OnRep_IsDead();
+}
+
+void ACCDCharacter::CheckAndRespawn()
+{
+	// 이미 부활한 경우 중복 처리 방지
+	if (!bIsDead) return; 
+	
+	if (ACCDGameMode* GM = Cast<ACCDGameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		GM->RequestRespawn(this);
+	}
 }
 
 /** --- 몽타주 제어 및 델리게이트 --- */
@@ -452,7 +473,7 @@ void ACCDCharacter::OnRep_IsDead()
 		if (ACCDPlayerController* PC = Cast<ACCDPlayerController>(GetController()))
 		{
 			if (!bIsDead) PC->ResetPlayerController(this);
-			else PC->ApplyDeath(bIsDead);
+			// else PC->ApplyDeath(bIsDead);
 		}
 	}
 	
@@ -627,7 +648,6 @@ void ACCDCharacter::HandleRevive()
 		UE_LOG(LogTemp, Warning, TEXT("Player is Invincible for 3 seconds"));
 	}
 }
-
 void ACCDCharacter::DeactivateInvincibility()
 {
 	if (HasAuthority())
@@ -677,7 +697,6 @@ void ACCDCharacter::CheckForSCP096()
 		}
 	}
 }
-
 void ACCDCharacter::Server_Trigger096Panic_Implementation(ACCD_096* Target096)
 {
 	if (Target096)
@@ -702,7 +721,6 @@ void ACCDCharacter::Look(const FInputActionValue& Value)
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
 }
-
 void ACCDCharacter::OnRotationPressed()
 {
 	if (InteractionComp && InteractionComp->GetGrabbedComponent()) 
@@ -710,22 +728,9 @@ void ACCDCharacter::OnRotationPressed()
 		InteractionComp->SetRotationMode(true);
 	}
 }
-
 void ACCDCharacter::OnRotationReleased()
 {
 	if (InteractionComp) InteractionComp->SetRotationMode(false);
-}
-
-FString ACCDCharacter::GetPlayerCustomName() const
-{
-	if (ACCDPlayerState* PS = GetPlayerState<ACCDPlayerState>())
-	{
-		FString CustomName = PS->CustomName;
-		if (IsLocallyControlled()) CustomName += TEXT(" (You)");
-		
-		return CustomName;
-	}
-	return TEXT("Unknown Player");
 }
 
 void ACCDCharacter::AddBloodToFeet(int32 StepCount)
@@ -733,7 +738,6 @@ void ACCDCharacter::AddBloodToFeet(int32 StepCount)
 	// 이미 피가 묻어있다면 횟수 누적 혹은 갱신
 	RemainingFootprints = FMath::Max(RemainingFootprints, StepCount);
 }
-
 void ACCDCharacter::TrySpawnFootprint(FName FootSocketName)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Footstep Detected! Socket: %s, Remaining: %d"), 
@@ -775,7 +779,6 @@ void ACCDCharacter::TrySpawnFootprint(FName FootSocketName)
 		}
 	}
 }
-
 void ACCDCharacter::Server_SpawnFootprint_Implementation(FVector Location, FRotator Rotation, bool bIsLeft)
 {
 	if (RemainingFootprints <= 0) return;

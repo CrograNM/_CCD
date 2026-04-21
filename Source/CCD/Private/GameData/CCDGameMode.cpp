@@ -31,3 +31,23 @@ void ACCDGameMode::OnCleaningFinished()
 		GS->OnRep_CleaningFinished(); 
 	}
 }
+
+void ACCDGameMode::RequestRespawn(ACCDCharacter* DeadCharacter)
+{
+	ACCDGameState* GS = GetGameState<ACCDGameState>();
+	if (GS && GS->SharedLives > 0)
+	{
+		// 목숨 차감
+		GS->SharedLives--;
+		GS->OnRep_SharedLives(); // 서버에서도 UI 갱신을 위해 호출
+		UE_LOG(LogTemp, Error, TEXT("Respawning player. Remaining Lives: %d"), GS->SharedLives);
+
+		// 실제 부활 로직 호출 (이전의 N초 타이머 후 호출되도록 연동)
+		DeadCharacter->Revive();
+	}
+	else
+	{
+		// 목숨이 없으면 게임 오버 처리
+		UE_LOG(LogTemp, Error, TEXT("No more lives! Game Over."));
+	}
+}

@@ -29,7 +29,7 @@ public:
 	
 	/** --- Death --- */
 	UFUNCTION(Client, Reliable)
-	void ApplyDeath(bool bIsDead);	// Fade 처리
+	void ApplyDeath(bool bIsDead, float RespawnTime = 0.0f);	// Fade 처리
 	void UpdateSpectatorWidget(TObjectPtr<ACCDCharacter> Target);
 	
 	/** --- Respawn --- */

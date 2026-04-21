@@ -220,6 +220,14 @@ protected:
 
     void DeactivateInvincibility(); // 무적 해제 함수
     
+    /** 부활 대기 시간 설정 */
+    UPROPERTY(EditAnywhere, Category = "Design | Death")
+    float RespawnDelay = 10.0f;
+    
+    void CheckAndRespawn();
+
+    FTimerHandle RespawnTimerHandle;
+    
     // 사망 시 조각에 가할 충격의 세기
     UPROPERTY(EditAnywhere, Category = "Design | Death")
     float DeathImpulseStrength = 500.0f;

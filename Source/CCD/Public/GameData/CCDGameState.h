@@ -19,4 +19,11 @@ public:
 
 	UFUNCTION()
 	void OnRep_CleaningFinished();
+	
+	// 전체 공유 목숨
+	UPROPERTY(ReplicatedUsing = OnRep_SharedLives, BlueprintReadOnly, Category = "GameRule")
+	int32 SharedLives = 5; // 초기값 설정
+
+	UFUNCTION()
+	void OnRep_SharedLives();
 };

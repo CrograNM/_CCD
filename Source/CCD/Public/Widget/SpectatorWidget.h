@@ -15,4 +15,7 @@ class CCD_API USpectatorWidget : public UUserWidget
 public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Spectate")
 	void UpdateSpectatorInfo(ACCDCharacter* TargetCharacter);
+	
+	UFUNCTION(BlueprintImplementableEvent, Category = "Spectate")
+	void StartRespawnCountdown(float RespawnTime);
 };
