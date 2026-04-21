@@ -135,6 +135,10 @@ public:
     
     FORCEINLINE TSubclassOf<ADecal_StainActor_Base> GetBloodStainActorClass() const { return BloodStainActorClass; }
 
+    /** 캐릭터의 커스텀 이름 (UI용) */
+    UFUNCTION(BlueprintCallable, Category = "Player")
+    FString GetPlayerCustomName() const;
+    
     // 피 묻은 발자국 설정
     void AddBloodToFeet(int32 StepCount);
 

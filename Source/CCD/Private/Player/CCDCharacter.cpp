@@ -716,6 +716,18 @@ void ACCDCharacter::OnRotationReleased()
 	if (InteractionComp) InteractionComp->SetRotationMode(false);
 }
 
+FString ACCDCharacter::GetPlayerCustomName() const
+{
+	if (ACCDPlayerState* PS = GetPlayerState<ACCDPlayerState>())
+	{
+		FString CustomName = PS->CustomName;
+		if (IsLocallyControlled()) CustomName += TEXT(" (You)");
+		
+		return CustomName;
+	}
+	return TEXT("Unknown Player");
+}
+
 void ACCDCharacter::AddBloodToFeet(int32 StepCount)
 {
 	// 이미 피가 묻어있다면 횟수 누적 혹은 갱신
