@@ -303,15 +303,6 @@ void ACCDPlayerController::SwitchToMainUI()
 		}
 	}
 	
-	if (LivesWidgetClass && !LivesWidgetInstance)
-	{
-		LivesWidgetInstance = CreateWidget<ULivesWidget>(this, LivesWidgetClass);
-		if (LivesWidgetInstance)
-		{
-			LivesWidgetInstance->AddToViewport();
-		}
-	}
-	
 	BindUIWithPawn(GetPawn());
 }
 
