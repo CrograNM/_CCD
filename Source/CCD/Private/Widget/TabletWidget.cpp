@@ -1,8 +1,36 @@
 
 #include "Widget/TabletWidget.h"
 
+#include "GameData/MapDataRow.h"
 #include "GameFramework/GameStateBase.h"
 #include "Kismet/GameplayStatics.h"
+
+FString UTabletWidget::GetMapDisplayNameFromAsset() const
+{
+	if (!MapDataTable) return TEXT("No Table");
+	
+	// 1. 현재 로드된 레벨의 이름을 가져온다
+	FString MapName = UGameplayStatics::GetCurrentLevelName(GetWorld(), true);
+
+	// 2. 데이터 테이블의 모든 행을 순회한다
+	static const FString ContextString(TEXT("MapLookupContext"));
+	TArray<FMapInfoRow*> AllRows;
+	MapDataTable->GetAllRows<FMapInfoRow>(ContextString, AllRows);
+
+	for (FMapInfoRow* Row : AllRows)
+	{
+		if (Row && !Row->MapAsset.IsNull())
+		{
+			// 3. 테이블에 등록된 에셋 이름과 현재 맵 이름이 일치하는지 확인
+			if (Row->MapAsset.GetAssetName().Equals(MapName, ESearchCase::IgnoreCase))
+			{
+				return Row->MapDisplayName.ToString();
+			}
+		}
+	}
+
+	return TEXT("Unknown Area");
+}
 
 FString UTabletWidget::GetCurrentCleanMapName() const
 {
