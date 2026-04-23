@@ -9,7 +9,8 @@ void ACCDPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME(ACCDPlayerState, CustomName);
 	DOREPLIFETIME(ACCDPlayerState, SteamName);
 	DOREPLIFETIME(ACCDPlayerState, bIsDead);
-	DOREPLIFETIME(ACCDPlayerState, RemainingRespawnTime);
+	DOREPLIFETIME(ACCDPlayerState, RespawnStartTime);
+	DOREPLIFETIME(ACCDPlayerState, RespawnEndTime);
 }
 
 void ACCDPlayerState::OnRep_CustomName() const

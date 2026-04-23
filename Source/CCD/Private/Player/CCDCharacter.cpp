@@ -301,6 +301,10 @@ void ACCDCharacter::Server_Die_Implementation()
 	if (ACCDPlayerState* PS = GetPlayerState<ACCDPlayerState>())
 	{
 		PS->bIsDead = true;
+		
+		// 현재 서버 시간 + 대기 시간을 저장
+		PS->RespawnStartTime = GetWorld()->GetTimeSeconds();
+		PS->RespawnEndTime = GetWorld()->GetTimeSeconds() + RespawnDelay;
 	}
 	HandleDeath();	
 	OnRep_IsDead(); 
@@ -308,7 +312,7 @@ void ACCDCharacter::Server_Die_Implementation()
 	GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &ACCDCharacter::CheckAndRespawn, RespawnDelay, false);
 	if (ACCDPlayerController* PC = Cast<ACCDPlayerController>(GetController()))
 	{
-		PC->ApplyDeath(true, RespawnDelay);
+		PC->ApplyDeath(true);
 	}
 }
 void ACCDCharacter::Revive()
@@ -323,6 +327,8 @@ void ACCDCharacter::Server_Revive_Implementation()
 	if (ACCDPlayerState* PS = GetPlayerState<ACCDPlayerState>())
 	{
 		PS->bIsDead = false;
+		PS->RespawnStartTime = -1.0f; // 부활 시 초기화
+		PS->RespawnEndTime = -1.0f; // 부활 시 초기화
 	}
 	HandleRevive();
 	if (AGameModeBase* GM = GetWorld()->GetAuthGameMode())

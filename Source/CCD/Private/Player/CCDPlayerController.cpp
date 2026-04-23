@@ -210,7 +210,7 @@ void ACCDPlayerController::UpdateRotation(float DeltaTime)
 }
 
 /** --- Death --- */
-void ACCDPlayerController::ApplyDeath_Implementation(bool bIsDead, float RespawnTime)
+void ACCDPlayerController::ApplyDeath_Implementation(bool bIsDead)
 {
 	if (ACCDPlayerCameraManager* CCDCamManager = Cast<ACCDPlayerCameraManager>(PlayerCameraManager))
 	{
@@ -222,13 +222,6 @@ void ACCDPlayerController::ApplyDeath_Implementation(bool bIsDead, float Respawn
 			
 			SwitchToSpectatorUI();
 			SpectateNextPlayer(true);
-		}
-		
-		// [추가] 생성된 관전자 위젯에 부활 카운트다운 명령 전달
-		if (SpectatorWidgetInstance)
-		{
-			// 블루프린트에서 구현할 함수 호출
-			SpectatorWidgetInstance->StartRespawnCountdown(RespawnTime);
 		}
 	}
 }

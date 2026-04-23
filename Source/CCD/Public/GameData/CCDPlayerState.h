@@ -24,9 +24,12 @@ public:
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "PlayerInfo")
 	bool bIsDead = false;
 
-	// 남은 리스폰 시간
-	UPROPERTY(Replicated, BlueprintReadOnly, Category = "PlayerInfo")
-	float RemainingRespawnTime = 0.0f;
+	// 부활이 완료될 서버의 절대 시간
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "PlayerState")
+	float RespawnStartTime = -1.0f;
+	
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "PlayerState")
+	float RespawnEndTime = -1.0f;
 
 	UFUNCTION()
 	void OnRep_CustomName() const;
