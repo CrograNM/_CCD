@@ -4,6 +4,7 @@
 #include "Actor/LevelTransitionBase.h"
 
 #include "Components/BoxComponent.h"
+#include "GameData/CCDGameMode.h"
 #include "GameData/CCDGameState.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
@@ -118,8 +119,9 @@ void ALevelTransitionBase::Interact_Implementation(AActor* Interactor)
 		UGameplayStatics::PlaySoundAtLocation(this, DoorOpenSound, GetActorLocation());
 	}
 
-	FTimerHandle TravelTimerHandle;
-	GetWorldTimerManager().SetTimer(TravelTimerHandle, this, &ALevelTransitionBase::StartLevelTravel, TravelDelay, false);
+	StartLevelTravel();
+	// FTimerHandle TravelTimerHandle;
+	// GetWorldTimerManager().SetTimer(TravelTimerHandle, this, &ALevelTransitionBase::StartLevelTravel, TravelDelay, false);
 }
 
 void ALevelTransitionBase::StartLevelTravel()
@@ -136,7 +138,12 @@ void ALevelTransitionBase::StartLevelTravel()
 		}
 	}
 	
-	GetWorld()->ServerTravel(NextLevelPath);
+	// GetWorld()->ServerTravel(NextLevelPath);
+	// 게임모드를 통해 통합된 레벨 전환 시퀀스를 실행합니다.
+	if (ACCDGameMode* GM = Cast<ACCDGameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		GM->TransitionToLevel(NextLevelPath);
+	}
 }
 
 void ALevelTransitionBase::OnConstruction(const FTransform& Transform)

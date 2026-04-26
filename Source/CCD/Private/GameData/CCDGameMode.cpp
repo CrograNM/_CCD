@@ -48,3 +48,25 @@ void ACCDGameMode::RequestRespawn(ACCDCharacter* DeadCharacter)
 		UE_LOG(LogTemp, Error, TEXT("No more lives or Manager not found!"));
 	}
 }
+
+void ACCDGameMode::TransitionToLevel(const FString& NextLevelPath)
+{
+	if (NextLevelPath.IsEmpty()) return;
+
+	// 1. 모든 접속된 플레이어 컨트롤러를 순회하며 로딩 UI 출력을 명령합니다.
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (ACCDPlayerControllerBase* PC = Cast<ACCDPlayerControllerBase>(It->Get()))
+		{
+			PC->Client_StartLoading(); // RPC 호출
+		}
+	}
+
+	// 2. 클라이언트가 UI를 띄우고 네트워크 패킷을 처리할 시간을 준 뒤 이동합니다.
+	FTimerHandle TravelTimer;
+	GetWorldTimerManager().SetTimer(TravelTimer, [this, NextLevelPath]()
+	{
+		// 심리스 트래블 활성 상태이므로 연결을 유지하며 이동합니다.
+		GetWorld()->ServerTravel(NextLevelPath + TEXT("?listen"));
+	}, 1.0f, false);
+}

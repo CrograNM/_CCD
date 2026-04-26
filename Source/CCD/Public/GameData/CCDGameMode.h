@@ -20,6 +20,10 @@ public:
 	
 	void RequestRespawn(ACCDCharacter* DeadCharacter);
 	
+	// 레벨 전환 함수
+	UFUNCTION(BlueprintCallable, Category = "GameControl")
+	void TransitionToLevel(const FString& NextLevelPath);
+	
 protected:
 	virtual void BeginPlay() override;
 

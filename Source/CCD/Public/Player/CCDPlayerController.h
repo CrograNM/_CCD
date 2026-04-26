@@ -2,8 +2,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CCDPlayerControllerBase.h"
 #include "InputActionValue.h"
-#include "GameFramework/PlayerController.h"
 #include "CCDPlayerController.generated.h"
 
 class UCCD_MainWidget;
@@ -15,7 +15,7 @@ class ACCDSpectator;
 class USpectatorWidget;
 
 UCLASS()
-class CCD_API ACCDPlayerController : public APlayerController
+class CCD_API ACCDPlayerController : public ACCDPlayerControllerBase
 {
 	GENERATED_BODY()
 	
