@@ -9,6 +9,7 @@ void ACCDPlayerControllerBase::Client_StartLoading_Implementation()
 {
 	if (auto* Subsystem = GetGameInstance()->GetSubsystem<UCCD_LoadingSubsystem>())
 	{
+		Subsystem->HideLoadingScreen();
 		Subsystem->ShowLoadingScreen(LoadingWidgetClass);
 	}
 }
