@@ -17,13 +17,16 @@ public:
 	ACCD_EBlueStick();
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
+	
 	virtual void ExecuteAction() override;
 	virtual void OnEquipped() override;
 	virtual void OnUnequipped() override;
 	
 	bool IsLEDOn() const { return bIsLEDOn; }
 	TObjectPtr<UMaterialParameterCollection> GetUVLightMPC() const { return UVLightMPC; }
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void ExecuteBlueStick();
 	
 protected:
 	virtual void BeginPlay() override;

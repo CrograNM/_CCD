@@ -61,6 +61,11 @@ void ACCD_EBlueStick::OnUnequipped()
 	}
 }
 
+void ACCD_EBlueStick::ExecuteBlueStick()
+{
+	ExecuteAction();
+}
+
 void ACCD_EBlueStick::BeginPlay()
 {
 	Super::BeginPlay();
