@@ -57,8 +57,8 @@ private:
 	
 	FString UserProfileName;
 	FString SaveSlotName = TEXT("UserProfile");
-	FString LobbyMapPath = TEXT("/Game/_CCD/Maps/Lobby");
-	FString MainMenuPath = TEXT("/Game/_CCD/Maps/LV_MainMenu");
+	FString LobbyMapPath = TEXT("/Game/Maps/TUWorld");
+	FString MainMenuPath = TEXT("/Game/Maps/Title");
 	
 	// Delegates for session management
 	FOnCreateSessionCompleteDelegate CreateSessionCompleteDelegate;
