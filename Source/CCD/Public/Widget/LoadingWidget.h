@@ -8,6 +8,7 @@
 
 class UTextBlock;
 class UProgressBar;
+class USoundBase;
 /**
  * 
  */
@@ -22,6 +23,11 @@ protected:
 	/** 로딩바 보간용 변수 */
 	float TargetProgress = 0.0f;
 	float CurrentDisplayProgress = 0.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Loading|Sound")
+	TObjectPtr<USoundBase> FinishSound;
+	
+	bool bHasPlayedFinishSound = false;
 	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UProgressBar> LoadingProgressBar;

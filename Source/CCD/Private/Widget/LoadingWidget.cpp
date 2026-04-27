@@ -6,6 +6,8 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "GameData/CCD_LoadingSubsystem.h"
+#include "Kismet/GameplayStatics.h" 
+#include "Sound/SoundBase.h"
 
 void ULoadingWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
@@ -29,6 +31,15 @@ void ULoadingWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		{
 			int32 IntPercent = FMath::Clamp(FMath::FloorToInt(CurrentDisplayProgress * 100.0f), 0, 100);
 			PercentText->SetText(FText::Format(FText::FromString(TEXT("{0}%")), IntPercent));
+		}
+		
+		if (!bHasPlayedFinishSound && CurrentDisplayProgress >= 0.999f)
+		{
+			if (FinishSound)
+			{
+				UGameplayStatics::PlaySound2D(this, FinishSound);
+			}
+			bHasPlayedFinishSound = true;
 		}
 	}
 }
