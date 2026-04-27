@@ -808,3 +808,22 @@ void ACCDCharacter::Server_SpawnFootprint_Implementation(FVector Location, FRota
 		RemainingFootprints--;
 	}
 }
+
+void ACCDCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+	
+	FVector LandingLocation = Hit.ImpactPoint;
+	
+	USoundBase* SoundToPlay = (RemainingFootprints > 0) ? BloodyLandingSound : NormalLandingSound;
+
+	if (SoundToPlay)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, SoundToPlay, LandingLocation);
+	}
+	
+	if (NoiseEmitter)
+	{
+		NoiseEmitter->MakeNoise(this, 1.0f, LandingLocation);
+	}
+}

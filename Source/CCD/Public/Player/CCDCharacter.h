@@ -209,6 +209,8 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Animation")
     TObjectPtr<UAnimMontage> EmoteMontage;
     
+    virtual void Landed(const FHitResult& Hit) override;
+    
     /** --- 사망 상태 관리 --- */
     UPROPERTY(ReplicatedUsing = OnRep_IsDead)
     bool bIsDead = false;
@@ -276,6 +278,12 @@ protected:
     // 사운드
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
     UPawnNoiseEmitterComponent* NoiseEmitter;
+    
+    UPROPERTY(EditAnywhere, Category = "Design | Sound")
+    TObjectPtr<USoundBase> NormalLandingSound;
+
+    UPROPERTY(EditAnywhere, Category = "Design | Sound")
+    TObjectPtr<USoundBase> BloodyLandingSound;
     
     UFUNCTION(Server, Reliable)
     void Server_Trigger096Panic(ACCD_096* Target096);
