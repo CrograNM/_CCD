@@ -57,10 +57,13 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Stats | Speed")
 	float WalkSpeed = 250.f;
 	
+	// 초당 회복량
 	UPROPERTY(EditAnywhere, Category = "Stats | Stamina")
-	float StaminaRegenRate = 15.f; // 초당 회복량
+	float StaminaRegenRate = 15.f; 
+	// 초당 소모량
 	UPROPERTY(EditAnywhere, Category = "Stats | Stamina")
-	float StaminaConsumptionRate = 20.f; // 초당 소모량
+	float StaminaConsumptionRate = 20.f; 
+	// 최대 스태미나
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats | Stamina")
 	float MaxStamina = 100.f;
 
