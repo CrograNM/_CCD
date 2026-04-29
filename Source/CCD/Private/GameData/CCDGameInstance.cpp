@@ -6,6 +6,7 @@
 #include "GameData/CCDSaveGame.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/Engine.h"
+#include "GameData/CCDGameMode.h"
 
 const FString UniqueBuildID = TEXT("ContainmentCleanupDetail_v0.0.1");
 
@@ -154,13 +155,21 @@ void UCCDGameInstance::LeaveSession()
 		}
 		else
 		{
-			UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
+			// UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
+			if (ACCDGameMode* GM = Cast<ACCDGameMode>(GetWorld()->GetAuthGameMode()))
+			{
+				GM->TransitionToLevel(*MainMenuPath);
+			}
 			UE_LOG(LogTemp, Warning, TEXT("No active session found. Returning to main menu."));
 		}
 	}
 	else 
 	{
-		UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
+		// UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
+		if (ACCDGameMode* GM = Cast<ACCDGameMode>(GetWorld()->GetAuthGameMode()))
+		{
+			GM->TransitionToLevel(*MainMenuPath);
+		}
 		UE_LOG(LogTemp, Warning, TEXT("Session Interface invalid. Cannot leave session cleanly."));
 	}
 }
@@ -212,7 +221,15 @@ void UCCDGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSucce
 
 	if (bWasSuccessful)
 	{
-		GetWorld()->ServerTravel(LobbyMapPath + TEXT("?listen"));
+		// GetWorld()->ServerTravel(LobbyMapPath + TEXT("?listen"));
+		if (ACCDGameMode* GM = Cast<ACCDGameMode>(GetWorld()->GetAuthGameMode()))
+		{
+			GM->TransitionToLevel(LobbyMapPath + TEXT("?listen"));
+		}
+		else 
+		{
+			UE_LOG(LogTemp, Error, TEXT("CCDGameMode not found. Transition Failed"));
+		}
 	}
 	else
 	{
@@ -243,7 +260,11 @@ void UCCDGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSucc
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to Destroy Session! Returning to main menu anyway."));
 	}
-	UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
+	// UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
+	if (ACCDGameMode* GM = Cast<ACCDGameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		GM->TransitionToLevel(*MainMenuPath);
+	}
 }
 
 void UCCDGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
