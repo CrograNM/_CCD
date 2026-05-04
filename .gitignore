@@ -73,3 +73,4 @@ Plugins/**/Intermediate/*
 # Cache files for the editor to use
 DerivedDataCache/*
 CCD.sln.DotSettings.user
+/Plugins/Developer/RiderLink
