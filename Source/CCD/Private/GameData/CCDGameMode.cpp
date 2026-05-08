@@ -3,6 +3,7 @@
 #include "Player/CCDPlayerController.h"
 #include "Actor/ProgressManager.h"
 #include "Actor/SharedLivesManager.h"
+#include "GameData/CCDGameRecordSubsystem.h"
 #include "GameData/CCDGameState.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -30,6 +31,13 @@ void ACCDGameMode::OnCleaningFinished()
 	{
 		GS->bIsCleaningFinished = true;
 		GS->OnRep_CleaningFinished(); 
+	}
+	
+	// 맵이 클리어 됐다는 사실을 기록
+	if (UCCDGameRecordSubsystem* RecordSystem = GetGameInstance()->GetSubsystem<UCCDGameRecordSubsystem>())
+	{
+		FString CurrentMapName = GetWorld()->GetOutermost()->GetName();
+		RecordSystem->RecordMapClear(CurrentMapName);
 	}
 }
 
