@@ -39,6 +39,8 @@ void ACCDGameMode::OnCleaningFinished()
 		FString CurrentMapName = GetWorld()->GetOutermost()->GetName();
 		RecordSystem->RecordMapClear(CurrentMapName);
 	}
+	
+	UE_LOG(LogTemp, Warning, TEXT("GameMode : Cleaning Finished!"));
 }
 
 void ACCDGameMode::RequestRespawn(ACCDCharacter* DeadCharacter)

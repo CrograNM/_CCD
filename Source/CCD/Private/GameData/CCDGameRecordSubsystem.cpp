@@ -67,18 +67,18 @@ void UCCDGameRecordSubsystem::LoadSession(int32 SlotIndex)
 
 void UCCDGameRecordSubsystem::RecordMapClear(FString MapPath)
 {
-	// 	if (CurrentSlotIndex == -1) return;
-	// 	
-	// 	// 현재 세션 데이터 업데이트
-	// 	CurrentSessionData.ClearedMaps.FindOrAdd(MapPath) = true;
-	// 	CurrentSessionData.LastSavedTime = FDateTime::Now();
-	// 	
-	// 	// 전체 리스트에 반영
-	// 	if (CachedSaveGameObject)
-	// 	{
-	// 		CachedSaveGameObject->SessionSlots.Add(CurrentSlotIndex, CurrentSessionData);
-	// 		SaveGameToDisk();
-	// 	}
+	if (CurrentSlotIndex == -1) return;
+	
+	// 현재 세션 데이터 업데이트
+	CurrentSessionData.ClearedMaps.FindOrAdd(MapPath) = true;
+	CurrentSessionData.LastSavedTime = FDateTime::Now();
+	
+	// 전체 리스트에 반영
+	if (CachedSaveGameObject)
+	{
+		CachedSaveGameObject->SessionSlots.Add(CurrentSlotIndex, CurrentSessionData);
+		SaveGameToDisk();
+	}
 }
 
 bool UCCDGameRecordSubsystem::AreAllMapsCleared(const TArray<FString>& RequiredMaps) const
@@ -106,4 +106,10 @@ TMap<int32, FSessionData> UCCDGameRecordSubsystem::GetSessionList() const
 		return CachedSaveGameObject->SessionSlots;
 	}
 	return TMap<int32, FSessionData>();
+}
+
+bool UCCDGameRecordSubsystem::IsMapCleared(FString MapPath) const
+{
+	const bool* bCleared = CurrentSessionData.ClearedMaps.Find(MapPath);
+	return (bCleared && *bCleared);
 }

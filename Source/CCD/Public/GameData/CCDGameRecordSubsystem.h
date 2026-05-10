@@ -39,6 +39,9 @@ public:
 	/** UI용: 모든 세션 목록 가져오기 */
 	UFUNCTION(BlueprintPure, Category = "SaveGame")
 	TMap<int32, FSessionData> GetSessionList() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "GameRecord")
+	bool IsMapCleared(FString MapPath) const;
 
 private:
 	// 현재 활성화된 세션 정보
