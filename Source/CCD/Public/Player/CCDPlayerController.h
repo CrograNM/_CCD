@@ -40,6 +40,14 @@ public:
 	void SwitchToMainUI();		// UI 복구
 	ACCDCharacter* GetCurrentSpectateTarget() const;
 	
+	/* --- Exec --- */
+	UFUNCTION(Exec)
+	void CleanAll();
+	
+	/** 서버에서 실제 청소 로직을 수행할 RPC */
+	UFUNCTION(Server, Reliable)
+	void Server_CleanAll();
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;

@@ -9,13 +9,16 @@
 #include "Blueprint/UserWidget.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Actor/ProgressManager.h"
 #include "Widget/SpectatorWidget.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Component/CCD_InteractionComponent.h"
 #include "Component/CCD_StatComponent.h"
+#include "Component/ProgressComponent.h"
 #include "Engine/Scene.h"
 #include "GameData/CCDGameInstance.h"
 #include "GameData/CCDPlayerState.h"
+#include "Kismet/GameplayStatics.h"
 #include "Widget/CCD_MainWidget.h"
 #include "Widget/EyeAnimWidget.h"
 #include "Widget/EyeCooldownWidget.h"
@@ -159,6 +162,36 @@ ACCDCharacter* ACCDPlayerController::GetCurrentSpectateTarget() const
 	return SpectateCandidates.IsValidIndex(CurrentSpectateIndex) 
 			? SpectateCandidates[CurrentSpectateIndex] : nullptr;
 }
+
+/* --- Exec --- */
+void ACCDPlayerController::CleanAll()
+{
+	Server_CleanAll();
+}
+
+void ACCDPlayerController::Server_CleanAll_Implementation()
+{
+	// 서버 권한 확인 (호스트/서버만 실행 가능하도록 보장)
+	if (!HasAuthority()) return;
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+	
+	// 월드 내의 모든 'ProgressValue > 0'인 액터를 찾아 파괴
+	for (TActorIterator<AActor> It(World); It; ++It)
+	{
+		if (UProgressComponent* ProgressComp = It->FindComponentByClass<UProgressComponent>())
+		{
+			if (ProgressComp->ProgressValue > 0.0f)
+			{
+				It->Destroy();
+			}
+		}
+	}
+	
+	UE_LOG(LogTemp, Error, TEXT("Server Command: CleanAll executed by Admin."));
+}
+
 void ACCDPlayerController::SpectateNextPlayer(bool bForward)
 {
 	// 1. 인스턴스가 없다면 생성 (최초 1회)
