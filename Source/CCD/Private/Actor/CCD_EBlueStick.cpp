@@ -118,7 +118,7 @@ void ACCD_EBlueStick::UpdateMeshLightMID()
 {
 	if (MeshLightMID)
 	{
-		FLinearColor EmissiveColor = bIsLEDOn ? FLinearColor(0.0f, 5.0f, 10.0f, 1.0f) :FLinearColor(0.12f, 0.16f, 0.21f, 1.0f);
+		FLinearColor EmissiveColor = bIsLEDOn ? FLinearColor(0.0f, 5.0f, 10.0f, 1.0f) :FLinearColor(0.012f, 0.016f, 0.021f, 0.2f);
 		MeshLightMID->SetVectorParameterValue(FName("EmissiveColor"), EmissiveColor);
 	}
 }
