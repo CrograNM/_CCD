@@ -37,6 +37,7 @@ void ACCDGameMode::OnCleaningFinished()
 	if (UCCDGameRecordSubsystem* RecordSystem = GetGameInstance()->GetSubsystem<UCCDGameRecordSubsystem>())
 	{
 		FString CurrentMapName = GetWorld()->GetOutermost()->GetName();
+		CurrentMapName = UWorld::RemovePIEPrefix(CurrentMapName);
 		RecordSystem->RecordMapClear(CurrentMapName);
 	}
 	
