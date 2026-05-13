@@ -111,5 +111,6 @@ TMap<int32, FSessionData> UCCDGameRecordSubsystem::GetSessionList() const
 bool UCCDGameRecordSubsystem::IsMapCleared(FString MapPath) const
 {
 	const bool* bCleared = CurrentSessionData.ClearedMaps.Find(MapPath);
+	UE_LOG(LogTemp, Warning, TEXT("Map '%s' is cleared? = %s"), *MapPath, (bCleared && *bCleared) ? TEXT("Yes") : TEXT("No"));
 	return (bCleared && *bCleared);
 }
