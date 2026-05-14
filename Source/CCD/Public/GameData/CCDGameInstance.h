@@ -52,6 +52,8 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "GameFlow")
 	bool bHasPlayedPrologue = false;
 	
+	void TransitionToMainMenu();
+	
 private:
 	void HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);
 	

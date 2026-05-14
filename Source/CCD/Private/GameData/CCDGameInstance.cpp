@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Engine/Engine.h"
 #include "GameData/CCDGameMode.h"
+#include "Player/CCDPlayerControllerBase.h"
 
 const FString UniqueBuildID = TEXT("ContainmentCleanupDetail_v0.0.1");
 
@@ -156,20 +157,14 @@ void UCCDGameInstance::LeaveSession()
 		else
 		{
 			// UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
-			if (ACCDGameMode* GM = Cast<ACCDGameMode>(GetWorld()->GetAuthGameMode()))
-			{
-				GM->TransitionToLevel(*MainMenuPath);
-			}
+			TransitionToMainMenu();
 			UE_LOG(LogTemp, Warning, TEXT("No active session found. Returning to main menu."));
 		}
 	}
 	else 
 	{
 		// UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
-		if (ACCDGameMode* GM = Cast<ACCDGameMode>(GetWorld()->GetAuthGameMode()))
-		{
-			GM->TransitionToLevel(*MainMenuPath);
-		}
+		TransitionToMainMenu();
 		UE_LOG(LogTemp, Warning, TEXT("Session Interface invalid. Cannot leave session cleanly."));
 	}
 }
@@ -261,10 +256,7 @@ void UCCDGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSucc
 		UE_LOG(LogTemp, Error, TEXT("Failed to Destroy Session! Returning to main menu anyway."));
 	}
 	// UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
-	if (ACCDGameMode* GM = Cast<ACCDGameMode>(GetWorld()->GetAuthGameMode()))
-	{
-		GM->TransitionToLevel(*MainMenuPath);
-	}
+	TransitionToMainMenu();
 }
 
 void UCCDGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
@@ -318,6 +310,26 @@ bool UCCDGameInstance::IsSteamActive() const
 {
 	const IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
 	return (Subsystem && Subsystem->GetSubsystemName() == FName(TEXT("Steam")));
+}
+
+void UCCDGameInstance::TransitionToMainMenu()
+{
+	const FString NextLevelPath = MainMenuPath;
+	UE_LOG(LogTemp, Warning, TEXT("Transitioning to Main Menu: %s"), *NextLevelPath);
+	
+	if (ACCDPlayerControllerBase* PC = Cast<ACCDPlayerControllerBase>(UGameplayStatics::GetPlayerController(GetWorld(), 0)))
+	{
+		PC->Client_StartLoading();
+	}
+
+	FTimerHandle TravelTimer;
+	GetTimerManager().SetTimer(TravelTimer, [this, NextLevelPath]()
+	{
+		if (UWorld* World = GetWorld())
+		{
+		   UGameplayStatics::OpenLevel(World, FName(*NextLevelPath), true);
+		}
+	}, 1.0f, false);
 }
 
 void UCCDGameInstance::HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType,
