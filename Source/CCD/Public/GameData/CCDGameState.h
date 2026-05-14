@@ -19,4 +19,7 @@ public:
 
 	UFUNCTION()
 	void OnRep_CleaningFinished();
+	
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "GameRule")
+	TArray<FString> ReplicatedClearedMapPaths;
 };

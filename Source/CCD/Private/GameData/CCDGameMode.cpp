@@ -39,6 +39,12 @@ void ACCDGameMode::OnCleaningFinished()
 		FString CurrentMapName = GetWorld()->GetOutermost()->GetName();
 		CurrentMapName = UWorld::RemovePIEPrefix(CurrentMapName);
 		RecordSystem->RecordMapClear(CurrentMapName);
+		
+		// 서버에서 GameState의 복제 배열 업데이트
+		if (ACCDGameState* GS = GetGameState<ACCDGameState>())
+		{
+			GS->ReplicatedClearedMapPaths.AddUnique(CurrentMapName);
+		}
 	}
 	
 	UE_LOG(LogTemp, Warning, TEXT("GameMode : Cleaning Finished!"));

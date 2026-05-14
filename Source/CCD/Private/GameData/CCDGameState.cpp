@@ -7,6 +7,7 @@ void ACCDGameState::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ACCDGameState, bIsCleaningFinished);
+	DOREPLIFETIME(ACCDGameState, ReplicatedClearedMapPaths);
 }
 
 void ACCDGameState::OnRep_CleaningFinished()
