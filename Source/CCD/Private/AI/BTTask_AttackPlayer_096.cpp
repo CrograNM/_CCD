@@ -6,10 +6,12 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AI/CCD_096.h"
 #include "Player/CCDCharacter.h"
+#include "Animation/AnimMontage.h"
 
 UBTTask_AttackPlayer_096::UBTTask_AttackPlayer_096()
 {
 	NodeName = TEXT("Attack and Reset 096");
+	AttackMontage = nullptr;
 }
 
 EBTNodeResult::Type UBTTask_AttackPlayer_096::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -22,24 +24,40 @@ EBTNodeResult::Type UBTTask_AttackPlayer_096::ExecuteTask(UBehaviorTreeComponent
 
 	if (TargetPlayer && SCP096 && !TargetPlayer->IsDead())
 	{
-		SCP096->Multicast_PlayKillSound();
 		TargetPlayer->Die(); 
+		SCP096->Multicast_PlayKillSound();
 		
-		AActor* NextTarget = SCP096->GetNextTarget();
-
-		if (NextTarget)
+		if (AttackMontage)
 		{
-			BB->SetValueAsObject(TEXT("TargetActor"), NextTarget);
-			SCP096->SetState(E096State::Enraged); 
-			
-			AIC->StopMovement();
+			SCP096->PlayAnimMontage(AttackMontage);
 		}
-		else
+		
+		UBehaviorTreeComponent* BTComp = &OwnerComp;
+		
+		FTimerHandle KillTimerHandle;
+		SCP096->GetWorldTimerManager().SetTimer(KillTimerHandle, [this, BTComp, SCP096, BB, AIC]()
 		{
-			SCP096->SetState(E096State::Idle);
-		}
-
-		return EBTNodeResult::Succeeded;
+			if (SCP096 && BTComp)
+			{
+				SCP096->StopAnimMontage(AttackMontage);
+				
+				AActor* NextTarget = SCP096->GetNextTarget();
+				if (NextTarget)
+				{
+					BB->SetValueAsObject(TEXT("TargetActor"), NextTarget);
+					SCP096->SetState(E096State::Enraged); 
+					AIC->StopMovement();
+				}
+				else
+				{
+					SCP096->SetState(E096State::Idle);
+				}
+				
+				this->FinishLatentTask(*BTComp, EBTNodeResult::Succeeded);
+			}
+		}, 1.5f, false);
+		
+		return EBTNodeResult::InProgress;
 	}
 
 	return EBTNodeResult::Failed;

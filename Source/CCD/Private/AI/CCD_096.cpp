@@ -121,11 +121,9 @@ void ACCD_096::OnRep_CurrentState()
 		break;
 	case E096State::Panic:
 		PlayPanicSound();
-		// 여기서 "부들부들 떠는" 애니메이션 몽타주 재생
 		break;
 	case E096State::Enraged:
 		PlayChaseSound();
-		// 여기서 "미친 듯이 달려오는" 애니메이션으로 전환
 		break;
 	}
 }
@@ -181,9 +179,6 @@ void ACCD_096::Multicast_PlayKillSound_Implementation()
 {
 	if (KillSound)
 	{
-		StopScreamSound(); 
-        
-
 		UGameplayStatics::PlaySoundAtLocation(
 			this, 
 			KillSound, 

@@ -4,22 +4,22 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
-#include "BTTask_AttackPlayer_096.generated.h"
+#include "BTTask_Panic_096.generated.h"
 
 /**
  * 
  */
-class UAnimMontage;
-
 UCLASS()
-class CCD_API UBTTask_AttackPlayer_096 : public UBTTaskNode
+class CCD_API UBTTask_Panic_096 : public UBTTaskNode
 {
 	GENERATED_BODY()
+
 public:
-	UBTTask_AttackPlayer_096();
+	UBTTask_Panic_096();
+
 protected:
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation", meta = (AllowPrivateAccess = "true"))
-	UAnimMontage* AttackMontage;
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	class UAnimMontage* PanicMontage;
 };
