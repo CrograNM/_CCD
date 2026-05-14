@@ -36,6 +36,7 @@ public:
 	void TriggerPanic(AActor* Player);
 	void PlayPanicSound();
 	void PlayChaseSound();
+	void PlayCrySound(USoundBase* InSound);
 	void StopScreamSound();
 	
 	void MarkPlayer(AActor* Player);

@@ -169,6 +169,18 @@ void ACCD_096::PlayChaseSound()
 	}
 }
 
+void ACCD_096::PlayCrySound(USoundBase* InSound)
+{
+	if (ScreamAudio && InSound)
+	{
+		if (ScreamAudio->IsPlaying() && ScreamAudio->Sound == InSound)
+			return;
+
+		ScreamAudio->SetSound(InSound);
+		ScreamAudio->Play();
+	}
+}
+
 void ACCD_096::StopScreamSound()
 {
 	if (ScreamAudio && ScreamAudio->IsPlaying()) ScreamAudio->Stop();
