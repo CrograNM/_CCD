@@ -42,6 +42,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "GameRecord")
 	bool IsMapCleared(FString MapPath) const;
+	
+	
+	TMap<FString, bool> GetCurrentSessionClearedMaps();
 
 private:
 	// 현재 활성화된 세션 정보

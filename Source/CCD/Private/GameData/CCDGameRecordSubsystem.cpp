@@ -124,6 +124,8 @@ TMap<int32, FSessionData> UCCDGameRecordSubsystem::GetSessionList() const
 
 bool UCCDGameRecordSubsystem::IsMapCleared(FString MapPath) const
 {
+	MapPath = UWorld::RemovePIEPrefix(MapPath);
+	
 	// 1. 호스트(서버/리슨 서버)인 경우: 자신의 세션 데이터(파일 기반)에서 직접 확인
 	if (GetWorld() && GetWorld()->GetNetMode() < NM_Client)
 	{
@@ -149,3 +151,9 @@ bool UCCDGameRecordSubsystem::IsMapCleared(FString MapPath) const
 
 	return false;
 }
+
+TMap<FString, bool> UCCDGameRecordSubsystem::GetCurrentSessionClearedMaps()
+{
+	return CurrentSessionData.ClearedMaps;
+}
+

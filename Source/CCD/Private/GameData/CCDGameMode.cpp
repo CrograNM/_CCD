@@ -3,6 +3,7 @@
 #include "Player/CCDPlayerController.h"
 #include "Actor/ProgressManager.h"
 #include "Actor/SharedLivesManager.h"
+#include "GameData/CCDSaveGame.h"
 #include "GameData/CCDGameRecordSubsystem.h"
 #include "GameData/CCDGameState.h"
 #include "Kismet/GameplayStatics.h"
@@ -23,6 +24,21 @@ void ACCDGameMode::BeginPlay()
 	// 월드에서 ProgressManager를 찾아 보관합니다.
 	AActor* FoundActor = UGameplayStatics::GetActorOfClass(GetWorld(), AProgressManager::StaticClass());
 	ProgressManager = Cast<AProgressManager>(FoundActor);
+	
+	// 서버에서 게임이 시작될 때, 현재 세션의 클리어된 맵 목록을 GameState의 복제 배열에 반영
+	if (UCCDGameRecordSubsystem* RecordSystem = GetGameInstance()->GetSubsystem<UCCDGameRecordSubsystem>())
+	{
+		if (ACCDGameState* GS = GetGameState<ACCDGameState>())
+		{
+			// 힌트: 서브시스템에 현재 활성화된 세션의 클리어 맵 목록만 가져오는 함수를 추가하면 편리합니다.
+			TMap<FString, bool> ClearedMaps = RecordSystem->GetCurrentSessionClearedMaps(); 
+			for (const auto& Map : ClearedMaps)
+			{
+				FString MapPath = UWorld::RemovePIEPrefix(Map.Key);
+				GS->ReplicatedClearedMapPaths.AddUnique(MapPath);
+			}
+		}
+	}
 }
 
 void ACCDGameMode::OnCleaningFinished()
