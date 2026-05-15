@@ -23,7 +23,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	// 핵심 로직: 영역 내 모든 플레이어가 있는지 확인
-	bool IsWaitingAreaFull() const;
+	virtual bool IsWaitingAreaFull() const;
 
 	UFUNCTION()
 	void OnWaitingAreaOverlapChange(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -91,6 +91,9 @@ protected:
 	void StartLevelTravel();
 	
 	virtual void OnConstruction(const FTransform& Transform) override;
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayDoorSound();
 
 public:
 	virtual void Interact_Implementation(AActor* Interactor) override;

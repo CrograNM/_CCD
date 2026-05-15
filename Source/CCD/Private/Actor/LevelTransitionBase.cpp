@@ -114,10 +114,7 @@ void ALevelTransitionBase::Interact_Implementation(AActor* Interactor)
 
 	bIsLoading = true;
 	
-	if (DoorOpenSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, DoorOpenSound, GetActorLocation());
-	}
+	Multicast_PlayDoorSound();
 
 	StartLevelTravel();
 	// FTimerHandle TravelTimerHandle;
@@ -138,8 +135,6 @@ void ALevelTransitionBase::StartLevelTravel()
 		}
 	}
 	
-	// GetWorld()->ServerTravel(NextLevelPath);
-	// 게임모드를 통해 통합된 레벨 전환 시퀀스를 실행합니다.
 	if (ACCDGameMode* GM = Cast<ACCDGameMode>(GetWorld()->GetAuthGameMode()))
 	{
 		GM->TransitionToLevel(NextLevelPath);
@@ -176,10 +171,16 @@ void ALevelTransitionBase::OnRep_CanStart()
 {
 	if (DoorMesh)
 	{
-		// 모든 플레이어가 모였을 때(bCanStart == true)만 외곽선을 켭니다.
 		DoorMesh->SetRenderCustomDepth(bCanStart);
 		
-		// 스텐실 값은 이전에 설정한 초록색 번호(200)를 그대로 사용합니다.
 		DoorMesh->SetCustomDepthStencilValue(200);
+	}
+}
+
+void ALevelTransitionBase::Multicast_PlayDoorSound_Implementation()
+{
+	if (DoorOpenSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, DoorOpenSound, GetActorLocation());
 	}
 }
