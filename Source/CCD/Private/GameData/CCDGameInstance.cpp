@@ -157,14 +157,43 @@ void UCCDGameInstance::LeaveSession()
 		else
 		{
 			// UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
-			TransitionToMainMenu();
+			TransitionLevel(MainMenuPath);
 			UE_LOG(LogTemp, Warning, TEXT("No active session found. Returning to main menu."));
 		}
 	}
 	else 
 	{
 		// UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
-		TransitionToMainMenu();
+		TransitionLevel(MainMenuPath);
+		UE_LOG(LogTemp, Warning, TEXT("Session Interface invalid. Cannot leave session cleanly."));
+	}
+}
+void UCCDGameInstance::LeaveSessionForEnding()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Attempting to leave session..."));
+
+	const IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
+	if (!Subsystem) return;
+
+	IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
+	if (SessionInterface.IsValid())
+	{
+		if (SessionInterface->GetNamedSession(NAME_GameSession))
+		{
+			DestroySessionCompleteDelegateHandle = SessionInterface->AddOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegate);
+			SessionInterface->DestroySession(NAME_GameSession);
+		}
+		else
+		{
+			// UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
+			TransitionLevel(EndingMapPath);
+			UE_LOG(LogTemp, Warning, TEXT("No active session found. Returning to main menu."));
+		}
+	}
+	else 
+	{
+		// UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
+		TransitionLevel(EndingMapPath);
 		UE_LOG(LogTemp, Warning, TEXT("Session Interface invalid. Cannot leave session cleanly."));
 	}
 }
@@ -256,7 +285,7 @@ void UCCDGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSucc
 		UE_LOG(LogTemp, Error, TEXT("Failed to Destroy Session! Returning to main menu anyway."));
 	}
 	// UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
-	TransitionToMainMenu();
+	TransitionLevel(MainMenuPath);
 }
 
 void UCCDGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
@@ -312,9 +341,8 @@ bool UCCDGameInstance::IsSteamActive() const
 	return (Subsystem && Subsystem->GetSubsystemName() == FName(TEXT("Steam")));
 }
 
-void UCCDGameInstance::TransitionToMainMenu()
+void UCCDGameInstance::TransitionLevel(FString NextLevelPath)
 {
-	const FString NextLevelPath = MainMenuPath;
 	UE_LOG(LogTemp, Warning, TEXT("Transitioning to Main Menu: %s"), *NextLevelPath);
 	
 	if (ACCDPlayerControllerBase* PC = Cast<ACCDPlayerControllerBase>(UGameplayStatics::GetPlayerController(GetWorld(), 0)))

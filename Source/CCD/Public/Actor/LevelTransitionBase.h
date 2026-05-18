@@ -88,7 +88,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Transition", meta = (MakeEditWidget = true))
 	FVector InteractVolumeRelativeLocation;
 	
-	void StartLevelTravel();
+	virtual void StartLevelTravel();
 	
 	virtual void OnConstruction(const FTransform& Transform) override;
 	

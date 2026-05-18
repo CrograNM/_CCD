@@ -36,6 +36,7 @@ public:
 	void HostSession(FString RoomName, bool bIsLAN, FString Path);
 	UFUNCTION(BlueprintCallable, Category = "Multiplayer")
 	void LeaveSession();
+	void LeaveSessionForEnding();
 	UFUNCTION(BlueprintCallable, Category = "Multiplayer")
 	void CleanupLocalSession();
 	
@@ -52,7 +53,7 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "GameFlow")
 	bool bHasPlayedPrologue = false;
 	
-	void TransitionToMainMenu();
+	void TransitionLevel(FString NextLevelPath);
 	
 private:
 	void HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);
@@ -61,6 +62,7 @@ private:
 	FString SaveSlotName = TEXT("UserProfile");
 	FString LobbyMapPath = TEXT("/Game/Maps/TUWorld");
 	FString MainMenuPath = TEXT("/Game/Maps/Title");
+	FString EndingMapPath = TEXT("/Game/Maps/Ending");
 	
 	// Delegates for session management
 	FOnCreateSessionCompleteDelegate CreateSessionCompleteDelegate;
