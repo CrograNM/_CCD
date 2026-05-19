@@ -100,7 +100,7 @@ void ACCDGameMode::TransitionToLevel(const FString& NextLevelPath)
 	GetWorldTimerManager().SetTimer(TravelTimer, [this, NextLevelPath]()
 	{
 		// 심리스 트래블 활성 상태이므로 연결을 유지하며 이동합니다.
-		GetWorld()->ServerTravel(NextLevelPath + TEXT("?listen"));
+		GetWorld()->ServerTravel(NextLevelPath);
 	}, 1.0f, false);
 }
 
