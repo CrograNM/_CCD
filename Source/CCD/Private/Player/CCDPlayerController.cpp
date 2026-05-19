@@ -62,7 +62,7 @@ void ACCDPlayerController::BeginPlay()
 	if (HasAuthority()) 
 		SwitchToMainUI();
 	
-	// 초기 플레이어 이름 설정
+	// 초기 플레이어 설정
 	if (IsLocalController())
 	{
 		if (UCCDGameInstance* GI = GetGameInstance<UCCDGameInstance>())
@@ -70,6 +70,8 @@ void ACCDPlayerController::BeginPlay()
 			FString MySavedName = GI->GetSavedName();
 			Server_SetInitialPlayerName(MySavedName);
 		}
+		
+		MyCharacter = Cast<ACCDCharacter>(GetPawn());
 	}
 }
 void ACCDPlayerController::OnRep_Pawn()
@@ -117,20 +119,10 @@ void ACCDPlayerController::Input_Move(const FInputActionValue& Value)
 void ACCDPlayerController::Input_Look(const FInputActionValue& Value)
 {
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
-	
-	ACCDCharacter* TargetCharacter = Cast<ACCDCharacter>(GetPawn());
     
 	// 캐릭터가 있고, 상호작용 컴포넌트가 회전 모드라면 시선 회전을 중단
-	if (TargetCharacter)
-	{
-		if (UCCD_InteractionComponent* InteractionComp = TargetCharacter->FindComponentByClass<UCCD_InteractionComponent>())
-		{
-			if (InteractionComp->IsRotationMode())
-			{
-				return;
-			}
-		}
-	}
+	if (!MyCharacter) return;
+	if (MyCharacter->IsRotationMode()) return;
 
 	// 회전 모드가 아닐 때만 기존 시선 회전 로직을 수행
 	if (LookAxisVector.X != 0.0f || LookAxisVector.Y != 0.0f)
@@ -141,7 +133,6 @@ void ACCDPlayerController::Input_Look(const FInputActionValue& Value)
 }
 void ACCDPlayerController::Input_ChangeTargetLeft(const FInputActionValue& Value)
 {
-	const ACCDCharacter* MyCharacter = Cast<ACCDCharacter>(GetPawn());
 	if (MyCharacter && MyCharacter->IsDead())
 	{
 		SpectateNextPlayer(true);
@@ -149,7 +140,6 @@ void ACCDPlayerController::Input_ChangeTargetLeft(const FInputActionValue& Value
 }
 void ACCDPlayerController::Input_ChangeTargetRight(const FInputActionValue& Value)
 {
-	const ACCDCharacter* MyCharacter = Cast<ACCDCharacter>(GetPawn());
 	if (MyCharacter && MyCharacter->IsDead())
 	{
 		SpectateNextPlayer(false);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Component/CCD_InteractionComponent.h"
 #include "Component/CCD_StatComponent.h"
 #include "GameFramework/Character.h"
 #include "CCDCharacter.generated.h"
@@ -134,6 +135,8 @@ public:
     bool GetIsGrabbed() const;
     
     FORCEINLINE TSubclassOf<ADecal_StainActor_Base> GetBloodStainActorClass() const { return BloodStainActorClass; }
+    
+    bool IsRotationMode() const { return InteractionComp ? InteractionComp->IsRotationMode() : false; }
 
     /** 캐릭터의 커스텀 이름 (UI용) */
     UFUNCTION(BlueprintCallable, Category = "Player")

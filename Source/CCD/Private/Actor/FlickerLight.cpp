@@ -7,6 +7,7 @@
 AFlickerLight::AFlickerLight()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.TickInterval = 0.1f;
 	
 	SpotLight = CreateDefaultSubobject<USpotLightComponent>(TEXT("SpotLight"));
 	RootComponent = SpotLight;

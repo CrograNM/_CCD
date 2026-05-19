@@ -96,4 +96,7 @@ protected:
 	
 private:
 	float PostProcessAlpha = 0.f;
+	
+	UPROPERTY()
+	TObjectPtr<ACCDCharacter> MyCharacter = nullptr;
 };
