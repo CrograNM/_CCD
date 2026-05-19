@@ -1,6 +1,9 @@
 
 #include "Player/CCDCharacter.h"
 
+#include "AIController.h"
+#include "BrainComponent.h"
+#include "EngineUtils.h"
 #include "EnhancedInputComponent.h"
 #include "Player/CCDPlayerController.h"
 #include "Actor/CCD_BodyFragment.h"
@@ -298,6 +301,43 @@ void ACCDCharacter::Server_Die_Implementation()
 	if (bIsDead) return; // 이미 사망한 경우 중복 처리 방지
 	UE_LOG(LogTemp, Warning, TEXT("[ACCDCharacter] Die called"));
 	
+	if (const ACCDGameMode* GM = Cast<ACCDGameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		if (GM->GetCurrentLives() <= 0)
+		{
+			if (ACCDGameState* GS = GM->GetGameState<ACCDGameState>())
+			{
+				if (!GS->bIsGameOver)
+				{
+					GS->bIsGameOver = true;
+					
+					// ================= [AI 정지 로직] =================
+					if (UWorld* World = GetWorld())
+					{
+						for (TActorIterator<AAIController> It(World); It; ++It)
+						{
+							if (AAIController* AIController = *It)
+							{
+								if (UBrainComponent* BrainComp = AIController->GetBrainComponent())
+								{
+									BrainComp->StopLogic(TEXT("Game Over"));
+								}
+								// 이동 컴포넌트도 명확하게 정지
+								AIController->StopMovement();
+							}
+						}
+					}
+					
+					if (HasAuthority())
+					{
+						GS->OnRep_IsGameOver();
+					}
+				}
+			}
+		}
+		return;
+	}
+	
 	bIsDead = true;
 	if (ACCDPlayerState* PS = GetPlayerState<ACCDPlayerState>())
 	{
@@ -314,25 +354,6 @@ void ACCDCharacter::Server_Die_Implementation()
 	if (ACCDPlayerController* PC = Cast<ACCDPlayerController>(GetController()))
 	{
 		PC->ApplyDeath(true);
-	}
-	
-	if (const ACCDGameMode* GM = Cast<ACCDGameMode>(GetWorld()->GetAuthGameMode()))
-	{
-		if (GM->GetCurrentLives() <= 0)
-		{
-			if (ACCDGameState* GS = GM->GetGameState<ACCDGameState>())
-			{
-				if (!GS->bIsGameOver)
-				{
-					GS->bIsGameOver = true;
-                
-					if (HasAuthority() && IsLocallyControlled())
-					{
-						GS->OnRep_IsGameOver();
-					}
-				}
-			}
-		}
 	}
 }
 void ACCDCharacter::Revive()
