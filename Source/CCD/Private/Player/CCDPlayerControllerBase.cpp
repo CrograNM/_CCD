@@ -3,6 +3,7 @@
 
 #include "Player/CCDPlayerControllerBase.h"
 
+#include "GameData/CCDGameInstance.h"
 #include "GameData/CCD_LoadingSubsystem.h"
 
 void ACCDPlayerControllerBase::Client_StartLoading_Implementation()
@@ -11,6 +12,14 @@ void ACCDPlayerControllerBase::Client_StartLoading_Implementation()
 	{
 		Subsystem->HideLoadingScreen();
 		Subsystem->ShowLoadingScreen(LoadingWidgetClass);
+	}
+}
+
+void ACCDPlayerControllerBase::Client_MoveToEndingLocal_Implementation(const FString& EndingMapPath)
+{
+	if (UCCDGameInstance* GI = Cast<UCCDGameInstance>(GetGameInstance()))
+	{
+		GI->TransitionLevel(EndingMapPath);
 	}
 }
 

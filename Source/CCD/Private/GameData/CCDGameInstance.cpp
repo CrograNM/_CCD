@@ -349,6 +349,8 @@ void UCCDGameInstance::TransitionLevel(FString NextLevelPath)
 	{
 		PC->Client_StartLoading();
 	}
+	
+	CleanupLocalSession();
 
 	FTimerHandle TravelTimer;
 	GetTimerManager().SetTimer(TravelTimer, [this, NextLevelPath]()
