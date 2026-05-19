@@ -30,6 +30,7 @@
 #include "InputActionValue.h"
 #include "MovieSceneSequenceID.h"
 #include "GameData/CCDGameMode.h"
+#include "GameData/CCDGameState.h"
 
 /** --- 생성자 및 기본 함수 --- */
 ACCDCharacter::ACCDCharacter()
@@ -313,6 +314,25 @@ void ACCDCharacter::Server_Die_Implementation()
 	if (ACCDPlayerController* PC = Cast<ACCDPlayerController>(GetController()))
 	{
 		PC->ApplyDeath(true);
+	}
+	
+	if (const ACCDGameMode* GM = Cast<ACCDGameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		if (GM->GetCurrentLives() <= 0)
+		{
+			if (ACCDGameState* GS = GM->GetGameState<ACCDGameState>())
+			{
+				if (!GS->bIsGameOver)
+				{
+					GS->bIsGameOver = true;
+                
+					if (HasAuthority() && IsLocallyControlled())
+					{
+						GS->OnRep_IsGameOver();
+					}
+				}
+			}
+		}
 	}
 }
 void ACCDCharacter::Revive()

@@ -24,6 +24,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "GameControl")
 	void TransitionToLevel(const FString& NextLevelPath);
 	
+	int32 GetCurrentLives() const;
+	
 protected:
 	virtual void BeginPlay() override;
 

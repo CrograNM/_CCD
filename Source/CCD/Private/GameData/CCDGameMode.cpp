@@ -103,3 +103,19 @@ void ACCDGameMode::TransitionToLevel(const FString& NextLevelPath)
 		GetWorld()->ServerTravel(NextLevelPath + TEXT("?listen"));
 	}, 1.0f, false);
 }
+
+int32 ACCDGameMode::GetCurrentLives() const
+{
+	// 월드에서 매니저를 찾아 부활 가능 여부를 확인합니다.
+	AActor* FoundActor = UGameplayStatics::GetActorOfClass(GetWorld(), ASharedLivesManager::StaticClass());
+	if (ASharedLivesManager* LivesManager = Cast<ASharedLivesManager>(FoundActor))
+	{
+		return LivesManager->GetCurrentLives();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("No more lives or Manager not found!"));
+	}
+	
+	return -1; // 매니저가 없거나 오류 시 -1 반환
+}

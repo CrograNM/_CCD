@@ -18,7 +18,17 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	void UpdateLivesUI(); // UI 갱신 함수 (클라이언트에서 호출)
-
+	
+	int32 GetCurrentLives() const { return Lives; }
+	
+	/* --- Exec --- */
+	UFUNCTION(Exec)
+	void SetLives(int32 NewLives);
+	
+	/** 서버에서 실제 청소 로직을 수행할 RPC */
+	UFUNCTION(Server, Reliable)
+	void Server_SetLives(int32 NewLives);
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
