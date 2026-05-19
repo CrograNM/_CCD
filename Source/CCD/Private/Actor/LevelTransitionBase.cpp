@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Player/CCDCharacter.h"
+#include "Player/CCDPlayerController.h"
 
 // Sets default values
 ALevelTransitionBase::ALevelTransitionBase()
@@ -138,6 +139,11 @@ void ALevelTransitionBase::StartLevelTravel()
 	if (ACCDGameMode* GM = Cast<ACCDGameMode>(GetWorld()->GetAuthGameMode()))
 	{
 		GM->TransitionToLevel(NextLevelPath);
+	}
+	
+	if (ACCDPlayerController* PC = Cast<ACCDPlayerController>(GetWorld()->GetFirstPlayerController()))
+	{
+		PC->CCD_FreezeAI();
 	}
 }
 
