@@ -47,6 +47,12 @@ public:
 	UFUNCTION(Exec)
 	void CCD_SetLifeCount(int32 NewLives);
 	
+	UFUNCTION(Exec)
+	void CCD_FreezeAI();
+
+	UFUNCTION(Exec)
+	void CCD_UnfreezeAI();
+	
 	/** 서버에서 실제 청소 로직을 수행할 RPC */
 	UFUNCTION(Server, Reliable)
 	void Server_CleanAll();
@@ -99,6 +105,10 @@ protected:
 	
 	// 위젯 연결
 	void BindUIWithPawn(APawn* InPawn);
+	
+	// FreezeAI를 서버에서 실행되도록
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerFreezeAI(bool bFreeze);
 	
 private:
 	float PostProcessAlpha = 0.f;

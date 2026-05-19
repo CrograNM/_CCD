@@ -1,6 +1,8 @@
 
 #include "Player/CCDPlayerController.h"
 
+#include "AIController.h"
+#include "BrainComponent.h"
 #include "Player/CCDCharacter.h"
 #include "GameData/CCDGameMode.h"
 #include "Player/CCDPlayerCameraManager.h"
@@ -193,6 +195,42 @@ void ACCDPlayerController::Server_SetLifeCount_Implementation(int32 NewLives)
 		LivesManager->Server_SetLives(NewLives);
 		UE_LOG(LogTemp, Error, TEXT("Server Command: SetLifeCount executed by Admin. New Lives: %d"), NewLives);
 	}
+}
+
+void ACCDPlayerController::CCD_FreezeAI()
+{
+	ServerFreezeAI(true);
+}
+
+void ACCDPlayerController::CCD_UnfreezeAI()
+{
+	ServerFreezeAI(false);
+}
+
+void ACCDPlayerController::ServerFreezeAI_Implementation(bool bFreeze)
+{
+	if (!HasAuthority()) return;
+	
+	for (TActorIterator<AAIController> It(GetWorld()); It; ++It)
+	{
+		AAIController* AIC = *It;
+		if (AIC && AIC->GetBrainComponent())
+		{
+			if (bFreeze)
+			{
+				AIC->GetBrainComponent()->StopLogic(TEXT("Cheat Freeze"));
+			}
+			else
+			{
+				AIC->GetBrainComponent()->RestartLogic();
+			}
+		}
+	}
+}
+
+bool ACCDPlayerController::ServerFreezeAI_Validate(bool bFreeze)
+{
+	return true;
 }
 
 void ACCDPlayerController::SpectateNextPlayer(bool bForward)
