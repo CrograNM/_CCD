@@ -23,16 +23,9 @@ void ASharedLivesManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	DOREPLIFETIME(ASharedLivesManager, Lives);
 }
 
-void ASharedLivesManager::SetLives(int32 NewLives)
-{	
-	Server_SetLives(NewLives);
-}
-
 void ASharedLivesManager::Server_SetLives_Implementation(int32 NewLives)
 {
 	if (!HasAuthority()) return;
-	
-	UE_LOG(LogTemp, Warning, TEXT("[Server] Setting Lives: %d"), NewLives);
 	Lives = NewLives;
 	OnRep_Lives();
 }
@@ -61,7 +54,7 @@ bool ASharedLivesManager::AttemptDecrementLife()
 
 void ASharedLivesManager::OnRep_Lives()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Setting Lives: %d"), Lives);
+	UE_LOG(LogTemp, Warning, TEXT("Lives Changed: %d"), Lives);
 	UpdateLivesUI();
 }
 

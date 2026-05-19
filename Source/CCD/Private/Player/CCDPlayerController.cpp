@@ -10,6 +10,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Actor/ProgressManager.h"
+#include "Actor/SharedLivesManager.h"
 #include "Widget/SpectatorWidget.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Component/CCD_InteractionComponent.h"
@@ -154,11 +155,10 @@ ACCDCharacter* ACCDPlayerController::GetCurrentSpectateTarget() const
 }
 
 /* --- Exec --- */
-void ACCDPlayerController::CleanAll()
+void ACCDPlayerController::CCD_CleanAll()
 {
 	Server_CleanAll();
 }
-
 void ACCDPlayerController::Server_CleanAll_Implementation()
 {
 	// 서버 권한 확인 (호스트/서버만 실행 가능하도록 보장)
@@ -180,6 +180,19 @@ void ACCDPlayerController::Server_CleanAll_Implementation()
 	}
 	
 	UE_LOG(LogTemp, Error, TEXT("Server Command: CleanAll executed by Admin."));
+}
+void ACCDPlayerController::CCD_SetLifeCount(int32 NewLives)
+{
+	Server_SetLifeCount(NewLives);
+}
+void ACCDPlayerController::Server_SetLifeCount_Implementation(int32 NewLives)
+{
+	AActor* FoundActor = UGameplayStatics::GetActorOfClass(GetWorld(), ASharedLivesManager::StaticClass());
+	if (ASharedLivesManager* LivesManager = Cast<ASharedLivesManager>(FoundActor))
+	{
+		LivesManager->Server_SetLives(NewLives);
+		UE_LOG(LogTemp, Error, TEXT("Server Command: SetLifeCount executed by Admin. New Lives: %d"), NewLives);
+	}
 }
 
 void ACCDPlayerController::SpectateNextPlayer(bool bForward)

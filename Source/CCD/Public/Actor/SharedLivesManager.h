@@ -21,10 +21,6 @@ public:
 	
 	int32 GetCurrentLives() const { return Lives; }
 	
-	/* --- Exec --- */
-	UFUNCTION(Exec)
-	void SetLives(int32 NewLives);
-	
 	/** 서버에서 실제 청소 로직을 수행할 RPC */
 	UFUNCTION(Server, Reliable)
 	void Server_SetLives(int32 NewLives);

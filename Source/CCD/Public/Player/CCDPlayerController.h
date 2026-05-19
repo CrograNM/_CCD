@@ -42,11 +42,17 @@ public:
 	
 	/* --- Exec --- */
 	UFUNCTION(Exec)
-	void CleanAll();
+	void CCD_CleanAll();
+	
+	UFUNCTION(Exec)
+	void CCD_SetLifeCount(int32 NewLives);
 	
 	/** 서버에서 실제 청소 로직을 수행할 RPC */
 	UFUNCTION(Server, Reliable)
 	void Server_CleanAll();
+	
+	UFUNCTION(Server, Reliable)
+	void Server_SetLifeCount(int32 NewLives);
 	
 protected:
 	virtual void BeginPlay() override;
