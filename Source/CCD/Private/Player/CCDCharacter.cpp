@@ -332,10 +332,10 @@ void ACCDCharacter::Server_Die_Implementation()
 					{
 						GS->OnRep_IsGameOver();
 					}
+					return;
 				}
 			}
 		}
-		return;
 	}
 	
 	bIsDead = true;
