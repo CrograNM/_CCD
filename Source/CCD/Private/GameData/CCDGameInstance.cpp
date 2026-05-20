@@ -98,16 +98,18 @@ void UCCDGameInstance::FindSessionsCustom(int32 MaxResults, bool bIsLAN, bool bU
 		FindSessionsCompleteDelegateHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(
 			FOnFindSessionsCompleteDelegate::CreateUObject(this, &UCCDGameInstance::OnFindSessionsComplete));
 
-		UE_LOG(LogTemp, Warning, TEXT("Starting Custom Session Search... (Max: %d)"), MaxResults);
+		UE_LOG(LogTemp, Warning, TEXT("[CCDGameInstance - FindSessionsCustom] Starting Custom Session Search... (Max: %d)"), MaxResults);
 		
 		if (!SessionInterface->FindSessions(0, SessionSearch.ToSharedRef()))
 		{
 			// 검색 시작 실패 시 즉시 빈 결과 반환
 			SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
 			OnCustomFindSessionsComplete.Broadcast(TArray<FBlueprintSessionResult>(), false);
-			UE_LOG(LogTemp, Error, TEXT("Failed to start session search!"));
+			UE_LOG(LogTemp, Error, TEXT("[CCDGameInstance - FindSessionsCustom] Failed to start session search!"));
 		}
 	}
+	
+	UE_LOG(LogTemp, Warning, TEXT("[CCDGameInstance - FindSessionsCustom] Code Executed"));
 }
 
 void UCCDGameInstance::HostSession(FString RoomName, bool bIsLAN, FString Path)
@@ -138,10 +140,12 @@ void UCCDGameInstance::HostSession(FString RoomName, bool bIsLAN, FString Path)
 		
 		SessionInterface->CreateSession(0, NAME_GameSession, SessionSettings);
 	}
+	
+	UE_LOG(LogTemp, Warning, TEXT("[CCDGameInstance - HostSession] Code Executed"));
 }
 void UCCDGameInstance::LeaveSession()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Attempting to leave session..."));
+	UE_LOG(LogTemp, Warning, TEXT("[CCDGameInstance - LeaveSession] Attempting to leave session..."));
 
 	const IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
 	if (!Subsystem) return;
@@ -158,46 +162,17 @@ void UCCDGameInstance::LeaveSession()
 		{
 			// UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
 			TransitionLevel(MainMenuPath);
-			UE_LOG(LogTemp, Warning, TEXT("No active session found. Returning to main menu."));
+			UE_LOG(LogTemp, Warning, TEXT("[CCDGameInstance - LeaveSession] No active session found. Returning to main menu."));
 		}
 	}
 	else 
 	{
 		// UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
 		TransitionLevel(MainMenuPath);
-		UE_LOG(LogTemp, Warning, TEXT("Session Interface invalid. Cannot leave session cleanly."));
+		UE_LOG(LogTemp, Warning, TEXT("[CCDGameInstance - LeaveSession] Session Interface invalid. Cannot leave session cleanly."));
 	}
+	UE_LOG(LogTemp, Warning, TEXT("[CCDGameInstance - LeaveSession] Code Executed"));
 }
-void UCCDGameInstance::LeaveSessionForEnding()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Attempting to leave session..."));
-
-	const IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
-	if (!Subsystem) return;
-
-	IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
-	if (SessionInterface.IsValid())
-	{
-		if (SessionInterface->GetNamedSession(NAME_GameSession))
-		{
-			DestroySessionCompleteDelegateHandle = SessionInterface->AddOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegate);
-			SessionInterface->DestroySession(NAME_GameSession);
-		}
-		else
-		{
-			// UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
-			TransitionLevel(EndingMapPath);
-			UE_LOG(LogTemp, Warning, TEXT("No active session found. Returning to main menu."));
-		}
-	}
-	else 
-	{
-		// UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
-		TransitionLevel(EndingMapPath);
-		UE_LOG(LogTemp, Warning, TEXT("Session Interface invalid. Cannot leave session cleanly."));
-	}
-}
-
 void UCCDGameInstance::CleanupLocalSession()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Cleaning up leftover local session..."));
@@ -213,21 +188,24 @@ void UCCDGameInstance::CleanupLocalSession()
 			{
 				// 맵 이동 콜백 등을 기다리지 않고 즉시 메모리에서 날려버립니다.
 				SessionInterface->DestroySession(NAME_GameSession);
-				UE_LOG(LogTemp, Warning, TEXT("Leftover Local Session Destroyed Cleanly."));
+				UE_LOG(LogTemp, Warning, TEXT("[CCDGameInstance - CleanupLocalSession] Leftover Local Session Destroyed Cleanly."));
 			}
 			else 
 			{
-				UE_LOG(LogTemp, Warning, TEXT("No leftover local session found."));
+				// 남아있는 세션이 없다는 건 정상적인 흐름입니다. 너무 걱정하지 마세요.
+				UE_LOG(LogTemp, Warning, TEXT("[CCDGameInstance - CleanupLocalSession] No leftover local session found."));
 			}
 		}
 		else 
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Session Interface invalid. Cannot clean up local session."));
+			// 세션 인터페이스가 유효하지 않다면, 세션 관리가 제대로 안 되고 있을 가능성이 큽니다. 로그로 상황을 남겨둡니다.
+			UE_LOG(LogTemp, Warning, TEXT("[CCDGameInstance - CleanupLocalSession] Session Interface invalid. Cannot clean up local session."));
 		}
 	}
 	else 
 	{
-		UE_LOG(LogTemp, Warning, TEXT("No Online Subsystem found. Cannot clean up local session."));
+		// 온라인 서브시스템이 아예 없는 경우, 세션 관리가 불가능하므로 로그로 상황을 남겨둡니다.
+		UE_LOG(LogTemp, Warning, TEXT("[CCDGameInstance - CleanupLocalSession] No Online Subsystem found. Cannot clean up local session."));
 	}
 }
 
@@ -252,13 +230,14 @@ void UCCDGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSucce
 		}
 		else 
 		{
-			UE_LOG(LogTemp, Error, TEXT("CCDGameMode not found. Transition Failed"));
+			UE_LOG(LogTemp, Error, TEXT("[OnCreateSessionComplete] CCDGameMode not found. Transition Failed"));
 		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to Create Session!"));
+		UE_LOG(LogTemp, Error, TEXT("[OnCreateSessionComplete] Failed to Create Session!"));
 	}
+	UE_LOG(LogTemp, Error, TEXT("[CCDGameInstance - OnCreateSessionComplete] Code Executed"));
 }
 void UCCDGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
 {
@@ -272,22 +251,22 @@ void UCCDGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSucc
 		}
 		else 
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Session Interface invalid. Cannot clear destroy session delegate."));
+			UE_LOG(LogTemp, Warning, TEXT("[OnDestroySessionComplete] Session Interface invalid. Cannot clear destroy session delegate."));
 		}
 	}
 	else 
 	{
-		UE_LOG(LogTemp, Warning, TEXT("No Online Subsystem found. Cannot clear destroy session delegate."));
+		UE_LOG(LogTemp, Warning, TEXT("[OnDestroySessionComplete] No Online Subsystem found. Cannot clear destroy session delegate."));
 	}
 	
 	if (!bWasSuccessful)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to Destroy Session! Returning to main menu anyway."));
+		UE_LOG(LogTemp, Error, TEXT("[OnDestroySessionComplete] Failed to Destroy Session! Returning to main menu anyway."));
 	}
 	// UGameplayStatics::OpenLevel(GetWorld(), FName(*MainMenuPath));
 	TransitionLevel(MainMenuPath);
+	UE_LOG(LogTemp, Error, TEXT("[CCDGameInstance - OnDestroySessionComplete] Code Executed"));
 }
-
 void UCCDGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 {
 	const IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
@@ -333,6 +312,7 @@ void UCCDGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 
 	// 블루프린트로 결과 방송
 	OnCustomFindSessionsComplete.Broadcast(BlueprintResults, bWasSuccessful);
+	UE_LOG(LogTemp, Error, TEXT("[CCDGameInstance - OnFindSessionsComplete] Code Executed"));
 }
 
 bool UCCDGameInstance::IsSteamActive() const
@@ -360,12 +340,13 @@ void UCCDGameInstance::TransitionLevel(FString NextLevelPath)
 		   UGameplayStatics::OpenLevel(World, FName(*NextLevelPath), true);
 		}
 	}, 1.0f, false);
+	UE_LOG(LogTemp, Error, TEXT("[CCDGameInstance - TransitionLevel] Code Executed"));
 }
 
 void UCCDGameInstance::HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType,
                                             const FString& ErrorString)
 {
-	UE_LOG(LogTemp, Error, TEXT("Network Disconnected: %s. Cleaning up local session..."), *ErrorString);
+	UE_LOG(LogTemp, Error, TEXT("[CCDGameInstance - HandleNetworkFailure] Network Disconnected: %s. Cleaning up local session..."), *ErrorString);
 	
 	LeaveSession();
 }
