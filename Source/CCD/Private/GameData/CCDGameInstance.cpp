@@ -321,6 +321,7 @@ bool UCCDGameInstance::IsSteamActive() const
 	return (Subsystem && Subsystem->GetSubsystemName() == FName(TEXT("Steam")));
 }
 
+// 로딩에서 바꾼거 테스트 해봐야함
 void UCCDGameInstance::TransitionLevel(FString NextLevelPath)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Transitioning to Main Menu: %s"), *NextLevelPath);
