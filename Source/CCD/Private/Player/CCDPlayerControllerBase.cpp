@@ -3,6 +3,7 @@
 
 #include "Player/CCDPlayerControllerBase.h"
 
+#include "EnhancedInputSubsystems.h"
 #include "GameData/CCDGameInstance.h"
 #include "GameData/CCD_LoadingSubsystem.h"
 
@@ -20,6 +21,17 @@ void ACCDPlayerControllerBase::Client_MoveToEndingLocal_Implementation(const FSt
 	if (UCCDGameInstance* GI = Cast<UCCDGameInstance>(GetGameInstance()))
 	{
 		GI->TransitionLevel(EndingMapPath);
+	}
+}
+
+void ACCDPlayerControllerBase::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	// Input
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
+	{
+		Subsystem->AddMappingContext(DefaultMappingContext, 0);
 	}
 }
 

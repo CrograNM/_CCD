@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "CCDPlayerControllerBase.generated.h"
 
+class UInputMappingContext;
 /**
  * 
  */
@@ -24,8 +25,12 @@ public:
 	void Client_MoveToEndingLocal(const FString& EndingMapPath);
 	
 protected:
+	virtual void BeginPlay() override;
 	virtual void OnRep_Pawn() override; // 새 레벨 도착 감지용
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
 	TSubclassOf<UUserWidget> LoadingWidgetClass;
+	
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 };

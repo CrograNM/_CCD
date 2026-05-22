@@ -55,12 +55,6 @@ void ACCDPlayerController::Server_SetInitialPlayerName_Implementation(const FStr
 void ACCDPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// Input
-	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
-	{
-		Subsystem->AddMappingContext(DefaultMappingContext, 0);
-	}
 	
 	if (HasAuthority()) 
 		SwitchToMainUI();
