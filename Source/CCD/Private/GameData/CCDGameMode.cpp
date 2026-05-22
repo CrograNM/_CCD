@@ -10,9 +10,6 @@
 
 ACCDGameMode::ACCDGameMode()
 {
-	DefaultPawnClass = ACCDCharacter::StaticClass();
-	PlayerControllerClass = ACCDPlayerController::StaticClass();
-	
 	// 심리스 트래블을 활성화하여 네트워크 연결을 유지한 채 맵을 이동합니다.
 	bUseSeamlessTravel = true;
 }
