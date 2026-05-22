@@ -223,14 +223,15 @@ void UCCDGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSucce
 
 	if (bWasSuccessful)
 	{
-		// GetWorld()->ServerTravel(LobbyMapPath + TEXT("?listen"));
+		// 
 		if (ACCDGameMode* GM = Cast<ACCDGameMode>(GetWorld()->GetAuthGameMode()))
 		{
 			GM->TransitionToLevel(LobbyMapPath + TEXT("?listen"));
 		}
 		else 
 		{
-			UE_LOG(LogTemp, Error, TEXT("[OnCreateSessionComplete] CCDGameMode not found. Transition Failed"));
+			UE_LOG(LogTemp, Error, TEXT("[OnCreateSessionComplete] CCDGameMode not found. But try 'ServerTravel' anyway."));
+			GetWorld()->ServerTravel(LobbyMapPath + TEXT("?listen"));
 		}
 	}
 	else
