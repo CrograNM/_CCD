@@ -6,6 +6,7 @@
 #include "Perception/AISense_Sight.h"
 #include "Perception/AISense_Hearing.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Player/CCDCharacter.h"
 
 ACCD_939_AIController::ACCD_939_AIController()
 {
@@ -26,29 +27,35 @@ void ACCD_939_AIController::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 {
 	UBlackboardComponent* BB = GetBlackboardComponent();
 	if (!BB) return;
+	
+	// 감지된 액터가 플레이어인지 캐스팅하여 확인
+	ACCDCharacter* SensedPlayer = Cast<ACCDCharacter>(Actor);
 
-	// 이미지의 'Successfully Sensed' 분기점
 	if (Stimulus.WasSuccessfullySensed())
 	{
-		// 1. 청각 자극인 경우
 		if (Stimulus.Type == UAISense::GetSenseID<UAISense_Hearing>())
 		{
-			// LoudLocation에 소리 발생 지점 저장
 			BB->SetValueAsVector(LoudLocationKey, Stimulus.StimulusLocation);
 		}
-		// 2. 시각 자극인 경우
 		else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
 		{
-			// TargetActor에 감지된 액터 저장
-			BB->SetValueAsObject(TargetActorKey, Actor);
+			if (SensedPlayer && !SensedPlayer->IsDead())
+			{
+				BB->SetValueAsObject(TargetActorKey, Actor);
+				SetFocus(Actor);
+			}
 		}
 	}
-	else
+	else 
 	{
-		// 감지가 끊겼을 때의 처리 (이미지의 Clear Value 대응)
 		if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
 		{
-			BB->ClearValue(TargetActorKey);
+			UObject* CurrentTarget = BB->GetValueAsObject(TargetActorKey);
+			if (CurrentTarget == Actor)
+			{
+				BB->ClearValue(TargetActorKey);
+				ClearFocus(EAIFocusPriority::Gameplay);
+			}
 		}
 	}
 }

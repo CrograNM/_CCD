@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Components/BoxComponent.h"
 #include "CCD_939.generated.h"
 
 UCLASS()
@@ -36,4 +37,16 @@ public:
 	// AI 컨트롤러에서 호출할 수 있는 상태 변경 함수
 	UFUNCTION(BlueprintCallable, Category = "AI")
 	void SetMovementState(bool bIsChasing);
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collision")
+	UBoxComponent* HeadCollision;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Collision")
+	UBoxComponent* BodyCollision;
+	
+	UFUNCTION(BlueprintCallable, Category = "Attack")
+	void ExecuteAttack();
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayAttackMontage(UAnimMontage* MontageToPlay);
 };

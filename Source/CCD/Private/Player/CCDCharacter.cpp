@@ -32,6 +32,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "MovieSceneSequenceID.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "GameData/CCDGameMode.h"
 #include "GameData/CCDGameState.h"
 
@@ -123,6 +124,11 @@ void ACCDCharacter::BeginPlay()
 	{
 		Mesh1P->SetLeaderPoseComponent(GetMesh());
 	}
+	
+	if (HasAuthority())
+	{
+		CurrentHealth = MaxHealth;
+	}
 }
 void ACCDCharacter::Tick(float DeltaTime)
 {
@@ -162,6 +168,8 @@ void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(ACCDCharacter, CurrentEmoteSection);
 	DOREPLIFETIME(ACCDCharacter, RemainingFootprints);
 	DOREPLIFETIME(ACCDCharacter, bIsInvincible);
+	DOREPLIFETIME(ACCDCharacter, MaxHealth);
+	DOREPLIFETIME(ACCDCharacter, CurrentHealth);
 }
 
 void ACCDCharacter::PerformEmote(FName EmoteSection)
@@ -656,7 +664,26 @@ void ACCDCharacter::HandleDeath()
 			}
 		}
 	}
+	
+	if (UWorld* World = GetWorld())
+	{
+		for (TActorIterator<AAIController> It(World); It; ++It)
+		{
+			if (AAIController* AIC = *It)
+			{
+				if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+				{
+					if (BB->GetValueAsObject(TEXT("TargetActor")) == this)
+					{
+						BB->ClearValue(TEXT("TargetActor"));
+						AIC->ClearFocus(EAIFocusPriority::Gameplay);
+					}
+				}
+			}
+		}
+	}
 }
+
 void ACCDCharacter::HandleRevive()
 {
 	// 충돌 복구 및 네비게이션 영향 허용
@@ -688,6 +715,8 @@ void ACCDCharacter::HandleRevive()
 		bIsInvincible = true;
         
 		RemainingFootprints = 0;
+		
+		CurrentHealth = MaxHealth;
 		
 		// 3초 뒤에 무적 해제
 		GetWorldTimerManager().SetTimer(InvincibilityTimerHandle, this, &ACCDCharacter::DeactivateInvincibility, 3.0f, false);
@@ -867,4 +896,31 @@ void ACCDCharacter::Landed(const FHitResult& Hit)
 	{
 		NoiseEmitter->MakeNoise(this, 1.0f, LandingLocation);
 	}
+}
+
+float ACCDCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	
+	if (!HasAuthority() || ActualDamage <= 0.f || bIsDead || bIsInvincible) 
+	{
+		return 0.f;
+	}
+	
+	CurrentHealth -= ActualDamage;
+	CurrentHealth = FMath::Clamp(CurrentHealth, 0.f, MaxHealth);
+
+	UE_LOG(LogTemp, Warning, TEXT("Took Damage. Current HP: %f"), CurrentHealth);
+	
+	if (CurrentHealth <= 0.f)
+	{
+		Server_Die();
+	}
+
+	return ActualDamage;
+}
+
+void ACCDCharacter::OnRep_CurrentHealth()
+{
+	// [UI 업데이트 용도]
 }

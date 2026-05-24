@@ -2,7 +2,11 @@
 
 
 #include "AI/CCD_939.h"
+
+#include "Components/BoxComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Player/CCDCharacter.h"
 
 // Sets default values
 ACCD_939::ACCD_939()
@@ -10,6 +14,18 @@ ACCD_939::ACCD_939()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	GetCharacterMovement()->MaxWalkSpeed = PatrolSpeed;
+	
+	// 1. 머리 콜리전 생성 및 부착
+	HeadCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("HeadCollision"));
+	HeadCollision->SetupAttachment(GetMesh(), TEXT("head")); // 실제 939 스켈레톤의 머리 뼈 이름을 적으세요
+	
+	// 2. 몸통 콜리전 생성 및 부착
+	BodyCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BodyCollision"));
+	BodyCollision->SetupAttachment(GetMesh(), TEXT("chest")); // 척추 뼈 이름
+
+	// 주의: 이 추가 콜리전들이 지형지물(벽, 바닥)에 걸려 이동을 방해하면 안 됩니다!
+	HeadCollision->SetCollisionProfileName(TEXT("OverlapOnlyPawn")); // 예시: Pawn하고만 상호작용
+	BodyCollision->SetCollisionProfileName(TEXT("OverlapOnlyPawn"));
 }
 
 // Called when the game starts or when spawned
@@ -36,4 +52,35 @@ void ACCD_939::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void ACCD_939::SetMovementState(bool bIsChasing)
 {
 	GetCharacterMovement()->MaxWalkSpeed = bIsChasing ? ChaseSpeed : PatrolSpeed;
+}
+
+void ACCD_939::ExecuteAttack()
+{
+	if (!HasAuthority()) return;
+	if (!HeadCollision) return;
+	
+	TArray<AActor*> OverlappingActors;
+	HeadCollision->GetOverlappingActors(OverlappingActors);
+
+	for (AActor* Actor : OverlappingActors)
+	{
+		if (Actor && Actor != this && Actor->IsA(ACCDCharacter::StaticClass()))
+		{
+			UGameplayStatics::ApplyDamage(
+				Actor, 
+				1.0f, 
+				GetController(), 
+				this, 
+				UDamageType::StaticClass()
+			);
+		}
+	}
+}
+
+void ACCD_939::Multicast_PlayAttackMontage_Implementation(UAnimMontage* MontageToPlay)
+{
+	if (MontageToPlay)
+	{
+		PlayAnimMontage(MontageToPlay);
+	}
 }

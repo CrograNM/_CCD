@@ -10,7 +10,7 @@
 
 UBTTask_AttackPlayer_173::UBTTask_AttackPlayer_173()
 {
-	NodeName = TEXT("Attack Player");
+	NodeName = TEXT("Attack 173");
 }
 
 EBTNodeResult::Type UBTTask_AttackPlayer_173::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)

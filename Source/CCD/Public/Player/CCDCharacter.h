@@ -152,6 +152,9 @@ public:
     UFUNCTION(Server, Reliable)
     void Server_SpawnFootprint(FVector Location, FRotator Rotation, bool bIsLeft);
     
+    // 939 전용 데미지 처리 함수 오버라이드
+    virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+    
 protected:
     virtual void BeginPlay() override;
     
@@ -305,4 +308,16 @@ protected:
     // 마우스 좌클릭 (회전 모드)
     void OnRotationPressed();
     void OnRotationReleased();
+    
+    // 최대 체력
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = "Design | Stat")
+    float MaxHealth = 3.0f;
+    
+    // 현재 체력
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_CurrentHealth, Category = "Design | Stat")
+    float CurrentHealth;
+    
+    // 클라이언트에서 체력이 변했을 때 호출될 함수 (UI 업데이트용)
+    UFUNCTION()
+    void OnRep_CurrentHealth();
 };
