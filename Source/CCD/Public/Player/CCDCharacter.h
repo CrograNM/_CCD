@@ -17,6 +17,7 @@ class UCCD_EquipmentComponent;
 class AGeometryCollectionActor;
 class ACCD_BodyFragment;
 class UInputAction;
+class UUserWidget;
 
 UCLASS()
 class CCD_API ACCDCharacter : public ACharacter
@@ -320,4 +321,14 @@ protected:
     // 클라이언트에서 체력이 변했을 때 호출될 함수 (UI 업데이트용)
     UFUNCTION()
     void OnRep_CurrentHealth();
+    
+    UFUNCTION(BlueprintImplementableEvent, Category = "Design | UI")
+    void OnDamageEffectTriggered(float CurrentHealthRatio);
+    
+    // 피격 이펙트 관련
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Design | UI")
+    TSubclassOf<class UUserWidget> DamageWidgetClass;
+    
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Design | UI")
+    TObjectPtr<class UUserWidget> DamageWidgetInstance;
 };

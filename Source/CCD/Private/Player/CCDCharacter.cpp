@@ -33,6 +33,7 @@
 #include "InputActionValue.h"
 #include "MovieSceneSequenceID.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Blueprint/UserWidget.h"
 #include "GameData/CCDGameMode.h"
 #include "GameData/CCDGameState.h"
 
@@ -912,6 +913,11 @@ float ACCDCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEv
 
 	UE_LOG(LogTemp, Warning, TEXT("Took Damage. Current HP: %f"), CurrentHealth);
 	
+	if (IsLocallyControlled())
+	{
+		OnRep_CurrentHealth();
+	}
+	
 	if (CurrentHealth <= 0.f)
 	{
 		Server_Die();
@@ -922,5 +928,23 @@ float ACCDCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEv
 
 void ACCDCharacter::OnRep_CurrentHealth()
 {
-	// [UI 업데이트 용도]
+	if (IsLocallyControlled())
+	{
+		if (DamageWidgetClass && !DamageWidgetInstance)
+		{
+			DamageWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), DamageWidgetClass);
+			if (DamageWidgetInstance)
+			{
+				DamageWidgetInstance->AddToViewport();
+			}
+		}
+		
+		if (CurrentHealth >= MaxHealth)
+		{
+			return; 
+		}
+		
+		float Ratio = MaxHealth > 0.0f ? (CurrentHealth / MaxHealth) : 0.0f;
+		OnDamageEffectTriggered(Ratio);
+	}
 }
