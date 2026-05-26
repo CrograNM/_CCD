@@ -35,6 +35,8 @@ public:
 	void Server_CloseEye();
 	void CloseEye();
 	
+	FORCEINLINE bool GetIsRunning() const { return bIsRunning; }
+	
 	float GetCurrentStamina() const { return CurrentStamina; }
 	float GetMaxStamina() const { return MaxStamina; }
 	float GetEyeCooldown() const { return EyeCooldownTime; }

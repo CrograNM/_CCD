@@ -832,6 +832,8 @@ void ACCDCharacter::TrySpawnFootprint(FName FootSocketName)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, SoundToPlay, SocketLocation);
 	}
+	
+	MakeFootstepNoise();
 
 	// 피가 묻어있을 때만 발자국 데칼 생성 로직 수행
 	if (RemainingFootprints > 0)
@@ -897,6 +899,28 @@ void ACCDCharacter::Landed(const FHitResult& Hit)
 	{
 		NoiseEmitter->MakeNoise(this, 1.0f, LandingLocation);
 	}
+}
+
+void ACCDCharacter::MakeFootstepNoise(float LoudnessMultiplier)
+{
+	if (!NoiseEmitter) return;
+
+	// 기본 소음 크기
+	float FinalLoudness = 1.0f * LoudnessMultiplier;
+	
+	// 달리기 소음
+	if (StatComp && StatComp->GetIsRunning())
+	{
+		FinalLoudness = 1.5f;
+	}
+	/*
+	else if (GetCharacterMovement() && GetCharacterMovement()->IsCrouching())
+	{
+		FinalLoudness = 0.0f; // 앉아서 걸을 때는 SCP-939가 못 듣도록 기획했다면 0으로 처리
+	}
+	*/
+	
+	NoiseEmitter->MakeNoise(this, FinalLoudness, GetActorLocation());
 }
 
 float ACCDCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)

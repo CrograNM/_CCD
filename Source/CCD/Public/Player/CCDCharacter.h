@@ -216,7 +216,9 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Animation")
     TObjectPtr<UAnimMontage> EmoteMontage;
     
+    // 플레이어 행동 소음 관련
     virtual void Landed(const FHitResult& Hit) override;
+    void MakeFootstepNoise(float LoudnessMultiplier = 1.0f);
     
     /** --- 사망 상태 관리 --- */
     UPROPERTY(ReplicatedUsing = OnRep_IsDead)
