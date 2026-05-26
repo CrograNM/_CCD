@@ -8,6 +8,11 @@
 #include "GameData/CCDGameState.h"
 #include "Kismet/GameplayStatics.h"
 
+#include "OnlineSessionSettings.h"
+#include "Online/OnlineSessionNames.h"
+#include "OnlineSubsystemUtils.h"
+#include "Interfaces/OnlineSessionInterface.h"
+
 ACCDGameMode::ACCDGameMode()
 {
 	// 심리스 트래블을 활성화하여 네트워크 연결을 유지한 채 맵을 이동합니다.
@@ -22,6 +27,8 @@ void ACCDGameMode::BeginPlay()
 	AActor* FoundActor = UGameplayStatics::GetActorOfClass(GetWorld(), AProgressManager::StaticClass());
 	ProgressManager = Cast<AProgressManager>(FoundActor);
 	
+	if (!HasAuthority()) return; // 서버에서만 실행
+	
 	// 서버에서 게임이 시작될 때, 현재 세션의 클리어된 맵 목록을 GameState의 복제 배열에 반영
 	if (UCCDGameRecordSubsystem* RecordSystem = GetGameInstance()->GetSubsystem<UCCDGameRecordSubsystem>())
 	{
@@ -35,6 +42,32 @@ void ACCDGameMode::BeginPlay()
 				GS->ReplicatedClearedMapPaths.AddUnique(MapPath);
 			}
 		}
+	}
+
+	// 로비 맵을 제외한 일반 인게임 맵인 경우 중간 난입을 차단합니다.
+	FString CurrentMapName = GetWorld()->GetOutermost()->GetName();
+	CurrentMapName = UWorld::RemovePIEPrefix(CurrentMapName);
+
+	// 로비 맵 이름(예: "TUWorld")이 아닐 때만 차단 로직 실행
+	if (CurrentMapName != TEXT("TUWorld"))
+	{
+		SetJoinInProgressAllowed(false);
+	}
+}
+
+void ACCDGameMode::PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId,
+	FString& ErrorMessage)
+{
+	Super::PreLogin(Options, Address, UniqueId, ErrorMessage);
+	
+	FString CurrentMapName = GetWorld()->GetOutermost()->GetName();
+	CurrentMapName = UWorld::RemovePIEPrefix(CurrentMapName);
+
+	// 로비가 아닌 실제 청소 레벨인데 외부 인원이 들어오려고 하면 튕겨냅니다.
+	if (CurrentMapName != TEXT("TUWorld"))
+	{
+		ErrorMessage = TEXT("The game is already in progress.");
+		UE_LOG(LogTemp, Warning, TEXT("Blocked mid-game join attempt from: %s"), *Address);
 	}
 }
 
@@ -115,4 +148,26 @@ int32 ACCDGameMode::GetCurrentLives() const
 	}
 	
 	return -1; // 매니저가 없거나 오류 시 -1 반환
+}
+
+void ACCDGameMode::SetJoinInProgressAllowed(bool bAllowJoin)
+{
+	if (!HasAuthority()) return;
+
+	if (const IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld()))
+	{
+		IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
+		if (SessionInterface.IsValid())
+		{
+			// 현재 열려있는 세션 설정 가져오기
+			if (FOnlineSessionSettings* CurrentSettings = SessionInterface->GetSessionSettings(NAME_GameSession))
+			{
+				CurrentSettings->bAllowJoinInProgress = bAllowJoin;
+
+				// 세션 업데이트를 서버 및 플랫폼(스팀/LAN)에 반영합니다.
+				SessionInterface->UpdateSession(NAME_GameSession, *CurrentSettings, true);
+				UE_LOG(LogTemp, Warning, TEXT("[CCDGameMode] bAllowJoinInProgress set to: %s"), bAllowJoin ? TEXT("True") : TEXT("False"));
+			}
+		}
+	}
 }

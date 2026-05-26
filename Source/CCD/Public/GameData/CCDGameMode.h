@@ -25,10 +25,13 @@ public:
 	void TransitionToLevel(const FString& NextLevelPath);
 	
 	int32 GetCurrentLives() const;
-	
+	void SetJoinInProgressAllowed(bool bAllowJoin);
+
 protected:
 	virtual void BeginPlay() override;
-
+	// CCDGameMode.h 에 추가
+	virtual void PreLogin(const FString& Options, const FString& Address, const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage) override;
+	
 	// 월드에 배치된 ProgressManager 참조
 	UPROPERTY()
 	class AProgressManager* ProgressManager;
