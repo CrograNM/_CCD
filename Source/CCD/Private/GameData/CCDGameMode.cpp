@@ -47,11 +47,16 @@ void ACCDGameMode::BeginPlay()
 	// 로비 맵을 제외한 일반 인게임 맵인 경우 중간 난입을 차단합니다.
 	FString CurrentMapName = GetWorld()->GetOutermost()->GetName();
 	CurrentMapName = UWorld::RemovePIEPrefix(CurrentMapName);
+	UE_LOG(LogTemp, Warning, TEXT("[CCDGameMode] Current Map Name: %s"), *CurrentMapName);
 
 	// 로비 맵 이름(예: "TUWorld")이 아닐 때만 차단 로직 실행
-	if (CurrentMapName != TEXT("TUWorld"))
+	if (CurrentMapName != TEXT("/Game/Maps/TUWorld"))
 	{
 		SetJoinInProgressAllowed(false);
+	}
+	else 
+	{
+		SetJoinInProgressAllowed(true);
 	}
 }
 
@@ -64,7 +69,7 @@ void ACCDGameMode::PreLogin(const FString& Options, const FString& Address, cons
 	CurrentMapName = UWorld::RemovePIEPrefix(CurrentMapName);
 
 	// 로비가 아닌 실제 청소 레벨인데 외부 인원이 들어오려고 하면 튕겨냅니다.
-	if (CurrentMapName != TEXT("TUWorld"))
+	if (CurrentMapName != TEXT("/Game/Maps/TUWorld"))
 	{
 		ErrorMessage = TEXT("The game is already in progress.");
 		UE_LOG(LogTemp, Warning, TEXT("Blocked mid-game join attempt from: %s"), *Address);
