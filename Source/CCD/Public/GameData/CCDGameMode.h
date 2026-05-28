@@ -21,7 +21,7 @@ public:
 	void RequestRespawn(ACCDCharacter* DeadCharacter);
 	
 	// 레벨 전환 함수
-	UFUNCTION(BlueprintCallable, Category = "GameControl")
+	UFUNCTION(BlueprintCallable, Category = "Transition (ServerTravel)")
 	void TransitionToLevel(const FString& NextLevelPath);
 	
 	int32 GetCurrentLives() const;

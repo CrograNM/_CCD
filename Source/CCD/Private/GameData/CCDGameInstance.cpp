@@ -325,7 +325,7 @@ bool UCCDGameInstance::IsSteamActive() const
 // 로딩에서 바꾼거 테스트 해봐야함
 void UCCDGameInstance::TransitionLevel(FString NextLevelPath)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Transitioning to Main Menu: %s"), *NextLevelPath);
+	UE_LOG(LogTemp, Warning, TEXT("[CCDGameInstance - TransitionLevel] Transitioning to : %s"), *NextLevelPath);
 	
 	if (ACCDPlayerControllerBase* PC = Cast<ACCDPlayerControllerBase>(UGameplayStatics::GetPlayerController(GetWorld(), 0)))
 	{
@@ -340,6 +340,31 @@ void UCCDGameInstance::TransitionLevel(FString NextLevelPath)
 		if (UWorld* World = GetWorld())
 		{
 		   UGameplayStatics::OpenLevel(World, FName(*NextLevelPath), true);
+		}
+	}, 1.0f, false);
+	UE_LOG(LogTemp, Error, TEXT("[CCDGameInstance - TransitionLevel] Code Executed"));
+}
+
+void UCCDGameInstance::TransitionToEnding(int32 TotalPlayerCount)
+{
+	FString NextLevelPath = "/Game/Maps/Ending";
+	
+	UE_LOG(LogTemp, Warning, TEXT("[CCDGameInstance - TransitionLevel] Transitioning to : %s"), *NextLevelPath);
+	
+	if (ACCDPlayerControllerBase* PC = Cast<ACCDPlayerControllerBase>(UGameplayStatics::GetPlayerController(GetWorld(), 0)))
+	{
+		PC->Client_StartLoading();
+	}
+	
+	CleanupLocalSession();
+
+	FTimerHandle TravelTimer;
+	GetTimerManager().SetTimer(TravelTimer, [this, NextLevelPath, TotalPlayerCount]()
+	{
+		if (UWorld* World = GetWorld())
+		{
+			const FString Option = FString::Printf(TEXT("?TotalPlayers=%d"), TotalPlayerCount);
+			UGameplayStatics::OpenLevel(World, FName(*NextLevelPath), true, Option);
 		}
 	}, 1.0f, false);
 	UE_LOG(LogTemp, Error, TEXT("[CCDGameInstance - TransitionLevel] Code Executed"));

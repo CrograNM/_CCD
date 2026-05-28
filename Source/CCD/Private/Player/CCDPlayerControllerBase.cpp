@@ -16,11 +16,11 @@ void ACCDPlayerControllerBase::Client_StartLoading_Implementation()
 	}
 }
 
-void ACCDPlayerControllerBase::Client_MoveToEndingLocal_Implementation(const FString& EndingMapPath)
+void ACCDPlayerControllerBase::Client_MoveToEndingLocal_Implementation(int32 TotalPlayerCount)
 {
 	if (UCCDGameInstance* GI = Cast<UCCDGameInstance>(GetGameInstance()))
 	{
-		GI->TransitionLevel(EndingMapPath);
+		GI->TransitionToEnding(TotalPlayerCount);
 	}
 }
 

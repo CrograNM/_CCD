@@ -16,4 +16,7 @@ public:
 
 protected:
 	virtual void StartLevelTravel() override;
+	
+	UFUNCTION(BlueprintImplementableEvent, Category = "Ending", meta = (DisplayName = "On Start Level Travel"))
+	void BP_OnStartLevelTravel(int32 TotalPlayers);
 };

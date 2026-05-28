@@ -27,12 +27,14 @@ void AEndingTruck::StartLevelTravel()
 	}
 	
 	NextLevelPath = "/Game/Maps/Ending";
-	// 월드의 모든 플레이어 컨트롤러를 순회하며 개별 이동 RPC를 날립니다.
-	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
-	{
-		if (ACCDPlayerControllerBase* PC = Cast<ACCDPlayerControllerBase>(It->Get()))
-		{
-			PC->Client_MoveToEndingLocal(NextLevelPath);
-		}
-	}
+	// 	// 월드의 모든 플레이어 컨트롤러를 순회하며 개별 이동 RPC를 날립니다.
+	// 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	// 	{
+	// 		if (ACCDPlayerControllerBase* PC = Cast<ACCDPlayerControllerBase>(It->Get()))
+	// 		{
+	// 			PC->Client_MoveToEndingLocal(NextLevelPath);
+	// 		}
+	// 	}
+	int32 TotalPlayerCount = GetWorld()->GetNumPlayerControllers();
+	BP_OnStartLevelTravel(TotalPlayerCount);
 }

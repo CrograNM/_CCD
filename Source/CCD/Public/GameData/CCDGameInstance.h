@@ -53,7 +53,11 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "GameFlow")
 	bool bHasPlayedPrologue = false;
 	
+	UFUNCTION(BlueprintCallable, Category = "Transition (OpenLevel)")
 	void TransitionLevel(FString NextLevelPath);
+	
+	UFUNCTION(BlueprintCallable, Category = "Transition (OpenLevel)")
+	void TransitionToEnding(int32 TotalPlayerCount);
 	
 private:
 	void HandleNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString);

@@ -21,8 +21,8 @@ public:
 	void Client_StartLoading();
 	
 	/** 클라이언트 본인의 네트워크를 끊고 개별적으로 엔딩 맵으로 이동하게 하는 RPC */
-	UFUNCTION(Client, Reliable)
-	void Client_MoveToEndingLocal(const FString& EndingMapPath);
+	UFUNCTION(BlueprintCallable, Client, Reliable)
+	void Client_MoveToEndingLocal(int32 TotalPlayerCount);
 	
 protected:
 	virtual void BeginPlay() override;
