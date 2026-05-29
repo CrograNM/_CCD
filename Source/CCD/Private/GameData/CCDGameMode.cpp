@@ -64,15 +64,15 @@ void ACCDGameMode::PreLogin(const FString& Options, const FString& Address, cons
 	FString& ErrorMessage)
 {
 	Super::PreLogin(Options, Address, UniqueId, ErrorMessage);
+	if (!ErrorMessage.IsEmpty()) return;
 	
 	FString CurrentMapName = GetWorld()->GetOutermost()->GetName();
 	CurrentMapName = UWorld::RemovePIEPrefix(CurrentMapName);
-
-	// 로비가 아닌 실제 청소 레벨인데 외부 인원이 들어오려고 하면 튕겨냅니다.
+	
 	if (CurrentMapName != TEXT("/Game/Maps/TUWorld"))
 	{
 		ErrorMessage = TEXT("The game is already in progress.");
-		UE_LOG(LogTemp, Warning, TEXT("Blocked mid-game join attempt from: %s"), *Address);
+		UE_LOG(LogTemp, Warning, TEXT("[CCDGameMode] Blocked genuine mid-game join attempt from: %s"), *Address);
 	}
 }
 
@@ -98,7 +98,7 @@ void ACCDGameMode::OnCleaningFinished()
 		}
 	}
 	
-	UE_LOG(LogTemp, Warning, TEXT("GameMode : Cleaning Finished!"));
+	UE_LOG(LogTemp, Warning, TEXT("[CCDGameMode] : Cleaning Finished!"));
 }
 
 void ACCDGameMode::RequestRespawn(ACCDCharacter* DeadCharacter)
@@ -113,7 +113,7 @@ void ACCDGameMode::RequestRespawn(ACCDCharacter* DeadCharacter)
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("No more lives or Manager not found!"));
+		UE_LOG(LogTemp, Error, TEXT("[CCDGameMode] No more lives or Manager not found!"));
 	}
 }
 
@@ -149,7 +149,7 @@ int32 ACCDGameMode::GetCurrentLives() const
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("No more lives or Manager not found!"));
+		UE_LOG(LogTemp, Error, TEXT("[CCDGameMode] No more lives or Manager not found!"));
 	}
 	
 	return -1; // 매니저가 없거나 오류 시 -1 반환
@@ -158,7 +158,16 @@ int32 ACCDGameMode::GetCurrentLives() const
 void ACCDGameMode::SetJoinInProgressAllowed(bool bAllowJoin)
 {
 	if (!HasAuthority()) return;
-
+	
+	// bDelayedStart = !bAllowJoin;
+	
+	if (GetWorld()->IsPlayInEditor()) 
+    {
+        // 에디터에서는 세션 인터페이스를 직접 건드리지 않고 로그만 남깁니다.
+        UE_LOG(LogTemp, Log, TEXT("[CCDGameMode] PIE Environment: Skipped OnlineSubsystem UpdateSession to prevent disconnection."));
+        return; 
+    }
+        
 	if (const IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld()))
 	{
 		IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
