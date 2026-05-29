@@ -919,7 +919,7 @@ void ACCDCharacter::MakeFootstepNoise(float LoudnessMultiplier)
 		FinalLoudness = 0.0f; // 앉아서 걸을 때는 SCP-939가 못 듣도록 기획했다면 0으로 처리
 	}
 	*/
-	w
+	
 	NoiseEmitter->MakeNoise(this, FinalLoudness, GetActorLocation());
 }
 
