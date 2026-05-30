@@ -65,7 +65,13 @@ void ACCDGameMode::PreLogin(const FString& Options, const FString& Address, cons
 {
 	Super::PreLogin(Options, Address, UniqueId, ErrorMessage);
 	if (!ErrorMessage.IsEmpty()) return;
-	
+	if (GetWorld()->IsPlayInEditor()) 
+    {
+        // 에디터에서는 PreLogin을 건드리지 않고 로그만 남깁니다.
+        UE_LOG(LogTemp, Warning, TEXT("[CCDGameMode] PreLogin: Skip for PIE to prevent disconnection."));
+        return; 
+    }
+    
 	FString CurrentMapName = GetWorld()->GetOutermost()->GetName();
 	CurrentMapName = UWorld::RemovePIEPrefix(CurrentMapName);
 	
@@ -164,7 +170,7 @@ void ACCDGameMode::SetJoinInProgressAllowed(bool bAllowJoin)
 	if (GetWorld()->IsPlayInEditor()) 
     {
         // 에디터에서는 세션 인터페이스를 직접 건드리지 않고 로그만 남깁니다.
-        UE_LOG(LogTemp, Log, TEXT("[CCDGameMode] PIE Environment: Skipped OnlineSubsystem UpdateSession to prevent disconnection."));
+        UE_LOG(LogTemp, Warning, TEXT("[CCDGameMode] SetJoinInProgressAllowed: Skipped OnlineSubsystem UpdateSession to prevent disconnection."));
         return; 
     }
         
