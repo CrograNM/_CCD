@@ -4,6 +4,17 @@
 #include "Blueprint/UserWidget.h"
 #include "Net/UnrealNetwork.h"
 
+void ACCDGameState::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	if (HasAuthority())
+	{
+		bIsCleaningFinished = false; 
+		bIsGameOver = false;
+	}
+}
+
 void ACCDGameState::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -40,3 +51,5 @@ void ACCDGameState::OnRep_IsGameOver()
 		}
 	}
 }
+
+

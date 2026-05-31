@@ -31,6 +31,8 @@ public:
 	void OnRep_IsGameOver();
 	
 protected:
+	virtual void BeginPlay() override;
+	
 	/** 에디터에서 할당할 게임 오버 위젯 클래스 */
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<UUserWidget> GameOverWidgetClass;

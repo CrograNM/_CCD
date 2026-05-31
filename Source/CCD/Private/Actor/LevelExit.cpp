@@ -2,6 +2,8 @@
 
 
 #include "Actor/LevelExit.h"
+
+#include "EngineUtils.h"
 #include "GameData/CCDGameState.h"
 #include "Player/CCDCharacter.h"
 #include "Components/BoxComponent.h"
@@ -23,7 +25,6 @@ bool ALevelExit::IsWaitingAreaFull() const
 	if (!GS->bIsCleaningFinished) return false;
 
 	int32 LivingPlayersCount = 0;
-	int32 OverlappingLivingPlayersCount = 0;
 
 	// 서버 내 모든 플레이어 중 살아있는 인원만 카운트
 	for (APlayerState* PS : GS->PlayerArray)
@@ -39,25 +40,38 @@ bool ALevelExit::IsWaitingAreaFull() const
 			}
 		}
 	}
-
-	// WaitingArea 안에 있는 액터 중 살아있는 플레이어 카운트
-	TArray<AActor*> OverlappingActors;
-	WaitingArea->GetOverlappingActors(OverlappingActors);
-
-	for (AActor* Actor : OverlappingActors)
+	
+	int32 TotalOverlappingLivingPlayersCount = 0;
+	
+	// 여러 출구의 영역이 겹쳐있을 때 동일한 플레이어가 중복 카운트되는 것을 방지하기 위한 Set
+	TSet<ACCDCharacter*> CountedPlayers;
+	
+	for (TActorIterator<ALevelExit> It(GetWorld()); It; ++It)
 	{
-		if (ACCDCharacter* Character = Cast<ACCDCharacter>(Actor))
+		ALevelExit* ExitActor = *It;
+		// 출구 액터와 해당 출구의 WaitingArea 컴포넌트가 유효한지 확인
+		if (ExitActor && ExitActor->WaitingArea)
 		{
-			// 영역 안에 있어도 죽은 상태라면 카운트에서 제외
-			if (!Character->IsDead())
+			TArray<AActor*> OverlappingActors;
+			ExitActor->WaitingArea->GetOverlappingActors(OverlappingActors);
+
+			for (AActor* Actor : OverlappingActors)
 			{
-				OverlappingLivingPlayersCount++;
+				if (ACCDCharacter* Character = Cast<ACCDCharacter>(Actor))
+				{
+					// 영역 안에 있고, 죽지 않았으며, 아직 카운트하지 않은 플레이어라면
+					if (!Character->IsDead() && !CountedPlayers.Contains(Character))
+					{
+						CountedPlayers.Add(Character);
+						TotalOverlappingLivingPlayersCount++;
+					}
+				}
 			}
 		}
 	}
 
-	// 살아있는 플레이어가 1명이라도 있고, 그들이 모두 영역에 들어왔을 때 true
-	return (LivingPlayersCount > 0 && OverlappingLivingPlayersCount >= LivingPlayersCount);
+	// 살아있는 플레이어가 1명이라도 있고, 모든 출구에 분산되어 있더라도 그들의 합산이 전체 생존자 수와 일치하면 true
+	return (LivingPlayersCount > 0 && TotalOverlappingLivingPlayersCount >= LivingPlayersCount);
 }
 
 void ALevelExit::Interact_Implementation(AActor* Interactor)
