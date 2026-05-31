@@ -333,4 +333,8 @@ protected:
     
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Design | UI")
     TObjectPtr<class UUserWidget> DamageWidgetInstance;
+    
+    // 캐릭터 피격(부상) 사운드
+    UPROPERTY(EditAnywhere, Category = "Design | Sound")
+    TObjectPtr<USoundBase> HurtSound;
 };

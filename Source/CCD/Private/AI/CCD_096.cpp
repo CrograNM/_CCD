@@ -118,12 +118,33 @@ void ACCD_096::OnRep_CurrentState()
 	{
 	case E096State::Idle:
 		StopScreamSound();
+		if (PanicMontage) StopAnimMontage(PanicMontage); // 몽타주 종료
 		break;
+        
 	case E096State::Panic:
 		PlayPanicSound();
+		
+		if (PanicMontage)
+		{
+			PlayAnimMontage(PanicMontage);
+			
+			FTimerHandle ExitLoopTimer;
+			GetWorldTimerManager().SetTimer(ExitLoopTimer, [this]()
+			{
+				if (UAnimInstance* AnimInst = GetMesh()->GetAnimInstance())
+				{
+					if (PanicMontage)
+					{
+						AnimInst->Montage_SetNextSection(FName("Loop"), FName("End"), PanicMontage);
+					}
+				}
+			}, 9.0f, false);
+		}
 		break;
+        
 	case E096State::Enraged:
 		PlayChaseSound();
+		if (PanicMontage) StopAnimMontage(PanicMontage);
 		break;
 	}
 }
