@@ -179,18 +179,18 @@ void ADecal_StainActor_Base::ValidateSurface()
 				}
 				
 				Params.AddIgnoredActor(HitActor);
-				UE_LOG(LogTemp, Warning, TEXT("%s - LineTrace hit actor %s, but no tags. Attempt %d/%d"), *GetName(), *HitActor->GetName(), i + 1, MaxAttempts);
+				// UE_LOG(LogTemp, Warning, TEXT("%s - LineTrace hit actor %s, but no tags. Attempt %d/%d"), *GetName(), *HitActor->GetName(), i + 1, MaxAttempts);
 			}
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("%s - LineTrace No Hit"), *GetName());
+			// UE_LOG(LogTemp, Warning, TEXT("%s - LineTrace No Hit"), *GetName());
 			break; 
 		}
 	}
 	
 	// 3회 시도 후에도 유효한 표면이 감지되지 않으면 데칼 제거
-	UE_LOG(LogTemp, Warning, TEXT("%s - Invalid surface. Destroying decal."), *GetName());
+	// UE_LOG(LogTemp, Warning, TEXT("%s - Invalid surface. Destroying decal."), *GetName());
 	Destroy();
 }
 

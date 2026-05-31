@@ -817,8 +817,7 @@ void ACCDCharacter::AddBloodToFeet(int32 StepCount)
 }
 void ACCDCharacter::TrySpawnFootprint(FName FootSocketName)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Footstep Detected! Socket: %s, Remaining: %d"), 
-		   *FootSocketName.ToString(), RemainingFootprints);
+	// UE_LOG(LogTemp, Warning, TEXT("Footstep Detected! Socket: %s, Remaining: %d"), *FootSocketName.ToString(), RemainingFootprints);
 	if (GetMesh() == nullptr) return;
 	
 	// 소켓(혹은 본)의 월드 위치 가져오기

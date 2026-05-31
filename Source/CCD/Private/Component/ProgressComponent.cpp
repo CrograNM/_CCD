@@ -33,7 +33,7 @@ void UProgressComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	if (GetOwner()->HasAuthority() && ProgressManager && !bIsTaskFinished)
 	{
 		ProgressManager->AddMaxProgress(-ProgressValue);
-		UE_LOG(LogTemp, Warning, TEXT("Progress Rolled Back: Actor %s destroyed before completion."), *GetOwner()->GetName());
+		// UE_LOG(LogTemp, Warning, TEXT("Progress Rolled Back: Actor %s destroyed before completion."), *GetOwner()->GetName());
 	}
 }
 

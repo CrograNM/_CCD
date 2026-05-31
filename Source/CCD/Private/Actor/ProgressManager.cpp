@@ -92,12 +92,14 @@ void AProgressManager::UpdateUI()
 void AProgressManager::UpdateProgressCompletion()
 {
 	// 목표치 달성 확인
+	if (MaxProgress <= 0.f) return;
 	if (CurrentProgress >= MaxProgress)
 	{
 		ACCDGameMode* GM = Cast<ACCDGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
 		if (GM)
 		{
 			GM->OnCleaningFinished();
+			UE_LOG(LogTemp, Warning, TEXT("[Progress Manager] Progress Goal Achieved! Current: %f, Max: %f"), CurrentProgress, MaxProgress);
 		}
 	}
 }
