@@ -102,9 +102,9 @@ void ACCDGameMode::OnCleaningFinished()
 		{
 			GS->ReplicatedClearedMapPaths.AddUnique(CurrentMapName);
 		}
-	}
 	
-	UE_LOG(LogTemp, Warning, TEXT("[CCDGameMode] : Cleaning Finished!"));
+		UE_LOG(LogTemp, Warning, TEXT("[CCDGameMode] : [%s] Cleaning Finished!"), *CurrentMapName);
+	}
 }
 
 void ACCDGameMode::RequestRespawn(ACCDCharacter* DeadCharacter)
