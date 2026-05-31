@@ -20,38 +20,22 @@ EBTNodeResult::Type UBTTask_Panic_096::ExecuteTask(UBehaviorTreeComponent& Owner
 	AAIController* AIC = OwnerComp.GetAIOwner();
 	ACCD_096* SCP096 = Cast<ACCD_096>(AIC->GetPawn());
 
-	if (!SCP096 || !PanicMontage) return EBTNodeResult::Failed;
+	if (!SCP096) return EBTNodeResult::Failed;
 	
 	if (AIC)
 	{
 		AIC->StopMovement();
 	}
-
-	UAnimInstance* AnimInst = SCP096->GetMesh()->GetAnimInstance();
-	if (!AnimInst) return EBTNodeResult::Failed;
 	
-	SCP096->PlayAnimMontage(PanicMontage);
 	
 	UBehaviorTreeComponent* BTComp = &OwnerComp;
-	
-	FTimerHandle ExitLoopTimer;
-	SCP096->GetWorldTimerManager().SetTimer(ExitLoopTimer, [AnimInst, this]()
-	{
-		if (AnimInst && PanicMontage)
-		{
-			AnimInst->Montage_SetNextSection(FName("Loop"), FName("End"), PanicMontage);
-		}
-	}, 9.0f, false);
-	
+
 	FTimerHandle FinishTimer;
 	SCP096->GetWorldTimerManager().SetTimer(FinishTimer, [this, BTComp, SCP096]()
 	{
 		if (SCP096 && BTComp)
 		{
 			SCP096->SetState(E096State::Enraged);
-
-			SCP096->StopAnimMontage(PanicMontage);
-			
 			this->FinishLatentTask(*BTComp, EBTNodeResult::Succeeded);
 		}
 	}, 10.0f, false);

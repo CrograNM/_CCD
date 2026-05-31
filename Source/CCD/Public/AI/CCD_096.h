@@ -82,6 +82,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Settings")
 	TObjectPtr<class USoundBase> KillSound;
 	
+	UPROPERTY(EditAnywhere, Category = "Animation")
+	TObjectPtr<class UAnimMontage> PanicMontage;
 	
 
 public:	
