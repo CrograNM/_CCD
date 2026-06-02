@@ -24,6 +24,17 @@ void UCCD_StatComponent::BeginPlay()
 	SetComponentTickEnabled(true);
 }
 
+void UCCD_StatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(EyeCloseTimerHandle);
+		World->GetTimerManager().ClearTimer(EyeOpenTimerHandle);
+	}
+
+	Super::EndPlay(EndPlayReason);
+}
+
 void UCCD_StatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -174,25 +185,38 @@ void UCCD_StatComponent::CloseEye()
 }
 void UCCD_StatComponent::Server_CloseEye_Implementation()
 {
-	FTimerHandle TimerHandle;
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]()
+	const UWorld* World = GetWorld();
+	if (!World) return;
+	
+	TWeakObjectPtr<UCCD_StatComponent> WeakThis(this);
+	World->GetTimerManager().SetTimer(EyeCloseTimerHandle, [WeakThis]()
 	{
-		bIsEyeClosed = true;
-		OnRep_IsEyeClosed();
+		// 타이머가 실행되는 시점에 객체가 살아있는지 확인
+		if (WeakThis.IsValid() && WeakThis->GetWorld())
+		{
+			WeakThis->bIsEyeClosed = true;
+			WeakThis->OnRep_IsEyeClosed();
+		}
 	}, EyeCloseTime, false);
 	Multicast_PlayEyeClosedAnimation();
 }
 void UCCD_StatComponent::OnRep_IsEyeClosed()
 {
+	const UWorld* World = GetWorld();
+	if (!World) return;
+	
 	if (bIsEyeClosed)
 	{
 		EyeCooldownTime = 0.f;		// 쿨타임 초기화
 		
-		FTimerHandle TimerHandle;
-		GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]()
+		TWeakObjectPtr<UCCD_StatComponent> WeakThis(this);
+		World->GetTimerManager().SetTimer(EyeOpenTimerHandle, [WeakThis]()
 		{
-			bIsEyeClosed = false;
-			OnRep_IsEyeClosed();
+			if (WeakThis.IsValid() && WeakThis->GetWorld())
+			{
+				WeakThis->bIsEyeClosed = false;
+				WeakThis->OnRep_IsEyeClosed();
+			}
 		}, EyeOpenTime, false);
 	}
 }
@@ -204,6 +228,6 @@ void UCCD_StatComponent::Multicast_PlayEyeClosedAnimation_Implementation()
 }
 void UCCD_StatComponent::OnRep_EyeCooldownTime()
 {
-	if (OwnerCharacter && OwnerCharacter->IsLocallyControlled())
+	if (IsValid(OwnerCharacter) && OwnerCharacter->IsLocallyControlled())
 		OnEyeCooldownChanged.Broadcast(EyeCooldownTime, EyeCooldownDuration);
 }

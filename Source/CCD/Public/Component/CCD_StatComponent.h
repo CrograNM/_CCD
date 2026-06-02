@@ -46,6 +46,7 @@ public:
 	
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	
 	/** --- 달리기 / 스태미나 --- */
 	UPROPERTY(Replicated)
@@ -98,6 +99,9 @@ protected:
 	void ResetExhaustion();
 	
 	/** --- 시야 판정, 쿨타임 --- */
+	FTimerHandle EyeCloseTimerHandle;
+	FTimerHandle EyeOpenTimerHandle;
+	
 	UPROPERTY(ReplicatedUsing = OnRep_IsEyeClosed)
 	bool bIsEyeClosed = false;
 	UFUNCTION()
