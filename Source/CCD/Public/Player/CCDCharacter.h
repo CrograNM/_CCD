@@ -123,6 +123,10 @@ public:
     
     FORCEINLINE UCCD_ViewComponent* GetViewComp() const { return ViewComp; }
     FORCEINLINE UCCD_EquipmentComponent* GetEquipmentComp() const { return EquipmentComp; }
+    
+    UFUNCTION(BlueprintCallable)
+    FORCEINLINE UCCD_InteractionComponent* GetInteractionComp() const { return InteractionComp; }
+    
     FORCEINLINE bool GetIsEquipHand() const { return EquipmentComp ? EquipmentComp->GetEquipmentState() == ECCD_EquipmentState::EES_Hands : true; }
     UFUNCTION(BlueprintCallable)
     FORCEINLINE bool IsDead() const { return bIsDead; }

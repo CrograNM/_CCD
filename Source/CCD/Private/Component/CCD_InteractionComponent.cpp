@@ -116,7 +116,7 @@ void UCCD_InteractionComponent::UpdateHighlight()
 		{
 			SetHighlightEffect(LastHighlightedComponent, false);
 		}
-
+		
 		if (CurrentHitComponent)
 		{
 			SetHighlightEffect(CurrentHitComponent, true);
@@ -135,7 +135,7 @@ void UCCD_InteractionComponent::SetHighlightEffect(UPrimitiveComponent* InCompon
 	// CustomDepth를 사용하여 하이라이트 출력 (PostProcess에서 CustomDepth 기반 외곽선 머티리얼 필요)
 	InComponent->SetRenderCustomDepth(bEnable);
 	
-	// InComponent->SetCustomDepthStencilValue(bEnable ? 1 : 0);
+	OnHighlightChanged.Broadcast(bEnable);
 }
 
 void UCCD_InteractionComponent::PhysicsHandleUpdate(float DeltaTime)
