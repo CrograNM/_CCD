@@ -95,8 +95,15 @@ void UCCD_InteractionComponent::UpdateHighlight()
 	{
 		// 인터페이스를 구현했거나 BurnableComponent가 있는 액터인지 확인 (필터링)
 		AActor* HitActor = HitResult.GetActor();
-		if (HitActor && (HitActor->FindComponentByClass<UBurnableComponent>() || 
-			HitActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass())))
+		if (!HitActor) return;
+		if (HitActor->FindComponentByClass<UBurnableComponent>())
+		{
+			if (OwnerCharacter->GetIsEquipHand())
+			{
+				CurrentHitComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent());
+			}
+		}
+		else if (HitActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass()))
 		{
 			CurrentHitComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent());
 		}

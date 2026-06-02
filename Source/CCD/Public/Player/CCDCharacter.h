@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Component/CCD_EquipmentComponent.h"
 #include "Component/CCD_InteractionComponent.h"
 #include "Component/CCD_StatComponent.h"
 #include "GameFramework/Character.h"
@@ -122,7 +123,7 @@ public:
     
     FORCEINLINE UCCD_ViewComponent* GetViewComp() const { return ViewComp; }
     FORCEINLINE UCCD_EquipmentComponent* GetEquipmentComp() const { return EquipmentComp; }
-    
+    FORCEINLINE bool GetIsEquipHand() const { return EquipmentComp ? EquipmentComp->GetEquipmentState() == ECCD_EquipmentState::EES_Hands : true; }
     UFUNCTION(BlueprintCallable)
     FORCEINLINE bool IsDead() const { return bIsDead; }
     
