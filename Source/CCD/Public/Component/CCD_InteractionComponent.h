@@ -36,6 +36,8 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Interaction")
 	FOnHighlightChanged OnHighlightChanged;
 	
+	float GetInteractRange() const { return InteractRange; }
+	
 protected:
 	virtual void BeginPlay() override;
 	
@@ -77,7 +79,7 @@ private:
 	FRotator GrabRelativeRotation;
 
 	UPROPERTY(EditAnywhere, Category = "Design | Interaction")
-	float InteractRange = 300.f;
+	float InteractRange = 400.f;
 
 	UPROPERTY(EditAnywhere, Category = "Design | Interaction")
 	float InteractionTolerance = 300.f;
