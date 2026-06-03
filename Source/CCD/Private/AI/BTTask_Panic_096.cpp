@@ -27,18 +27,41 @@ EBTNodeResult::Type UBTTask_Panic_096::ExecuteTask(UBehaviorTreeComponent& Owner
 		AIC->StopMovement();
 	}
 	
+	TWeakObjectPtr<UBehaviorTreeComponent> WeakBTComp(&OwnerComp);
+	TWeakObjectPtr<ACCD_096> WeakSCP096(SCP096);
+	TWeakObjectPtr<UBTTask_Panic_096> WeakThis(this);
 	
-	UBehaviorTreeComponent* BTComp = &OwnerComp;
+	SCP096->GetWorldTimerManager().ClearTimer(PanicTimerHandle);
 
-	FTimerHandle FinishTimer;
-	SCP096->GetWorldTimerManager().SetTimer(FinishTimer, [this, BTComp, SCP096]()
+	SCP096->GetWorldTimerManager().SetTimer(PanicTimerHandle, [WeakBTComp, WeakSCP096, WeakThis]()
 	{
-		if (SCP096 && BTComp)
+		if (WeakBTComp.IsValid() && WeakSCP096.IsValid() && WeakThis.IsValid())
 		{
-			SCP096->SetState(E096State::Enraged);
-			this->FinishLatentTask(*BTComp, EBTNodeResult::Succeeded);
+			UBehaviorTreeComponent* BTComp = WeakBTComp.Get();
+			ACCD_096* SCP = WeakSCP096.Get();
+			
+			if (BTComp->GetActiveNode() == WeakThis.Get())
+			{
+				SCP->SetState(E096State::Enraged);
+				
+				BTComp->OnTaskFinished(WeakThis.Get(), EBTNodeResult::Succeeded);
+			}
 		}
 	}, 10.0f, false);
 	
 	return EBTNodeResult::InProgress;
+}
+
+void UBTTask_Panic_096::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult)
+{
+	AAIController* AIC = OwnerComp.GetAIOwner();
+	if (AIC)
+	{
+		if (ACCD_096* SCP096 = Cast<ACCD_096>(AIC->GetPawn()))
+		{
+			SCP096->GetWorldTimerManager().ClearTimer(PanicTimerHandle);
+		}
+	}
+
+	Super::OnTaskFinished(OwnerComp, NodeMemory, TaskResult);
 }
