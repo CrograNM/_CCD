@@ -32,28 +32,43 @@ EBTNodeResult::Type UBTTask_AttackPlayer_096::ExecuteTask(UBehaviorTreeComponent
 			SCP096->PlayAnimMontage(AttackMontage);
 		}
 		
-		UBehaviorTreeComponent* BTComp = &OwnerComp;
+		TWeakObjectPtr<UBehaviorTreeComponent> WeakBTComp(&OwnerComp);
+		TWeakObjectPtr<ACCD_096> WeakSCP096(SCP096);
+		TWeakObjectPtr<UBlackboardComponent> WeakBB(BB);
+		TWeakObjectPtr<AAIController> WeakAIC(AIC);
+		TWeakObjectPtr<UBTTask_AttackPlayer_096> WeakThis(this);
+		
+		UAnimMontage* CachedAttackMontage = AttackMontage; 
 		
 		FTimerHandle KillTimerHandle;
-		SCP096->GetWorldTimerManager().SetTimer(KillTimerHandle, [this, BTComp, SCP096, BB, AIC]()
+		SCP096->GetWorldTimerManager().SetTimer(KillTimerHandle, [WeakBTComp, WeakSCP096, WeakBB, WeakAIC, WeakThis, CachedAttackMontage]()
 		{
-			if (SCP096 && BTComp)
+			if (WeakBTComp.IsValid() && WeakSCP096.IsValid() && WeakBB.IsValid() && WeakAIC.IsValid() && WeakThis.IsValid())
 			{
-				SCP096->StopAnimMontage(AttackMontage);
+				UBehaviorTreeComponent* BTComp = WeakBTComp.Get();
+				ACCD_096* SCP096 = WeakSCP096.Get();
+				UBlackboardComponent* BBComp = WeakBB.Get();
+				AAIController* AICont = WeakAIC.Get();
+				UBTTask_AttackPlayer_096* MyTask = WeakThis.Get();
+
+				if (CachedAttackMontage)
+				{
+					SCP096->StopAnimMontage(CachedAttackMontage);
+				}
 				
 				AActor* NextTarget = SCP096->GetNextTarget();
 				if (NextTarget)
 				{
-					BB->SetValueAsObject(TEXT("TargetActor"), NextTarget);
+					BBComp->SetValueAsObject(TEXT("TargetActor"), NextTarget);
 					SCP096->SetState(E096State::Enraged); 
-					AIC->StopMovement();
+					AICont->StopMovement();
 				}
 				else
 				{
 					SCP096->SetState(E096State::Idle);
 				}
 				
-				this->FinishLatentTask(*BTComp, EBTNodeResult::Succeeded);
+				MyTask->FinishLatentTask(*BTComp, EBTNodeResult::Succeeded);
 			}
 		}, 1.5f, false);
 		
