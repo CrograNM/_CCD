@@ -62,6 +62,60 @@ void UBTService_CheckObserved::TickNode(UBehaviorTreeComponent& OwnerComp, uint8
 	
 	bool bAnyOneObserved = SCP->IsObserved();
 	BB->SetValueAsBool(GetSelectedBlackboardKey(), bAnyOneObserved);
+	
+	if (!BB->GetValueAsBool(TEXT("HasSpottedPlayer")))
+	{
+		bool b173LookingAtPlayer = false;
+
+		if (ClosestPlayer)
+		{
+			FVector SCPForward = SCP->GetActorForwardVector();
+			
+			FVector ToPlayer = ClosestPlayer->GetActorLocation() - SCP->GetActorLocation();
+			ToPlayer.Z = 0.0f; 
+			ToPlayer.Normalize();
+			
+			float ViewDot = FVector::DotProduct(SCPForward, ToPlayer);
+			const float SCPVisibilityThreshold = 0.7f;
+			
+			if (ViewDot >= SCPVisibilityThreshold)
+			{
+				FHitResult SightHit;
+				
+				FVector TraceStart = SCP->GetActorLocation() + FVector(0.f, 0.f, SCP->BaseEyeHeight);
+				FVector TraceEnd = ClosestPlayer->GetActorLocation();
+				
+				FCollisionQueryParams TraceParams;
+				TraceParams.AddIgnoredActor(SCP);      
+				TraceParams.AddIgnoredActor(ClosestPlayer);
+				
+				bool bIsOccluded = GetWorld()->LineTraceSingleByChannel(
+					SightHit, 
+					TraceStart, 
+					TraceEnd, 
+					ECC_Visibility, 
+					TraceParams
+				);
+				
+				if (!bIsOccluded)
+				{
+					b173LookingAtPlayer = true;
+				}
+			}
+		}
+		
+		const float SpottingRange = 1500.0f; 
+		
+		if (bAnyOneObserved || b173LookingAtPlayer || (ClosestPlayer && MinDistance <= SpottingRange))
+		{
+			BB->SetValueAsBool(TEXT("HasSpottedPlayer"), true);
+			BB->SetValueAsBool(TEXT("CanMove"), true);
+			
+			UE_LOG(LogTemp, Warning, TEXT("[AI] SCP-173 Chase Activated! (Player Looked: %s, SCP Looked: %s)"), 
+				bAnyOneObserved ? TEXT("True") : TEXT("False"), 
+				b173LookingAtPlayer ? TEXT("True") : TEXT("False"));
+		}
+	}
 
 	if (bAnyOneObserved)
 	{
@@ -70,6 +124,14 @@ void UBTService_CheckObserved::TickNode(UBehaviorTreeComponent& OwnerComp, uint8
 	}
 	else
 	{
-		SCP->SetMovementInstant(true);
+		if (BB->GetValueAsBool(TEXT("HasSpottedPlayer")))
+		{
+			SCP->SetMovementInstant(true);
+		}
+		else
+		{
+			SCP->SetMovementInstant(false);
+			AIC->StopMovement();
+		}
 	}
 }

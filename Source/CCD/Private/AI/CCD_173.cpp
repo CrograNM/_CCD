@@ -33,17 +33,17 @@ void ACCD_173::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	FTimerHandle TimerHandle;
-	GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([this]()
+	if (HasAuthority())
 	{
 		if (AAIController* AIC = Cast<AAIController>(GetController()))
 		{
 			if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
 			{
-				BB->SetValueAsBool(TEXT("CanMove"), true);
+				BB->SetValueAsBool(TEXT("CanMove"), false);
+				BB->SetValueAsBool(TEXT("HasSpottedPlayer"), false);
 			}
 		}
-	}), 5.0f, false);
+	}
 }
 
 void ACCD_173::Tick(float DeltaTime)
