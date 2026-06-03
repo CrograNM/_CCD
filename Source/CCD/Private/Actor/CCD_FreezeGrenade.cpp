@@ -76,57 +76,64 @@ void ACCD_FreezeGrenade::OnGrenadeHit(UPrimitiveComponent* HitComponent, AActor*
 
 void ACCD_FreezeGrenade::Detonate(AActor* TargetActor)
 {
-	if (!HasAuthority() || !TargetActor) return;
-	
-	APawn* TargetPawn = Cast<APawn>(TargetActor);
-	if (TargetPawn)
-	{
-		if (AAIController* AIC = Cast<AAIController>(TargetPawn->GetController()))
-		{
-			if (UBrainComponent* BrainComp = AIC->FindComponentByClass<UBrainComponent>())
-			{
-				BrainComp->StopLogic(TEXT("Freeze Grenade Direct Hit"));
-				AIC->StopMovement();
-				
-				USkeletalMeshComponent* TargetMesh = TargetPawn->FindComponentByClass<USkeletalMeshComponent>();
-				if (TargetMesh)
-				{
-					TargetMesh->bNoSkeletonUpdate = true;
-					TargetMesh->SetComponentTickEnabled(false);
-				}
-				
-				FTimerHandle UnfreezeTimerHandle;
+    if (!HasAuthority() || !TargetActor) return;
+    
+    APawn* TargetPawn = Cast<APawn>(TargetActor);
+    if (TargetPawn)
+    {
+        if (AAIController* AIC = Cast<AAIController>(TargetPawn->GetController()))
+        {
+            if (UBrainComponent* BrainComp = AIC->FindComponentByClass<UBrainComponent>())
+            {
+                BrainComp->StopLogic(TEXT("Freeze Grenade Direct Hit"));
+                AIC->StopMovement();
+                
+                USkeletalMeshComponent* TargetMesh = TargetPawn->FindComponentByClass<USkeletalMeshComponent>();
+                if (TargetMesh)
+                {
+                    TargetMesh->bNoSkeletonUpdate = true;
+                    TargetMesh->SetComponentTickEnabled(false);
+                }
+            	
+                TWeakObjectPtr<UBrainComponent> WeakBrainComp = BrainComp;
+                TWeakObjectPtr<AAIController> WeakAIC = AIC;
+                TWeakObjectPtr<USkeletalMeshComponent> WeakTargetMesh = TargetMesh;
 
-				GetWorldTimerManager().SetTimer(UnfreezeTimerHandle, FTimerDelegate::CreateLambda([BrainComp, AIC, TargetMesh]()
-				{
-					if (BrainComp && AIC)
-					{
-						BrainComp->RestartLogic();
-						
-						if (TargetMesh)
-						{
-							TargetMesh->bNoSkeletonUpdate = false;
-							TargetMesh->SetComponentTickEnabled(true);
-						}
-						
-						UE_LOG(LogTemp, Warning, TEXT("[Grenade] Direct-hit AI and Animation Restarted successfully after 30s."));
-					}
-				}), 30.0f, false);
-				
-				UE_LOG(LogTemp, Warning, TEXT("[Grenade] Direct Hit! Stopped Brain and Anim for: %s"), *TargetActor->GetName());
-			}
-		}
-	}
-	
-	if (ExplosionSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, ExplosionSound, GetActorLocation());
-	}
+                FTimerHandle UnfreezeTimerHandle;
+                GetWorldTimerManager().SetTimer(UnfreezeTimerHandle, FTimerDelegate::CreateLambda([WeakBrainComp, WeakAIC, WeakTargetMesh]()
+                {
+                    if (WeakBrainComp.IsValid() && WeakAIC.IsValid())
+                    {
+                        WeakBrainComp->RestartLogic();
+                        
+                        if (WeakTargetMesh.IsValid())
+                        {
+                            WeakTargetMesh->bNoSkeletonUpdate = false;
+                            WeakTargetMesh->SetComponentTickEnabled(true);
+                        }
+                        
+                        UE_LOG(LogTemp, Warning, TEXT("[Grenade] Direct-hit AI and Animation Restarted successfully after 30s."));
+                    }
+                    else
+                    {
+                        UE_LOG(LogTemp, Log, TEXT("[Grenade] Target AI or Controller was destroyed before unfreeze timer ended."));
+                    }
+                }), 30.0f, false);
+                
+                UE_LOG(LogTemp, Warning, TEXT("[Grenade] Direct Hit! Stopped Brain and Anim for: %s"), *TargetActor->GetName());
+            }
+        }
+    }
+    
+    if (ExplosionSound)
+    {
+        UGameplayStatics::PlaySoundAtLocation(this, ExplosionSound, GetActorLocation());
+    }
 
-	if (ExplosionVFX)
-	{
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionVFX, GetActorLocation());
-	}
-	
-	Destroy();
+    if (ExplosionVFX)
+    {
+        UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionVFX, GetActorLocation());
+    }
+    
+    Destroy();
 }
