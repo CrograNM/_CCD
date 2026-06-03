@@ -161,6 +161,12 @@ public:
     // 939 전용 데미지 처리 함수 오버라이드
     virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
     
+    // 수류탄을 주웠을 때 보관할 포인터 세터
+    FORCEINLINE void SetHeldGrenade(class ACCD_FreezeGrenade* Grenade) { HeldGrenade = Grenade; }
+
+    // 현재 수류탄을 들고 있는지 여부 반환
+    FORCEINLINE bool HasFreezeGrenade() const { return HeldGrenade != nullptr; }
+    
 protected:
     virtual void BeginPlay() override;
     
@@ -342,4 +348,15 @@ protected:
     // 캐릭터 피격(부상) 사운드
     UPROPERTY(EditAnywhere, Category = "Design | Sound")
     TObjectPtr<USoundBase> HurtSound;
+    
+    // 현재 플레이어가 E키로 획득하여 들고 있는 수류탄 액터 포인터
+    UPROPERTY(Replicated, VisibleAnywhere, Category = "Design | Equipment")
+    TObjectPtr<class ACCD_FreezeGrenade> HeldGrenade;
+
+    // 수류탄 투척 서버 RPC 함수
+    UFUNCTION(Server, Reliable)
+    void Server_ThrowHeldGrenade(FVector LaunchDir);
+    
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Design | Equipment")
+    TSubclassOf<class ACCD_FreezeGrenade> FreezeGrenadeClass;
 };

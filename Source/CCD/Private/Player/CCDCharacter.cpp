@@ -32,6 +32,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "MovieSceneSequenceID.h"
+#include "Actor/CCD_FreezeGrenade.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "GameData/CCDGameMode.h"
@@ -171,6 +172,7 @@ void ACCDCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME(ACCDCharacter, bIsInvincible);
 	DOREPLIFETIME(ACCDCharacter, MaxHealth);
 	DOREPLIFETIME(ACCDCharacter, CurrentHealth);
+	DOREPLIFETIME(ACCDCharacter, HeldGrenade);
 }
 
 void ACCDCharacter::PerformEmote(FName EmoteSection)
@@ -813,6 +815,13 @@ void ACCDCharacter::Look(const FInputActionValue& Value)
 }
 void ACCDCharacter::OnRotationPressed()
 {
+	if (HasFreezeGrenade())
+	{
+		FVector CamForward = FirstPersonCamera ? FirstPersonCamera->GetForwardVector() : GetActorForwardVector();
+		Server_ThrowHeldGrenade(CamForward);
+		return;
+	}
+	
 	if (InteractionComp && InteractionComp->GetGrabbedComponent()) 
 	{
 		InteractionComp->SetRotationMode(true);
@@ -820,7 +829,9 @@ void ACCDCharacter::OnRotationPressed()
 }
 void ACCDCharacter::OnRotationReleased()
 {
-	if (InteractionComp) InteractionComp->SetRotationMode(false);
+	if (!InteractionComp) return;
+	
+	InteractionComp->SetRotationMode(false);
 }
 
 void ACCDCharacter::AddBloodToFeet(int32 StepCount)
@@ -993,5 +1004,27 @@ void ACCDCharacter::OnRep_CurrentHealth()
 		
 		float Ratio = MaxHealth > 0.0f ? (CurrentHealth / MaxHealth) : 0.0f;
 		OnDamageEffectTriggered(Ratio);
+	}
+}
+
+void ACCDCharacter::Server_ThrowHeldGrenade_Implementation(FVector LaunchDir)
+{
+	if (!HasAuthority() || !HeldGrenade) 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Character] Throw aborted. HeldGrenade is NULL."));
+		return;
+	}
+	
+	ACCD_FreezeGrenade* GrenadeToThrow = HeldGrenade;
+	HeldGrenade = nullptr;
+
+	if (InteractionComp && InteractionComp->GetGrabbedComponent())
+	{
+		InteractionComp->ForceRelease(); 
+	}
+	
+	if (GrenadeToThrow)
+	{
+		GrenadeToThrow->Launch(LaunchDir);
 	}
 }
