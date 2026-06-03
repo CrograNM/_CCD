@@ -55,10 +55,11 @@ void ACCD_EMopActor::PerformMopTrace()
 {
 	if (!HasAuthority()) return;
 	if (!OwnerCharacter) return;
-
+	float InteractRange = OwnerCharacter->GetInteractionComp()->GetInteractRange();
+	
 	// 카메라 위치와 방향 가져오기
 	FVector Start = OwnerCharacter->GetFirstPersonCamera()->GetComponentLocation();
-	FVector End = Start + (OwnerCharacter->GetFirstPersonCamera()->GetForwardVector() * 300.f);
+	FVector End = Start + (OwnerCharacter->GetFirstPersonCamera()->GetForwardVector() * InteractRange);
 
 	FHitResult HitResult;
 	FCollisionQueryParams Params;

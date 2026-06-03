@@ -8,6 +8,8 @@
 class UPhysicsHandleComponent;
 class UCameraComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHighlightChanged, bool, bIsEnabled);
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class CCD_API UCCD_InteractionComponent : public UActorComponent
 {
@@ -30,6 +32,11 @@ public:
 	void AddRotationInput(float Pitch, float Yaw);
 	
 	UPrimitiveComponent* GetGrabbedComponent() const { return GrabbedComponent; }
+	
+	UPROPERTY(BlueprintAssignable, Category = "Interaction")
+	FOnHighlightChanged OnHighlightChanged;
+	
+	float GetInteractRange() const { return InteractRange; }
 	
 protected:
 	virtual void BeginPlay() override;
@@ -72,7 +79,7 @@ private:
 	FRotator GrabRelativeRotation;
 
 	UPROPERTY(EditAnywhere, Category = "Design | Interaction")
-	float InteractRange = 300.f;
+	float InteractRange = 400.f;
 
 	UPROPERTY(EditAnywhere, Category = "Design | Interaction")
 	float InteractionTolerance = 300.f;

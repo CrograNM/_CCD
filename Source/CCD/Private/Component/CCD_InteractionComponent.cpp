@@ -95,8 +95,15 @@ void UCCD_InteractionComponent::UpdateHighlight()
 	{
 		// 인터페이스를 구현했거나 BurnableComponent가 있는 액터인지 확인 (필터링)
 		AActor* HitActor = HitResult.GetActor();
-		if (HitActor && (HitActor->FindComponentByClass<UBurnableComponent>() || 
-			HitActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass())))
+		if (!HitActor) return;
+		if (HitActor->FindComponentByClass<UBurnableComponent>())
+		{
+			if (OwnerCharacter->GetIsEquipHand())
+			{
+				CurrentHitComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent());
+			}
+		}
+		else if (HitActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass()))
 		{
 			CurrentHitComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent());
 		}
@@ -109,7 +116,7 @@ void UCCD_InteractionComponent::UpdateHighlight()
 		{
 			SetHighlightEffect(LastHighlightedComponent, false);
 		}
-
+		
 		if (CurrentHitComponent)
 		{
 			SetHighlightEffect(CurrentHitComponent, true);
@@ -128,7 +135,7 @@ void UCCD_InteractionComponent::SetHighlightEffect(UPrimitiveComponent* InCompon
 	// CustomDepth를 사용하여 하이라이트 출력 (PostProcess에서 CustomDepth 기반 외곽선 머티리얼 필요)
 	InComponent->SetRenderCustomDepth(bEnable);
 	
-	// InComponent->SetCustomDepthStencilValue(bEnable ? 1 : 0);
+	OnHighlightChanged.Broadcast(bEnable);
 }
 
 void UCCD_InteractionComponent::PhysicsHandleUpdate(float DeltaTime)
