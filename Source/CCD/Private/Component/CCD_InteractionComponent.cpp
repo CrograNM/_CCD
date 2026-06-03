@@ -235,14 +235,17 @@ void UCCD_InteractionComponent::Server_PerformInteract_Implementation(AActor* Ta
 
 	if (UBurnableComponent* BurnComp = TargetActor->FindComponentByClass<UBurnableComponent>())
 	{
-		UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(TargetActor->GetRootComponent());
-        
-		if (RootPrim && RootPrim->IsSimulatingPhysics())
+		if (OwnerCharacter->GetIsEquipHand())
 		{
-			FVector GrabPoint = RootPrim->Bounds.Origin;
-			Multicast_GrabObject(RootPrim, GrabPoint);
+			UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(TargetActor->GetRootComponent());
+        
+			if (RootPrim && RootPrim->IsSimulatingPhysics())
+			{
+				FVector GrabPoint = RootPrim->Bounds.Origin;
+				Multicast_GrabObject(RootPrim, GrabPoint);
+			}
+			IInteractInterface::Execute_Interact(BurnComp, OwnerCharacter);
 		}
-		IInteractInterface::Execute_Interact(BurnComp, OwnerCharacter);
 	}
 	else if (TargetActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass()))
 	{
