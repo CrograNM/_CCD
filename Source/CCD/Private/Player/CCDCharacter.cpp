@@ -587,7 +587,7 @@ void ACCDCharacter::HandleDeath()
 			if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_WorldStatic, Params))
 			{
 				FActorSpawnParameters SpawnParams;
-				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 		
 				// 바닥 평면에 맞춘 회전값 (바닥 노멀 기준)
 				FRotator SpawnRot = HitResult.ImpactNormal.Rotation();
@@ -628,6 +628,14 @@ void ACCDCharacter::HandleDeath()
 				// // 랜덤한 방향으로 튀어나가게 충격 가하기
 				// FVector RandomImpulse = (FVector::UpVector + FVector(FMath::RandRange(-1.f, 1.f), FMath::RandRange(-1.f, 1.f), 0.f)).GetSafeNormal() * DeathImpulseStrength;
 				// Fragment->InitFragment(FragmentMesh, RandomImpulse);
+				if (Fragment->GetMeshComp())
+				{
+					// 파편 메쉬 컴포넌트가 플레이어 본체(this)를 이동 시 무시
+					Fragment->GetMeshComp()->IgnoreActorWhenMoving(this, true);
+				}
+    
+				// 플레이어 캐릭터 본체(Actor)가 파편 액터를 이동 시 무시
+				this->MoveIgnoreActorAdd(Fragment);
 				
 				// 방사형 패턴으로 충격파
 				FBox SphereBounds = FragmentMesh->GetImportedBounds().GetBox();
@@ -654,6 +662,11 @@ void ACCDCharacter::HandleDeath()
 
 			if (SpawnedOrgan)
 			{
+				if (SpawnedOrgan->GetMeshComp())
+				{
+					SpawnedOrgan->GetMeshComp()->IgnoreActorWhenMoving(this, true);
+				}
+				this->MoveIgnoreActorAdd(SpawnedOrgan);
 				USkeletalMesh* FragmentMesh = SpawnedOrgan->GetMeshComp()->GetSkeletalMeshAsset();
 				FBox SphereBounds = FragmentMesh->GetImportedBounds().GetBox();
 				FVector MeshRelativeCenter = SphereBounds.GetCenter();
