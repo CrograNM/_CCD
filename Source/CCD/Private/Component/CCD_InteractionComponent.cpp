@@ -1,5 +1,7 @@
 
 #include "Component/CCD_InteractionComponent.h"
+
+#include "Actor/CCD_FreezeGrenade.h"
 #include "Player/CCDCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
@@ -211,28 +213,29 @@ void UCCD_InteractionComponent::Server_PerformInteract_Implementation(AActor* Ta
 {
 	if (!OwnerCharacter) return;
 	
-	// 2. 들고 있는 상태라면 놓기 처리
+	// 들고 있는 상태라면 놓기 처리
 	if (GrabbedComponent)
 	{
 		Multicast_ReleaseObject();
 		return;
 	}
 	
-	// 3. 서버 측 검증 로직 시작
 	if (!TargetActor) return;
 
 	UCameraComponent* ActiveCam = OwnerCharacter->GetFirstPersonCamera();
 	if (!ActiveCam) return;
 
-	// 검증 A: 거리 체크 (클라이언트가 보고한 위치가 서버 플레이어 위치에서 상식적인 거리인가?)
+	// 거리 검증
 	float DistanceToHit = FVector::Dist(ActiveCam->GetComponentLocation(), HitLocation);
-	if (DistanceToHit > (InteractRange + InteractionTolerance)) 
+	if (DistanceToHit > (InteractRange + InteractionTolerance)) return;
+	
+	if (ACCD_FreezeGrenade* GrenadeActor = Cast<ACCD_FreezeGrenade>(TargetActor))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[Interact] Validation Failed: Distance too far. %f / %f"), DistanceToHit, InteractRange);
-		return;
+		if (OwnerCharacter->HasFreezeGrenade()) return;
+		
+		OwnerCharacter->SetHeldGrenade(GrenadeActor);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("[Interact] Server Validated interaction with: %s"), *TargetActor->GetName());
-
+	
 	if (UBurnableComponent* BurnComp = TargetActor->FindComponentByClass<UBurnableComponent>())
 	{
 		UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(TargetActor->GetRootComponent());
@@ -359,6 +362,12 @@ void UCCD_InteractionComponent::ReleaseObject_Impl()
 			WasteActor->UpdatePhysicsReplicates(true);
 		}
 	}
+	
+	if (OwnerCharacter && OwnerCharacter->HasFreezeGrenade())
+	{
+		OwnerCharacter->SetHeldGrenade(nullptr);
+	}
+	
 	GrabbedComponent = nullptr;
 	
 	SetComponentTickEnabled(false);
