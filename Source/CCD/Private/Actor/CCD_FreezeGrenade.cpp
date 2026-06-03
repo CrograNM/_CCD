@@ -4,8 +4,11 @@
 #include "Actor/CCD_FreezeGrenade.h"
 #include "AIController.h"
 #include "BrainComponent.h"
+#include "NiagaraComponentPoolMethodEnum.h"
+#include "NiagaraFunctionLibrary.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Player/CCDCharacter.h"
 
 ACCD_FreezeGrenade::ACCD_FreezeGrenade()
@@ -85,19 +88,44 @@ void ACCD_FreezeGrenade::Detonate(AActor* TargetActor)
 				BrainComp->StopLogic(TEXT("Freeze Grenade Direct Hit"));
 				AIC->StopMovement();
 				
+				USkeletalMeshComponent* TargetMesh = TargetPawn->FindComponentByClass<USkeletalMeshComponent>();
+				if (TargetMesh)
+				{
+					TargetMesh->bNoSkeletonUpdate = true;
+					TargetMesh->SetComponentTickEnabled(false);
+				}
+				
 				FTimerHandle UnfreezeTimerHandle;
-				GetWorldTimerManager().SetTimer(UnfreezeTimerHandle, FTimerDelegate::CreateLambda([BrainComp, AIC]()
+
+				GetWorldTimerManager().SetTimer(UnfreezeTimerHandle, FTimerDelegate::CreateLambda([BrainComp, AIC, TargetMesh]()
 				{
 					if (BrainComp && AIC)
 					{
 						BrainComp->RestartLogic();
-						UE_LOG(LogTemp, Warning, TEXT("[Grenade] Direct-hit AI Logic Restarted successfully after 30s."));
+						
+						if (TargetMesh)
+						{
+							TargetMesh->bNoSkeletonUpdate = false;
+							TargetMesh->SetComponentTickEnabled(true);
+						}
+						
+						UE_LOG(LogTemp, Warning, TEXT("[Grenade] Direct-hit AI and Animation Restarted successfully after 30s."));
 					}
 				}), 30.0f, false);
 				
-				UE_LOG(LogTemp, Warning, TEXT("[Grenade] Direct Hit! Stopped BrainComponent for: %s"), *TargetActor->GetName());
+				UE_LOG(LogTemp, Warning, TEXT("[Grenade] Direct Hit! Stopped Brain and Anim for: %s"), *TargetActor->GetName());
 			}
 		}
+	}
+	
+	if (ExplosionSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ExplosionSound, GetActorLocation());
+	}
+
+	if (ExplosionVFX)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionVFX, GetActorLocation());
 	}
 	
 	Destroy();

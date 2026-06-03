@@ -7,6 +7,7 @@
 #include "CCD_FreezeGrenade.generated.h"
 
 class UProjectileMovementComponent;
+class UNiagaraSystem;
 
 UCLASS()
 class CCD_API ACCD_FreezeGrenade : public AWasteActor_Base
@@ -22,6 +23,12 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UProjectileMovementComponent> ProjectileMovement;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Design | Sound")
+	TObjectPtr<USoundBase> ExplosionSound;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Design | Effect")
+	TObjectPtr<UNiagaraSystem> ExplosionVFX;
 	
 	UFUNCTION()
 	void OnGrenadeHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, 
