@@ -324,6 +324,12 @@ void UCCD_InteractionComponent::GrabObject_Impl(UPrimitiveComponent* ComponentTo
 	GrabRelativeRotation = FRotator(0.f, ObjectYaw - CameraYaw, 0.f);
 	
 	GrabbedComponent->SetSimulatePhysics(true);
+	
+	if (GrabbedComponent->IsA<USkeletalMeshComponent>())
+	{
+		GrabbedComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
+	
 	GrabbedComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 
 	if (AWasteActor_Base* WasteActor = Cast<AWasteActor_Base>(GrabbedComponent->GetOwner()))
@@ -358,6 +364,11 @@ void UCCD_InteractionComponent::ReleaseObject_Impl()
 	
 	if (GrabbedComponent)
 	{
+		if (GrabbedComponent->IsA<USkeletalMeshComponent>())
+		{
+			GrabbedComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		}
+		
 		GrabbedComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
 
 		if (AWasteActor_Base* WasteActor = Cast<AWasteActor_Base>(GrabbedComponent->GetOwner()))
