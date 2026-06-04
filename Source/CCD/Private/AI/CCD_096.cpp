@@ -127,15 +127,23 @@ void ACCD_096::OnRep_CurrentState()
 		if (PanicMontage)
 		{
 			PlayAnimMontage(PanicMontage);
-			
+        
 			FTimerHandle ExitLoopTimer;
-			GetWorldTimerManager().SetTimer(ExitLoopTimer, [this]()
+			TWeakObjectPtr<ACCD_096> WeakThis(this);
+
+			GetWorldTimerManager().SetTimer(ExitLoopTimer, [WeakThis]()
 			{
-				if (UAnimInstance* AnimInst = GetMesh()->GetAnimInstance())
+				if (ACCD_096* ValidThis = WeakThis.Get())
 				{
-					if (PanicMontage)
+					if (USkeletalMeshComponent* Mesh = ValidThis->GetMesh())
 					{
-						AnimInst->Montage_SetNextSection(FName("Loop"), FName("End"), PanicMontage);
+						if (UAnimInstance* AnimInst = Mesh->GetAnimInstance())
+						{
+							if (ValidThis->PanicMontage)
+							{
+								AnimInst->Montage_SetNextSection(FName("Loop"), FName("End"), ValidThis->PanicMontage);
+							}
+						}
 					}
 				}
 			}, 9.0f, false);
