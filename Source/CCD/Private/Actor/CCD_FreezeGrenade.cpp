@@ -125,15 +125,20 @@ void ACCD_FreezeGrenade::Detonate(AActor* TargetActor)
         }
     }
     
-    if (ExplosionSound)
-    {
-        UGameplayStatics::PlaySoundAtLocation(this, ExplosionSound, GetActorLocation());
-    }
-
-    if (ExplosionVFX)
-    {
-        UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionVFX, GetActorLocation());
-    }
+	Multicast_PlayExplosionEffects(GetActorLocation());
     
     Destroy();
+}
+
+void ACCD_FreezeGrenade::Multicast_PlayExplosionEffects_Implementation(FVector Location)
+{
+	if (ExplosionSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ExplosionSound, Location);
+	}
+
+	if (ExplosionVFX)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), ExplosionVFX, Location);
+	}
 }

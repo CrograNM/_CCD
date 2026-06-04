@@ -34,6 +34,9 @@ protected:
 	void OnGrenadeHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, 
 		UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PlayExplosionEffects(FVector Location);
+	
 	void Detonate(AActor* TargetActor);
 
 private:
