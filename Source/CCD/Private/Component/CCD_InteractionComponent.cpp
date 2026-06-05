@@ -28,8 +28,22 @@ void UCCD_InteractionComponent::BeginPlay()
 	{
 		PhysicsHandle = OwnerCharacter->FindComponentByClass<UPhysicsHandleComponent>();
 		
-		if (OwnerCharacter->IsLocallyControlled())
-			GetWorld()->GetTimerManager().SetTimer(HighlightTimerHandle, this, &UCCD_InteractionComponent::UpdateHighlight, 0.1f, true);
+		if (OwnerCharacter && OwnerCharacter->IsLocallyControlled())
+		{
+			TWeakObjectPtr<UCCD_InteractionComponent> WeakThis(this);
+			GetWorld()->GetTimerManager().SetTimer(
+				HighlightTimerHandle,
+				[WeakThis]()
+				{
+					if (WeakThis.IsValid())
+					{
+						WeakThis->UpdateHighlight();
+					}
+				},
+				0.1f,
+				true
+			);
+		}
 	}
 }
 
@@ -331,6 +345,25 @@ void UCCD_InteractionComponent::GrabObject_Impl(UPrimitiveComponent* ComponentTo
 	}
 	
 	GrabbedComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+	
+	if (GetWorld())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(CollisionRestoreTimerHandle);
+    
+		TWeakObjectPtr<UCCD_InteractionComponent> WeakThis(this);
+		GetWorld()->GetTimerManager().SetTimer(
+			CollisionRestoreTimerHandle,
+			[WeakThis]()
+			{
+				if (WeakThis.IsValid())
+				{
+					WeakThis->RestoreCollision_Impl();
+				}
+			},
+			0.5f,
+			false
+		);
+	}
 
 	if (AWasteActor_Base* WasteActor = Cast<AWasteActor_Base>(GrabbedComponent->GetOwner()))
 	{
@@ -359,6 +392,11 @@ void UCCD_InteractionComponent::ReleaseObject_Impl()
 	
 	bIsRotationMode = false;
 	CustomRotationOffset = FRotator::ZeroRotator;
+	
+	if (GetWorld())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(CollisionRestoreTimerHandle);
+	}
 	
 	PhysicsHandle->ReleaseComponent();
 	
@@ -411,4 +449,17 @@ void UCCD_InteractionComponent::SetRotationMode(bool bActive)
 void UCCD_InteractionComponent::Server_SetRotationMode_Implementation(bool bActive)
 {
 	SetRotationMode(bActive);
+}
+
+void UCCD_InteractionComponent::RestoreCollision_Impl()
+{
+	if (GrabbedComponent)
+	{
+		if (GrabbedComponent->IsA<USkeletalMeshComponent>())
+		{
+			GrabbedComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		}
+		
+		GrabbedComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+	}
 }

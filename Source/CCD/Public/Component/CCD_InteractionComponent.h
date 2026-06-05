@@ -60,6 +60,9 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void Server_SetRotationMode(bool bActive);
 	
+	FTimerHandle CollisionRestoreTimerHandle;
+	void RestoreCollision_Impl();
+	
 private:
 	/** --- 하이라이트 관련 --- */
 	FTimerHandle HighlightTimerHandle;
