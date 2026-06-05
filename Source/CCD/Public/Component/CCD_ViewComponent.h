@@ -20,6 +20,7 @@ public:
 
 	// 외부 인터페이스
 	void ToggleView();
+	void SetViewModeFPS(bool bNewIsFirstPerson);
 	void ApplyViewMode(bool bFirstPerson);
 	
 	UFUNCTION(BlueprintCallable)

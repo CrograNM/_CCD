@@ -273,6 +273,13 @@ void ACCDCharacter::ToggleView()
 	if (bIsDead) return;
 	if (ViewComp) ViewComp->ToggleView(); 
 }
+
+void ACCDCharacter::SetViewModeFPS(bool bNewIsFirstPerson)
+{
+	if (bIsDead) return;
+	if (ViewComp) ViewComp->SetViewModeFPS(bNewIsFirstPerson);
+}
+
 void ACCDCharacter::UseEquipment()
 {
 	if (bIsDead) return;
@@ -472,12 +479,14 @@ void ACCDCharacter::OnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted
 void ACCDCharacter::OnEmoteMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	if (!HasAuthority()) return;
+	SetViewModeFPS(true);
 	bIsActionInProgress = false; // 액션 상태 해제
 	bIsEmoting = false; // 이모트 상태 해제
 }
 
 void ACCDCharacter::Server_StopMontage_Implementation()
 {
+	SetViewModeFPS(true);
 	Multicast_StopMontage();
 }
 

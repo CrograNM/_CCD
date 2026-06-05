@@ -76,6 +76,23 @@ void UCCD_ViewComponent::ToggleView()
 	}
 }
 
+void UCCD_ViewComponent::SetViewModeFPS(bool bNewIsFirstPerson)
+{
+	if (bIsFirstPerson == bNewIsFirstPerson) return; // 이미 원하는 시점인 경우 중복 처리 방지
+	if (!OwnerCharacter) return;
+	if (OwnerCharacter->IsDead()) return; // 사망 시 시점 전환 방지
+	
+	bIsFirstPerson = bNewIsFirstPerson;
+	ApplyViewMode(bIsFirstPerson);
+	Server_ToggleView(bIsFirstPerson);
+	
+	if (OwnerCharacter && OwnerCharacter->IsLocallyControlled())
+	{
+		OwnerCharacter->GetEquipmentComp()->HandleEquipmentEffects(OwnerCharacter->GetEquipmentComp()->GetEquipmentState());
+		OwnerCharacter->SetMesh1PVisibility(bIsFirstPerson);
+	}
+}
+
 void UCCD_ViewComponent::ApplyViewMode(bool bFirstPerson)
 {
 	if (!OwnerCharacter) return;

@@ -38,6 +38,9 @@ public:
     
     UFUNCTION(BlueprintCallable, Category = "Camera")
     void ToggleView();
+    
+    UFUNCTION(BlueprintCallable, Category = "Camera")
+    void SetViewModeFPS(bool bNewIsFirstPerson);
 
     UFUNCTION(BlueprintCallable, Category = "Equipment")
     void SwitchEquipment(const ECCD_EquipmentState NewState);
