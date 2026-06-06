@@ -68,7 +68,7 @@ protected:
 	float StaminaConsumptionRate = 20.f; 
 	// 최대 스태미나
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats | Stamina")
-	float MaxStamina = 100.f;
+	float MaxStamina = 150.f;
 
 	UPROPERTY(EditAnywhere, Category = "Stats | Stamina")
 	float ExhaustionDelay = 3.0f;

@@ -22,6 +22,7 @@ void UCCD_StatComponent::BeginPlay()
 	SetComponentTickEnabled(false);
 	OwnerCharacter = Cast<ACCDCharacter>(GetOwner());
 	SetComponentTickEnabled(true);
+	CurrentStamina = MaxStamina;
 }
 
 void UCCD_StatComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
