@@ -6,6 +6,7 @@
 #include "Player/CCDCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
+#include "Component/CCD_EquipmentComponent.h"
 #include "Component/BurnableComponent.h"
 #include "Interface/InteractInterface.h"
 #include "Actor/WasteActor_Base.h"
@@ -113,14 +114,7 @@ void UCCD_InteractionComponent::UpdateHighlight()
 		// 인터페이스를 구현했거나 BurnableComponent가 있는 액터인지 확인 (필터링)
 		AActor* HitActor = HitResult.GetActor();
 		if (!HitActor) return;
-		if (HitActor->FindComponentByClass<UBurnableComponent>())
-		{
-			if (OwnerCharacter->GetIsEquipHand())
-			{
-				CurrentHitComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent());
-			}
-		}
-		else if (HitActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass()))
+		if (HitActor->FindComponentByClass<UBurnableComponent>() || HitActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass()))
 		{
 			CurrentHitComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent());
 		}
@@ -253,17 +247,19 @@ void UCCD_InteractionComponent::Server_PerformInteract_Implementation(AActor* Ta
 	
 	if (UBurnableComponent* BurnComp = TargetActor->FindComponentByClass<UBurnableComponent>())
 	{
-		if (OwnerCharacter->GetIsEquipHand())
+		if (!OwnerCharacter->GetIsEquipHand())
 		{
-			UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(TargetActor->GetRootComponent());
-        
-			if (RootPrim && RootPrim->IsSimulatingPhysics())
-			{
-				FVector GrabPoint = RootPrim->Bounds.Origin;
-				Multicast_GrabObject(RootPrim, GrabPoint);
-			}
-			IInteractInterface::Execute_Interact(BurnComp, OwnerCharacter);
+			OwnerCharacter->SwitchEquipment(ECCD_EquipmentState::EES_Hands);
 		}
+		
+		UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(TargetActor->GetRootComponent());
+        
+		if (RootPrim && RootPrim->IsSimulatingPhysics())
+		{
+			FVector GrabPoint = RootPrim->Bounds.Origin;
+			Multicast_GrabObject(RootPrim, GrabPoint);
+		}
+		IInteractInterface::Execute_Interact(BurnComp, OwnerCharacter);
 	}
 	else if (TargetActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass()))
 	{
