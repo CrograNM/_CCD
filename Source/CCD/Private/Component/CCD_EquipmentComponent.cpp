@@ -36,6 +36,20 @@ void UCCD_EquipmentComponent::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 	DOREPLIFETIME(UCCD_EquipmentComponent, ReplicatedTools);
 }
 
+void UCCD_EquipmentComponent::SwitchEquipment(ECCD_EquipmentState NewState)
+{
+	if (EquipmentState == NewState || !OwnerCharacter) return;
+	
+	if (OwnerCharacter->GetIsUnequipping() || OwnerCharacter->GetIsActionInProgress()) return;
+	
+	if (OwnerCharacter->IsLocallyControlled())
+	{
+		OnEquipmentChanged.Broadcast(NewState);
+	}
+	
+	Server_SetEquipmentState(NewState);
+}
+
 void UCCD_EquipmentComponent::Server_SetEquipmentState_Implementation(ECCD_EquipmentState NewState)
 {
 	if (EquipmentState == NewState || !OwnerCharacter) return;
@@ -199,6 +213,8 @@ void UCCD_EquipmentComponent::HandleEquipNotify()
         
 		// 서버에서도 부착 상태 업데이트
 		HandleEquipmentEffects(EquipmentState);
+		
+		OnEquipmentChanged.Broadcast(PendingEquipmentState);
 	}
 	
 	// 클라이언트 : 서버의 복제본이 도착하기 전 애니메이션 타이밍에 맞춰 미리 부착
@@ -207,6 +223,8 @@ void UCCD_EquipmentComponent::HandleEquipNotify()
 		// 로컬 플레이어는 서버 응답을 기다리지 않고 애니메이션 싱크에 맞춰 미리 부착
 		ECCD_EquipmentState PredictState = OwnerCharacter->GetIsUnequipping() ? ECCD_EquipmentState::EES_Hands : PendingEquipmentState;
 		HandleEquipmentEffects(PredictState);
+		
+		OnEquipmentChanged.Broadcast(PendingEquipmentState);
 	}
 }
 

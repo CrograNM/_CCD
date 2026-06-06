@@ -30,6 +30,8 @@ struct FEquipToolInfo
 	TObjectPtr<ACCD_EquipActor_Base> ToolActor = nullptr;
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEquipmentChangedSignature, ECCD_EquipmentState, NewState);
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class CCD_API UCCD_EquipmentComponent : public UActorComponent
 {
@@ -41,7 +43,7 @@ public:
 	
 	/** --- 외부 인터페이스 --- */
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	void SwitchEquipment(ECCD_EquipmentState NewState) { Server_SetEquipmentState(NewState); }
+	void SwitchEquipment(ECCD_EquipmentState NewState);
 	
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	void HandleEquipNotify();
@@ -67,6 +69,9 @@ public:
 	
 	/** --- 내부 로직 --- */
 	void HandleEquipmentEffects(ECCD_EquipmentState NewState);
+	
+	UPROPERTY(BlueprintAssignable, Category = "Equipment | Event")
+	FOnEquipmentChangedSignature OnEquipmentChanged;
 	
 protected:
 	virtual void BeginPlay() override;

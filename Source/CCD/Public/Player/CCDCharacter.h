@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AI/CCD_096.h"
 #include "Component/CCD_EquipmentComponent.h"
 #include "Component/CCD_InteractionComponent.h"
 #include "Component/CCD_StatComponent.h"
@@ -110,6 +111,7 @@ public:
     FORCEINLINE bool GetIsUnequipping() const { return bIsUnequipping; }
     FORCEINLINE void SetIsUnequipping(bool bNewIsUnequipping) { bIsUnequipping = bNewIsUnequipping; }
     
+    UFUNCTION(BlueprintCallable, Category = "Character | State")
     FORCEINLINE bool GetIsActionInProgress() const { return bIsActionInProgress; }
     FORCEINLINE void SetIsActionInProgress(bool bNewIsActionInProgress) { bIsActionInProgress = bNewIsActionInProgress; }
 
@@ -137,7 +139,8 @@ public:
     bool GetIsObserveActivated() const { return StatComp ? StatComp->GetIsObserveActivated() : false; }
     
     void CheckForSCP096();
-    
+    void Server_Trigger096Panic_Implementation(::ACCD_096* Target096);
+
     FORCEINLINE TObjectPtr<USkeletalMeshComponent> GetMesh1P() const { return Mesh1P; }
     void SetMesh1PVisibility(bool bVisible);
     
