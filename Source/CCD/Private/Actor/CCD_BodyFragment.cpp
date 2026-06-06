@@ -140,6 +140,7 @@ void ACCD_BodyFragment::OnRep_SkeletalMesh()
 		MeshComp->SetSkeletalMesh(RepSkeletalMesh);
 		MeshComp->SetCollisionProfileName(TEXT("PhysicsActor"));
 		MeshComp->SetCollisionResponseToChannel(ECC_DecalSurface, ECR_Ignore); // 데칼 표면 검사와 충돌 무시
+		MeshComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore); // 플레이어와 충돌 무시
 		MeshComp->SetSimulatePhysics(true);
 		MeshComp->SetNotifyRigidBodyCollision(true);
 		MeshComp->SetUseCCD(true);

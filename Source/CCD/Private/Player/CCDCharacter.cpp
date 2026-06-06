@@ -589,7 +589,7 @@ void ACCDCharacter::HandleDeath()
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(this);
 		
-		for (int i = 0; i < 3; ++i)
+		for (int i = 0; i < 1; ++i)
 		{
 			FHitResult HitResult;
 			FVector Start = GetActorLocation() + FVector(0.f, 0.f, BloodSpawnHeight);
@@ -622,7 +622,22 @@ void ACCDCharacter::HandleDeath()
 	// 카오스 디스트럭션 적용 (Geometry Collection Mesh 스폰)
 	if (DeathFragmentClass && FragmentMeshList.Num() > 0)
 	{
-		for (USkeletalMesh* FragmentMesh : FragmentMeshList)
+		TArray<TObjectPtr<USkeletalMesh>> MeshesToSpawn;
+		TArray<TObjectPtr<USkeletalMesh>> TempPool = FragmentMeshList;	// 원본 복사 풀
+		int32 SpawnTargetCount = FMath::Min(3, TempPool.Num());		// 전체 개수와 3개 중 더 작은 값을 타겟 스폰 수로 결정
+		
+		for (int32 i = 0; i < SpawnTargetCount; ++i)
+		{
+			int32 RandomIndex = FMath::RandRange(0, TempPool.Num() - 1);
+			if (TempPool[RandomIndex])
+			{
+				MeshesToSpawn.Add(TempPool[RandomIndex]);
+			}
+			// 중복 방지를 위해 선택된 요소를 스왑 후 제거
+			TempPool.RemoveAtSwap(RandomIndex);
+		}
+		
+		for (USkeletalMesh* FragmentMesh : MeshesToSpawn)
 		{
 			if (!FragmentMesh) continue;
 			FVector SpawnLocation = GetActorLocation() + 
@@ -636,16 +651,12 @@ void ACCDCharacter::HandleDeath()
 
 			if (Fragment)
 			{
-				// // 랜덤한 방향으로 튀어나가게 충격 가하기
-				// FVector RandomImpulse = (FVector::UpVector + FVector(FMath::RandRange(-1.f, 1.f), FMath::RandRange(-1.f, 1.f), 0.f)).GetSafeNormal() * DeathImpulseStrength;
-				// Fragment->InitFragment(FragmentMesh, RandomImpulse);
 				if (Fragment->GetMeshComp())
 				{
 					// 파편 메쉬 컴포넌트가 플레이어 본체(this)를 이동 시 무시
 					Fragment->GetMeshComp()->IgnoreActorWhenMoving(this, true);
 				}
     
-				// 플레이어 캐릭터 본체(Actor)가 파편 액터를 이동 시 무시
 				this->MoveIgnoreActorAdd(Fragment);
 				
 				// 방사형 패턴으로 충격파

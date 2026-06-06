@@ -1,10 +1,12 @@
 
 #include "Component/CCD_InteractionComponent.h"
 
+#include "Actor/CCD_BodyFragment.h"
 #include "Actor/CCD_FreezeGrenade.h"
 #include "Player/CCDCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
+#include "Component/CCD_EquipmentComponent.h"
 #include "Component/BurnableComponent.h"
 #include "Interface/InteractInterface.h"
 #include "Actor/WasteActor_Base.h"
@@ -112,14 +114,7 @@ void UCCD_InteractionComponent::UpdateHighlight()
 		// 인터페이스를 구현했거나 BurnableComponent가 있는 액터인지 확인 (필터링)
 		AActor* HitActor = HitResult.GetActor();
 		if (!HitActor) return;
-		if (HitActor->FindComponentByClass<UBurnableComponent>())
-		{
-			if (OwnerCharacter->GetIsEquipHand())
-			{
-				CurrentHitComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent());
-			}
-		}
-		else if (HitActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass()))
+		if (HitActor->FindComponentByClass<UBurnableComponent>() || HitActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass()))
 		{
 			CurrentHitComponent = Cast<UPrimitiveComponent>(HitActor->GetRootComponent());
 		}
@@ -158,7 +153,7 @@ void UCCD_InteractionComponent::PhysicsHandleUpdate(float DeltaTime)
 {
 	if (!PhysicsHandle || !GrabbedComponent || !OwnerCharacter) return;
     
-	float TargetDistance = 200.f; 
+	float TargetDistance = 150.f; 
 	UCameraComponent* PlayerCam = OwnerCharacter->GetFirstPersonCamera();
 	FVector RealTargetLocation = PlayerCam->GetComponentLocation() + (PlayerCam->GetForwardVector() * TargetDistance);
 	
@@ -173,7 +168,7 @@ void UCCD_InteractionComponent::PhysicsHandleUpdate(float DeltaTime)
 	FRotator CurrentRotation {};
 	PhysicsHandle->GetTargetLocationAndRotation(CurrentLocation, CurrentRotation);
     
-	float FollowSpeed = 10.0f; 
+	float FollowSpeed = 30.0f; 
 	FVector NewLocation = FMath::VInterpTo(CurrentLocation, RealTargetLocation, DeltaTime, FollowSpeed);
 	FRotator NewRotation = FMath::RInterpTo(CurrentRotation, RealTargetRotation, DeltaTime, FollowSpeed);
     
@@ -252,74 +247,25 @@ void UCCD_InteractionComponent::Server_PerformInteract_Implementation(AActor* Ta
 	
 	if (UBurnableComponent* BurnComp = TargetActor->FindComponentByClass<UBurnableComponent>())
 	{
-		if (OwnerCharacter->GetIsEquipHand())
+		if (!OwnerCharacter->GetIsEquipHand())
 		{
-			UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(TargetActor->GetRootComponent());
-        
-			if (RootPrim && RootPrim->IsSimulatingPhysics())
-			{
-				FVector GrabPoint = RootPrim->Bounds.Origin;
-				Multicast_GrabObject(RootPrim, GrabPoint);
-			}
-			IInteractInterface::Execute_Interact(BurnComp, OwnerCharacter);
+			OwnerCharacter->SwitchEquipment(ECCD_EquipmentState::EES_Hands);
 		}
+		
+		UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(TargetActor->GetRootComponent());
+        
+		if (RootPrim && RootPrim->IsSimulatingPhysics())
+		{
+			FVector GrabPoint = RootPrim->Bounds.Origin;
+			Multicast_GrabObject(RootPrim, GrabPoint);
+		}
+		IInteractInterface::Execute_Interact(BurnComp, OwnerCharacter);
 	}
 	else if (TargetActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass()))
 	{
 		IInteractInterface::Execute_Interact(TargetActor, OwnerCharacter);
 	}
 }
-
-// void UCCD_InteractionComponent::Server_PerformInteract_Implementation()
-// {
-// 	if (!OwnerCharacter) return;
-// 	
-// 	if (GrabbedComponent)
-// 	{
-// 		Multicast_ReleaseObject();
-// 		return;
-// 	}
-//
-// 	// 캐릭터의 현재 카메라 위치와 방향을 가져옵니다.
-// 	UCameraComponent* ActiveCam = OwnerCharacter->GetFirstPersonCamera(); 
-// 	FVector TraceStart = ActiveCam->GetComponentLocation();
-// 	FVector TraceEnd = TraceStart + (ActiveCam->GetForwardVector() * InteractRange);
-//
-// 	FHitResult HitResult;
-// 	FCollisionQueryParams Params;
-// 	Params.AddIgnoredActor(GetOwner());
-//
-// 	if (GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_Visibility, Params))
-// 	{
-// 		AActor* HitActor = HitResult.GetActor();
-// 		if (!HitActor) return;
-// 		UE_LOG(LogTemp, Warning, TEXT("[Hand] Interacted with : %s"), *HitActor->GetName());
-// 		
-// 		if (UBurnableComponent* BurnComp = HitActor->FindComponentByClass<UBurnableComponent>())
-// 		{
-// 			UE_LOG(LogTemp, Warning, TEXT("[Hand] Target has BurnableComponent!"));
-// 			UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(HitActor->GetRootComponent());
-// 			
-// 			if (RootPrim && RootPrim->IsSimulatingPhysics())
-// 			{
-// 				FVector CenterLocation = RootPrim->Bounds.Origin;
-// 				Multicast_GrabObject(RootPrim, CenterLocation); // CenterLocation 이전: HitResult.ImpactPoint
-// 				UE_LOG(LogTemp, Warning, TEXT("[Hand] Grabbed with : %s"), *HitActor->GetName());
-// 			}
-// 			else UE_LOG(LogTemp, Error, TEXT("[Hand] no root primitive component!"));
-// 			IInteractInterface::Execute_Interact(BurnComp, OwnerCharacter);
-// 		}
-// 		else if (HitActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass()))
-// 		{
-// 			UE_LOG(LogTemp, Warning, TEXT("[Hand] Target does not has BurnableComponent!"));
-// 			IInteractInterface::Execute_Interact(HitActor, OwnerCharacter);
-// 		}
-// 		else
-// 		{
-// 			UE_LOG(LogTemp, Warning, TEXT("[Hand] Target does not implement InteractInterface!"));
-// 		}
-// 	}
-// }
 
 void UCCD_InteractionComponent::Multicast_GrabObject_Implementation(UPrimitiveComponent* ComponentToGrab, FVector GrabLocation)
 {
@@ -360,7 +306,7 @@ void UCCD_InteractionComponent::GrabObject_Impl(UPrimitiveComponent* ComponentTo
 					WeakThis->RestoreCollision_Impl();
 				}
 			},
-			0.5f,
+			0.2f,
 			false
 		);
 	}
@@ -402,12 +348,7 @@ void UCCD_InteractionComponent::ReleaseObject_Impl()
 	
 	if (GrabbedComponent)
 	{
-		if (GrabbedComponent->IsA<USkeletalMeshComponent>())
-		{
-			GrabbedComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		}
-		
-		GrabbedComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+		RestoreCollision_Impl();
 
 		if (AWasteActor_Base* WasteActor = Cast<AWasteActor_Base>(GrabbedComponent->GetOwner()))
 		{
@@ -458,8 +399,14 @@ void UCCD_InteractionComponent::RestoreCollision_Impl()
 		if (GrabbedComponent->IsA<USkeletalMeshComponent>())
 		{
 			GrabbedComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			
+			GrabbedComponent->SetCollisionProfileName(TEXT("PhysicsActor"));
+			GrabbedComponent->SetCollisionResponseToChannel(ECC_DecalSurface, ECR_Ignore); // 데칼 표면 검사와 충돌 무시
+			GrabbedComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore); // 플레이어와 충돌 무시
+			GrabbedComponent->SetSimulatePhysics(true);
+			GrabbedComponent->SetNotifyRigidBodyCollision(true);
+			GrabbedComponent->SetUseCCD(true);
 		}
-		
-		GrabbedComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+		else GrabbedComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
 	}
 }
