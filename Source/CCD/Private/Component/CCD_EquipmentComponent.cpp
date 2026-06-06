@@ -81,12 +81,19 @@ void UCCD_EquipmentComponent::Server_SetEquipmentState_Implementation(ECCD_Equip
 	else
 	{
 		ProceedToEquip(NewState);
+		
+		if (GetOwner()->HasAuthority())
+		{
+			OnEquipmentChanged.Broadcast(EquipmentState); 
+		}
 	}
 }
 
 void UCCD_EquipmentComponent::OnRep_EquipmentState(ECCD_EquipmentState PreviousState)
 {
 	HandleEquipmentEffects(EquipmentState);
+	
+	OnEquipmentChanged.Broadcast(EquipmentState);
 }
 
 void UCCD_EquipmentComponent::HandleEquipmentEffects(ECCD_EquipmentState NewState)
