@@ -8,6 +8,7 @@
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "Perception/AISense_Hearing.h"
 
 AIncineratorActor::AIncineratorActor()
 {
@@ -136,7 +137,11 @@ void AIncineratorActor::Interact_Implementation(AActor* Interactor)
 	// 문 상태 토글
 	bIsDoorOpen = !bIsDoorOpen;
 	if (bIsDoorOpen) SetActorTickEnabled(false); // 문이 열리면 대미지 판정 중지
-	else SetActorTickEnabled(true); // 문이 닫히면 대미지 판정 재개
+	else 
+	{
+		SetActorTickEnabled(true); // 문이 닫히면 대미지 판정 재개
+		UAISense_Hearing::ReportNoiseEvent(this, GetActorLocation(), 1.5f, Interactor);
+	}
     
 	// 서버에서도 OnRep 함수를 직접 호출하여 자신의 화면을 갱신합니다.
 	OnRep_DoorOpen();

@@ -5,6 +5,7 @@
 #include "ActorSequencePlayer.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Perception/AISense_Hearing.h"
 
 ABinSpawnerActor::ABinSpawnerActor()
 {
@@ -59,8 +60,13 @@ void ABinSpawnerActor::ExecuteSpawning()
 
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-		GetWorld()->SpawnActor<AActor>(BucketClass, SpawnLocation, SpawnRotation, SpawnParams);
+		
+		AActor* SpawnedBucket = GetWorld()->SpawnActor<AActor>(BucketClass, SpawnLocation, SpawnRotation, SpawnParams);
+		
+		if (SpawnedBucket)
+		{
+			UAISense_Hearing::ReportNoiseEvent(this, GetActorLocation(), 1.5f, nullptr);
+		}
 	}
 }
 

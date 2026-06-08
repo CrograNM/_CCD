@@ -9,6 +9,7 @@
 #include "Actor/WaterBucketActor.h"
 #include "Component/WashableComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Perception/AISense_Hearing.h"
 
 ACCD_EMopActor::ACCD_EMopActor()
 {
@@ -79,6 +80,7 @@ void ACCD_EMopActor::PerformMopTrace()
 		{
 			if (Bucket->WashMop(MopPollution_Blood, MopPollution_Excrement))
 			{
+				UAISense_Hearing::ReportNoiseEvent(this, HitResult.Location, 0.8f, OwnerCharacter);
 				SpilledStainCount = 0;
 				UpdateMopMaterial();
 			}
@@ -113,6 +115,8 @@ void ACCD_EMopActor::PerformMopTrace()
 					}
 				}
 				
+				UAISense_Hearing::ReportNoiseEvent(this, HitResult.Location, 0.6f, OwnerCharacter);
+				
 				SpilledStainCount++;
 				if (SpilledStainCount >= 1)
 				{
@@ -139,6 +143,8 @@ void ACCD_EMopActor::PerformMopTrace()
 			else if (WashComp->GetWashableType() == ECCD_WashableType::EWT_Excrement) 
 				MopPollution_Excrement += PollutionAdded;
 			
+			UAISense_Hearing::ReportNoiseEvent(this, HitResult.Location, 0.5f, OwnerCharacter);
+			
 			UpdateMopMaterial();
 		}
 		
@@ -146,6 +152,8 @@ void ACCD_EMopActor::PerformMopTrace()
 	else {
 		// 대걸레 허공 휘두르기 사운드 재생
 		Multicast_PlayMopSwingSound();
+		
+		UAISense_Hearing::ReportNoiseEvent(this, OwnerCharacter->GetActorLocation(), 0.2f, OwnerCharacter);
 	}
 }
 

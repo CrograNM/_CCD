@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Net/UnrealNetwork.h"
+#include "Perception/AISense_Hearing.h"
 
 ABucketSpawnerActor::ABucketSpawnerActor()
 {
@@ -147,7 +148,12 @@ void ABucketSpawnerActor::ExecuteSpawning()
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-		GetWorld()->SpawnActor<AActor>(BucketClass, SpawnLocation, SpawnRotation, SpawnParams);
+		AActor* SpawnedBucket = GetWorld()->SpawnActor<AActor>(BucketClass, SpawnLocation, SpawnRotation, SpawnParams);
+		
+		if (SpawnedBucket)
+		{
+			UAISense_Hearing::ReportNoiseEvent(this, GetActorLocation(), 1.2f, nullptr);
+		}
 	}
 
 	// 모든 클라이언트에게 역재생 명령

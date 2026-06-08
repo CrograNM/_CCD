@@ -8,7 +8,7 @@
 #include "Components/DecalComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
-
+#include "Perception/AISense_Hearing.h"
 
 AWaterBucketActor::AWaterBucketActor()
 {
@@ -187,6 +187,9 @@ void AWaterBucketActor::SpillWater()
 	}
 		
 	UE_LOG(LogTemp, Warning, TEXT("Spill Water!"));
+	
+	UAISense_Hearing::ReportNoiseEvent(this, GetActorLocation(), 2.0f, GetInstigator());
+	
 	WaterMeshComp->SetVisibility(false);
 	WaterMaterial = nullptr;
 	bIsWaterSpilled = true;
