@@ -33,7 +33,7 @@ void ACCD_939_AIController::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 
 	if (Stimulus.WasSuccessfullySensed())
 	{
-		if (Stimulus.Type == UAISense::GetSenseID<UAISense_Hearing>())s
+		if (Stimulus.Type == UAISense::GetSenseID<UAISense_Hearing>())
 		{
 			BB->SetValueAsVector(LoudLocationKey, Stimulus.StimulusLocation);
 		}
