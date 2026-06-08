@@ -166,11 +166,15 @@ void ACCDPlayerController::Server_CleanAll_Implementation()
 	// 월드 내의 모든 'ProgressValue > 0'인 액터를 찾아 파괴
 	for (TActorIterator<AActor> It(World); It; ++It)
 	{
-		if (UProgressComponent* ProgressComp = It->FindComponentByClass<UProgressComponent>())
+		AActor* TargetActor = *It;
+		if (IsValid(TargetActor) && !TargetActor->IsPendingKillPending())
 		{
-			if (ProgressComp->ProgressValue > 0.0f)
+			if (UProgressComponent* ProgressComp = It->FindComponentByClass<UProgressComponent>())
 			{
-				It->Destroy();
+				if (ProgressComp->ProgressValue > 0.0f)
+				{
+					It->Destroy();
+				}
 			}
 		}
 	}
