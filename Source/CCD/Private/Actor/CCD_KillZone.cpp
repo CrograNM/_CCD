@@ -35,6 +35,8 @@ void ACCD_KillZone::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* 
 			{
 				// 3. 조건 만족 시 액터 파괴
 				OtherActor->Destroy();
+				
+				UE_LOG(LogTemp, Warning, TEXT("KillZone: Destroyed %s due to entering kill zone."), *OtherActor->GetName());
 			}
 		}
 	}
