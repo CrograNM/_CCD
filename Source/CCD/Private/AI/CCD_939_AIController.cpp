@@ -33,7 +33,7 @@ void ACCD_939_AIController::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 
 	if (Stimulus.WasSuccessfullySensed())
 	{
-		if (Stimulus.Type == UAISense::GetSenseID<UAISense_Hearing>())
+		if (Stimulus.Type == UAISense::GetSenseID<UAISense_Hearing>())s
 		{
 			BB->SetValueAsVector(LoudLocationKey, Stimulus.StimulusLocation);
 		}
@@ -54,6 +54,9 @@ void ACCD_939_AIController::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 			if (CurrentTarget == Actor)
 			{
 				BB->ClearValue(TargetActorKey);
+				
+				BB->ClearValue(TEXT("HasScreamed"));
+				
 				ClearFocus(EAIFocusPriority::Gameplay);
 			}
 		}

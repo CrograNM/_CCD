@@ -140,6 +140,40 @@ void ACCDCharacter::Tick(float DeltaTime)
 	if (!bIsDead)
 	{
 		CheckForSCP096();
+		
+		// ================= [SCP-939 실내 거리 디버깅 로직 추가] =================
+		if (IsLocallyControlled() && GetWorld())
+		{
+			TArray<AActor*> Found939Actors;
+			UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), Found939Actors);
+
+			for (AActor* TargetActor : Found939Actors)
+			{
+				if (TargetActor && TargetActor->GetName().Contains(TEXT("939")))
+				{
+					// 캐릭터와 SCP-939 사이의 거리 계산
+					float DistanceInCm = FVector::Dist(GetActorLocation(), TargetActor->GetActorLocation());
+					float DistanceInMeters = DistanceInCm / 100.0f; // cm -> m 변환
+					
+					float CurrentLoudness = 0.3f; // 기본 걷기
+					FString StateStr = TEXT("Walking (듣기범위: 7.5m)");
+
+					if (StatComp && StatComp->GetIsRunning())
+					{
+						CurrentLoudness = 1.0f;
+						StateStr = TEXT("Sprinting (듣기범위: 25m)");
+					}
+					
+					FString DebugMessage = FString::Printf(
+						TEXT("[DEBUG] SCP-939와의 거리: %.2fm | 현재 상태: %s | Loudness: %.1f"), 
+						DistanceInMeters, *StateStr, CurrentLoudness
+					);
+					
+					GEngine->AddOnScreenDebugMessage(10, 0.0f, FColor::Yellow, DebugMessage);
+				}
+			}
+		}
+		// ====================================================================
 	}
 }
 void ACCDCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -949,12 +983,12 @@ void ACCDCharacter::MakeFootstepNoise(float LoudnessMultiplier)
 	if (!NoiseEmitter) return;
 
 	// 기본 소음 크기
-	float FinalLoudness = 1.0f * LoudnessMultiplier;
+	float FinalLoudness = 0.3f * LoudnessMultiplier;
 	
 	// 달리기 소음
 	if (StatComp && StatComp->GetIsRunning())
 	{
-		FinalLoudness = 1.5f;
+		FinalLoudness = 1.0f;
 	}
 	/*
 	else if (GetCharacterMovement() && GetCharacterMovement()->IsCrouching())
@@ -963,7 +997,10 @@ void ACCDCharacter::MakeFootstepNoise(float LoudnessMultiplier)
 	}
 	*/
 	
-	NoiseEmitter->MakeNoise(this, FinalLoudness, GetActorLocation());
+	if (FinalLoudness > 0.0f)
+	{
+		NoiseEmitter->MakeNoise(this, FinalLoudness, GetActorLocation());
+	}
 }
 
 float ACCDCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
