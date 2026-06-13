@@ -23,6 +23,7 @@ public:
 	ACCDPlayerController();
 	virtual void UpdateRotation(float DeltaTime) override;
 	virtual void OnRep_Pawn() override;
+	virtual void PlayerTick(float DeltaTime) override;
 	
 	UFUNCTION(Server, Reliable)
 	void Server_SetInitialPlayerName(const FString& InName);
@@ -113,4 +114,19 @@ private:
 	
 	UPROPERTY()
 	TObjectPtr<ACCDCharacter> MyCharacter = nullptr;
+	
+	// UI Sway 효과 관련 변수
+	FRotator LastCameraRotation = FRotator::ZeroRotator; // 이전 프레임 카메라 회전값
+    FVector2D CurrentUISwayOffset = FVector2D::ZeroVector; // 현재 누적된 UI 변위 오프셋
+    
+    UPROPERTY(EditAnywhere, Category = "Design | UI")
+    float UISwaySensitivity = 5.0f; // 마우스 회전에 반응하여 UI가 미끄러지는 감도 수치
+    
+    UPROPERTY(EditAnywhere, Category = "Design | UI")
+    float UISwaySpeed = 10.0f; // 마우스를 멈췄을 때 원래 중앙 정위치로 돌아오는 보간 복귀 속도
+    
+    UPROPERTY(EditAnywhere, Category = "Design | UI")
+    float MaxUISwayOffset = 30.0f; // HUD 레이어가 화면 영역을 과도하게 이탈하지 않도록 차단하는 한계 영역(픽셀 단위)
+    
+    void UpdateUISway(float DeltaTime);
 };

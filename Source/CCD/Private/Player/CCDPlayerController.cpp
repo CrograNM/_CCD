@@ -69,6 +69,11 @@ void ACCDPlayerController::BeginPlay()
 		}
 		
 		MyCharacter = Cast<ACCDCharacter>(GetPawn());
+		
+		if (PlayerCameraManager)
+		{
+			LastCameraRotation = PlayerCameraManager->GetCameraRotation();
+		}
 	}
 }
 void ACCDPlayerController::OnRep_Pawn()
@@ -82,6 +87,42 @@ void ACCDPlayerController::OnRep_Pawn()
 	{
 		SwitchToMainUI(); // 내부에서 BindUIWithPawn 호출
 	}
+}
+
+void ACCDPlayerController::PlayerTick(float DeltaTime)
+{
+	if (!IsLocalController()) return;
+	Super::PlayerTick(DeltaTime);
+
+	// 매 프레임 입력 모드 및 카메라 이동에 발맞춰 HUD 밀림/복귀 연산 수행
+	UpdateUISway(DeltaTime);
+}
+void ACCDPlayerController::UpdateUISway(float DeltaTime)
+{
+	// 화면에 인게임 UI 메인 위젯이 생성되어 띄워져 있을 때만 계산 작동
+	if (!MainWidgetInstance || !PlayerCameraManager) return;
+
+	FRotator CurrentCamRot = PlayerCameraManager->GetCameraRotation();
+	
+	FRotator DeltaRot = (CurrentCamRot - LastCameraRotation).GetNormalized();
+
+	// 카메라가 오른쪽(Yaw+)으로 회전할 때 UI는 왼쪽(X-)으로 밀림
+	FVector2D TargetOffset;
+	TargetOffset.X = -DeltaRot.Yaw * UISwaySensitivity;
+	TargetOffset.Y = DeltaRot.Pitch * UISwaySensitivity;
+
+	// 과도하게 휙 돌렸을 때 UI가 찢어지는 문제를 막기 위해 오프셋 최대 반경 클램핑 처리
+	TargetOffset.X = FMath::Clamp(TargetOffset.X, -MaxUISwayOffset, MaxUISwayOffset);
+	TargetOffset.Y = FMath::Clamp(TargetOffset.Y, -MaxUISwayOffset, MaxUISwayOffset);
+
+	// 현재 위치에서 목표 위치(마우스 정지 시 자동으로 0,0)로 부드러운 완충 원복
+	CurrentUISwayOffset.X = FMath::FInterpTo(CurrentUISwayOffset.X, TargetOffset.X, DeltaTime, UISwaySpeed);
+	CurrentUISwayOffset.Y = FMath::FInterpTo(CurrentUISwayOffset.Y, TargetOffset.Y, DeltaTime, UISwaySpeed);
+
+	// 최상단 위젯 레이어 자체의 Render Transform
+	MainWidgetInstance->SetRenderTranslation(CurrentUISwayOffset);
+	
+	LastCameraRotation = CurrentCamRot;
 }
 
 /** --- Input --- */
