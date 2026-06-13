@@ -23,9 +23,7 @@
 #include "GameData/CCDPlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "Widget/CCD_MainWidget.h"
-#include "Widget/EyeAnimWidget.h"
 #include "Widget/EyeCooldownWidget.h"
-#include "Widget/LivesWidget.h"
 #include "Widget/NoiseWidget.h"
 #include "Widget/StaminaWidget.h"
 
@@ -440,11 +438,8 @@ void ACCDPlayerController::BindUIWithPawn(APawn* InPawn)
 		}
 		
 		// --- 시야 쿨타임 위젯 ---
-		if (MainWidgetInstance->WBP_Eye)
+		if (MainWidgetInstance->WBP_EyeCooldown)
 		{
-			StatComp->OnEyeClosed.RemoveAll(MainWidgetInstance->WBP_Eye);
-			StatComp->OnEyeClosed.AddUObject(MainWidgetInstance->WBP_Eye, &UEyeAnimWidget::CloseEyeAnimation);
-			
 			StatComp->OnEyeCooldownChanged.RemoveAll(MainWidgetInstance->WBP_EyeCooldown);
 			StatComp->OnEyeCooldownChanged.AddUObject(MainWidgetInstance->WBP_EyeCooldown, &UEyeCooldownWidget::UpdateCooldown);
 			

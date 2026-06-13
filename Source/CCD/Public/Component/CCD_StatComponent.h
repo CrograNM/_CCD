@@ -7,7 +7,7 @@
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStaminaChanged, float /*CurrentStamina*/, float /*MaxStamina*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEyeCooldownChanged, float /*CooldownTime*/, float /*CooldownDuration*/);
-DECLARE_MULTICAST_DELEGATE (FOnEyeClosed);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE (FOnEyeClosed);
 DECLARE_MULTICAST_DELEGATE_OneParam (FOnNoiseLevelChanged, float /*NoiseLevel*/);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -23,7 +23,10 @@ public:
 	/** --- Delegate --- */
 	FOnStaminaChanged OnStaminaChanged;	// 스태미나
 	FOnEyeCooldownChanged OnEyeCooldownChanged; // 시야 쿨타임
+	
+	UPROPERTY(BlueprintAssignable, Category = "Stats | Eye")
 	FOnEyeClosed OnEyeClosed; // 시야 닫힘 이벤트, Closed = true 일 때 발생
+	
 	FOnNoiseLevelChanged OnNoiseLevelChanged; // 소음 레벨 변경 이벤트
 	
 	/** --- Getter / Setter --- */

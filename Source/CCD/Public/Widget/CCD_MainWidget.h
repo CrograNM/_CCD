@@ -23,8 +23,5 @@ public:
 	TObjectPtr<UEyeCooldownWidget> WBP_EyeCooldown;
 	
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UEyeAnimWidget> WBP_Eye;
-	
-	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UNoiseWidget> WBP_Noise;
 };
