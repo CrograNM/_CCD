@@ -1058,17 +1058,6 @@ float ACCDCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEv
 	
 	CurrentHealth -= ActualDamage;
 	CurrentHealth = FMath::Clamp(CurrentHealth, 0.f, MaxHealth);
-	
-	if (HurtSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(
-			this, 
-			HurtSound, 
-			GetActorLocation(), 
-			1.0f, // 볼륨 배율
-			1.0f  // 피치 배율
-		);
-	}
 
 	UE_LOG(LogTemp, Warning, TEXT("Took Damage. Current HP: %f"), CurrentHealth);
 	

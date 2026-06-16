@@ -80,6 +80,7 @@ void ACCD_939::ExecuteAttack()
 						this, 
 						UDamageType::StaticClass()
 					);
+					Multicast_PlayAttackSound();
 				}
 			}
 		}
@@ -94,3 +95,16 @@ void ACCD_939::Multicast_PlayAttackMontage_Implementation(UAnimMontage* MontageT
 	}
 }
 
+void ACCD_939::Multicast_PlayAttackSound_Implementation()
+{
+	if (AttackSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this, 
+			AttackSound, 
+			GetActorLocation(), 
+			1.0f,               
+			1.0f                
+		);
+	}
+}

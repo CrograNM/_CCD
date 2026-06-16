@@ -351,10 +351,6 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Design | UI")
     TObjectPtr<class UUserWidget> DamageWidgetInstance;
     
-    // 캐릭터 피격(부상) 사운드
-    UPROPERTY(EditAnywhere, Category = "Design | Sound")
-    TObjectPtr<USoundBase> HurtSound;
-    
     // 현재 플레이어가 E키로 획득하여 들고 있는 수류탄 액터 포인터
     UPROPERTY(Replicated, VisibleAnywhere, Category = "Design | Equipment")
     TObjectPtr<class ACCD_FreezeGrenade> HeldGrenade;

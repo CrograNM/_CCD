@@ -49,4 +49,10 @@ public:
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlayAttackMontage(UAnimMontage* MontageToPlay);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Design | Sound")
+	TObjectPtr<USoundBase> AttackSound;
+	
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_PlayAttackSound();
 };
