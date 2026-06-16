@@ -59,6 +59,12 @@ public:
 	UFUNCTION(NetMulticast, Unreliable)
 	void Multicast_PlayAttackSound();
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Design | Sound")
+	TObjectPtr<USoundBase> StateSound;
+	
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_PlayStateSound(bool bAtLocation);
+	
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SetFreezeVisual(bool bFreeze);
 	

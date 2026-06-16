@@ -87,6 +87,27 @@ void ACCD_939::ExecuteAttack()
 	}
 }
 
+void ACCD_939::Multicast_PlayStateSound_Implementation(bool bAtLocation)
+{
+	if (StateSound)
+	{
+		if (bAtLocation)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this, 
+				StateSound, 
+				GetActorLocation(), 
+				1.0f,               
+				1.0f                
+			);
+		}
+		else
+		{
+			UGameplayStatics::PlaySound2D(this, StateSound);
+		}
+	}
+}
+
 void ACCD_939::Multicast_SetFreezeVisual_Implementation(bool bFreeze)
 {
 	USkeletalMeshComponent* TargetMesh = GetMesh();

@@ -4,7 +4,7 @@
 #include "AI/BTTask_RandomSoundTask.h"
 
 #include "AIController.h"
-#include "Kismet/GameplayStatics.h"
+#include "AI/CCD_939.h"
 
 UBTTask_RandomSoundTask::UBTTask_RandomSoundTask()
 {
@@ -27,17 +27,12 @@ EBTNodeResult::Type UBTTask_RandomSoundTask::ExecuteTask(UBehaviorTreeComponent&
 
 		if (SelectedSound)
 		{
-			if (bPlayAtActorLocation)
+			ACCD_939* SCP939 = Cast<ACCD_939>(ControlledPawn);
+			
+			if (SCP939)
 			{
-				UGameplayStatics::PlaySoundAtLocation(
-					ControlledPawn, 
-					SelectedSound, 
-					ControlledPawn->GetActorLocation()
-				);
-			}
-			else
-			{
-				UGameplayStatics::PlaySound2D(ControlledPawn, SelectedSound);
+				SCP939->StateSound = SelectedSound;
+				SCP939->Multicast_PlayStateSound(bPlayAtActorLocation);
 			}
 		}
 	}
