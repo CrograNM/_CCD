@@ -18,11 +18,6 @@ EBTNodeResult::Type UBTTask_AttackPlayer_939::ExecuteTask(UBehaviorTreeComponent
 	if (Controlling939 && AttackMontage)
 	{
 		Controlling939->Multicast_PlayAttackMontage(AttackMontage); 
-		
-		if (Controlling939->HasAuthority())
-		{
-			Controlling939->ExecuteAttack();
-		}
 
 		return EBTNodeResult::Succeeded;
 	}
