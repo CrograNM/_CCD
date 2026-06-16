@@ -48,7 +48,6 @@ void ACCD_939_AIController::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 				if (BB->GetValueAsObject(TargetActorKey) != Actor)
 				{
 					BB->SetValueAsObject(TargetActorKey, Actor);
-					SetFocus(Actor);
 				}
 				
 				BB->ClearValue(LoudLocationKey);
@@ -65,10 +64,17 @@ void ACCD_939_AIController::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 			{
 				if (!GetWorldTimerManager().IsTimerActive(TargetLostTimerHandle))
 				{
+					TWeakObjectPtr<ACCD_939_AIController> WeakThis(this);
+					
 					GetWorldTimerManager().SetTimer(
 						TargetLostTimerHandle, 
-						this, 
-						&ACCD_939_AIController::ClearTargetActor, 
+						FTimerDelegate::CreateLambda([WeakThis]()
+						{
+							if (WeakThis.IsValid())
+							{
+								WeakThis->ClearTargetActor();
+							}
+						}),
 						2.0f,
 						false
 					);

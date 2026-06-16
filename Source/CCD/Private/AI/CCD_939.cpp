@@ -71,7 +71,7 @@ void ACCD_939::ExecuteAttack()
 			{
 				float Dist = FVector::Dist(GetActorLocation(), TargetActor->GetActorLocation());
 				
-				if (Dist <= 400.0f)
+				if (Dist <= 500.0f)
 				{
 					UGameplayStatics::ApplyDamage(
 						TargetActor, 
@@ -111,7 +111,7 @@ void ACCD_939::Multicast_SetFreezeVisual_Implementation(bool bFreeze)
 		{
 			if (Mat)
 			{
-				Mat->SetScalarParameterValue(TEXT("FreezeAmount"), 1.0f);
+				Mat->SetScalarParameterValue(TEXT("FreezeAmount"), 0.2f);
 			}
 		}
 	}

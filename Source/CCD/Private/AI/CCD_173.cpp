@@ -222,7 +222,7 @@ void ACCD_173::Multicast_SetFreezeVisual_Implementation(bool bFreeze)
 		{
 			if (Mat)
 			{
-				Mat->SetScalarParameterValue(TEXT("FreezeAmount"), 1.0f);
+				Mat->SetScalarParameterValue(TEXT("FreezeAmount"), 0.2f);
 			}
 		}
 	}
