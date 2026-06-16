@@ -85,6 +85,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Animation")
 	TObjectPtr<class UAnimMontage> PanicMontage;
 	
+	UPROPERTY()
+	TArray<class UMaterialInstanceDynamic*> DynamicMaterials;
+	
 
 public:	
 	virtual void Tick(float DeltaTime) override;
@@ -93,5 +96,6 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlayKillSound();
 	
-
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_SetFreezeVisual(bool bFreeze);
 };

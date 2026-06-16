@@ -6,6 +6,8 @@
 #include "BrainComponent.h"
 #include "NiagaraComponentPoolMethodEnum.h"
 #include "NiagaraFunctionLibrary.h"
+#include "AI/CCD_173.h"
+#include "AI/CCD_939.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/OverlapResult.h"
@@ -79,17 +81,15 @@ void ACCD_FreezeGrenade::Detonate()
 {
     if (!HasAuthority()) return;
     
-	FVector ExplodeLocation = GetActorLocation();
-    
-	// 1. 구체 형태의 물리 범위 검사(Sphere Overlap) 세팅
-	TArray<FOverlapResult> OverlapResults;
-	FCollisionShape SphereShape = FCollisionShape::MakeSphere(FreezeRadius);
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(this);
-	if (GetOwner()) QueryParams.AddIgnoredActor(GetOwner()); // 던진 플레이어 무시
-	GetWorld()->OverlapMultiByChannel(OverlapResults, ExplodeLocation, FQuat::Identity, ECC_Pawn, SphereShape, QueryParams);
+    FVector ExplodeLocation = GetActorLocation();
 	
-    // 2. 감지된 오버랩 액터들을 순회하며 AI 검출 및 동결 적용
+    TArray<FOverlapResult> OverlapResults;
+    FCollisionShape SphereShape = FCollisionShape::MakeSphere(FreezeRadius);
+    FCollisionQueryParams QueryParams;
+    QueryParams.AddIgnoredActor(this);
+    if (GetOwner()) QueryParams.AddIgnoredActor(GetOwner());
+    GetWorld()->OverlapMultiByChannel(OverlapResults, ExplodeLocation, FQuat::Identity, ECC_Pawn, SphereShape, QueryParams);
+	
     for (const FOverlapResult& Result : OverlapResults)
     {
         AActor* OverlappedActor = Result.GetActor();
@@ -98,16 +98,12 @@ void ACCD_FreezeGrenade::Detonate()
         APawn* TargetPawn = Cast<APawn>(OverlappedActor);
         if (TargetPawn)
         {
-            // 오버랩된 생명체가 플레이어가 아닌 'AI 컨트롤러'를 지니고 있는지 판별
             if (AAIController* AIC = Cast<AAIController>(TargetPawn->GetController()))
             {
                 if (UBrainComponent* BrainComp = AIC->FindComponentByClass<UBrainComponent>())
                 {
-                    // AI 사고 정지 및 즉시 정지
                     BrainComp->StopLogic(TEXT("Freeze Grenade Radial Hit"));
                     AIC->StopMovement();
-                    
-                    // 애니메이션 일시정지 처리
                     USkeletalMeshComponent* TargetMesh = TargetPawn->FindComponentByClass<USkeletalMeshComponent>();
                     if (TargetMesh)
                     {
@@ -115,14 +111,34 @@ void ACCD_FreezeGrenade::Detonate()
                         TargetMesh->SetComponentTickEnabled(false);
                     }
                 	
-                    // 개별 람다 캡처용 약포인터 생성
+                    ACCD_096* SCP096 = Cast<ACCD_096>(TargetPawn);
+                    ACCD_173* SCP173 = Cast<ACCD_173>(TargetPawn);
+                    ACCD_939* SCP939 = Cast<ACCD_939>(TargetPawn);
+
+                    if (SCP096)
+                    {
+                        SCP096->Multicast_SetFreezeVisual(true);
+                    }
+                    if (SCP939)
+                    {
+                        SCP939->Multicast_SetFreezeVisual(true);
+                    }
+                    if (SCP173)
+                    {
+                        SCP173->Multicast_SetFreezeVisual(true);
+                        SCP173->StopMoveSound();
+                    }
+                	
                     TWeakObjectPtr<UBrainComponent> WeakBrainComp = BrainComp;
                     TWeakObjectPtr<AAIController> WeakAIC = AIC;
                     TWeakObjectPtr<USkeletalMeshComponent> WeakTargetMesh = TargetMesh;
-
-                    // 각 대상마다 독립적인 30초 타이머 작동
+                    
+                    TWeakObjectPtr<ACCD_096> Weak096 = SCP096;
+                    TWeakObjectPtr<ACCD_173> Weak173 = SCP173;
+                    TWeakObjectPtr<ACCD_939> Weak939 = SCP939;
+                	
                     FTimerHandle UnfreezeTimerHandle;
-                    GetWorldTimerManager().SetTimer(UnfreezeTimerHandle, FTimerDelegate::CreateLambda([WeakBrainComp, WeakAIC, WeakTargetMesh]()
+                    GetWorldTimerManager().SetTimer(UnfreezeTimerHandle, FTimerDelegate::CreateLambda([WeakBrainComp, WeakAIC, WeakTargetMesh, Weak096, Weak173, Weak939]()
                     {
                         if (WeakBrainComp.IsValid() && WeakAIC.IsValid())
                         {
@@ -133,18 +149,22 @@ void ACCD_FreezeGrenade::Detonate()
                                 WeakTargetMesh->bNoSkeletonUpdate = false;
                                 WeakTargetMesh->SetComponentTickEnabled(true);
                             }
+
+                            if (Weak096.IsValid()) Weak096->Multicast_SetFreezeVisual(false);
+                            if (Weak939.IsValid()) Weak939->Multicast_SetFreezeVisual(false);
+                            if (Weak173.IsValid()) Weak173->Multicast_SetFreezeVisual(false);
                             
-                            UE_LOG(LogTemp, Warning, TEXT("[Grenade] Radial-hit AI and Animation Restarted successfully after 30s."));
+                            UE_LOG(LogTemp, Warning, TEXT("[Grenade] Radial-hit SCP AI, Anim, and Ice Visual Restored successfully."));
                         }
                     }), 30.0f, false);
                     
-                    UE_LOG(LogTemp, Warning, TEXT("[Grenade] Radial Hit! Stopped Brain and Anim for: %s"), *OverlappedActor->GetName());
+                    UE_LOG(LogTemp, Warning, TEXT("[Grenade] Radial Hit! Stopped Brain, Anim, and Frozen Visual for: %s"), *OverlappedActor->GetName());
                 }
             }
         }
     }
-	
-	Multicast_PlayExplosionEffects(GetActorLocation());
+    
+    Multicast_PlayExplosionEffects(GetActorLocation());
     
     Destroy();
 }

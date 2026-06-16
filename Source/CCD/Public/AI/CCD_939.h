@@ -27,6 +27,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|Movement")
 	float ChaseSpeed = 600.0f;
 	
+	UPROPERTY()
+	TArray<class UMaterialInstanceDynamic*> DynamicMaterials;
+	
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -55,4 +58,7 @@ public:
 	
 	UFUNCTION(NetMulticast, Unreliable)
 	void Multicast_PlayAttackSound();
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_SetFreezeVisual(bool bFreeze);
 };
