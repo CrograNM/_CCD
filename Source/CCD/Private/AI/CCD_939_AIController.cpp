@@ -32,17 +32,27 @@ void ACCD_939_AIController::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 	{
 		if (Stimulus.Type == UAISense::GetSenseID<UAISense_Hearing>())
 		{
-			BB->SetValueAsVector(LoudLocationKey, Stimulus.StimulusLocation);
-			
-			BB->SetValueAsBool(TEXT("IsInvestigating"), true);
+			if (BB->GetValueAsObject(TargetActorKey) == nullptr)
+			{
+				BB->SetValueAsVector(LoudLocationKey, Stimulus.StimulusLocation);
+				BB->SetValueAsBool(TEXT("IsInvestigating"), true);
+			}
 		}
 		else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
 		{
 			ACCDCharacter* SensedPlayer = Cast<ACCDCharacter>(Actor);
 			if (SensedPlayer && !SensedPlayer->IsDead())
 			{
-				BB->SetValueAsObject(TargetActorKey, Actor);
-				SetFocus(Actor);
+				GetWorldTimerManager().ClearTimer(TargetLostTimerHandle);
+				
+				if (BB->GetValueAsObject(TargetActorKey) != Actor)
+				{
+					BB->SetValueAsObject(TargetActorKey, Actor);
+					SetFocus(Actor);
+				}
+				
+				BB->ClearValue(LoudLocationKey);
+				BB->SetValueAsBool(TEXT("IsInvestigating"), false);
 			}
 		}
 	}
@@ -53,10 +63,28 @@ void ACCD_939_AIController::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 			UObject* CurrentTarget = BB->GetValueAsObject(TargetActorKey);
 			if (CurrentTarget == Actor)
 			{
-				BB->ClearValue(TargetActorKey);
-				BB->ClearValue(TEXT("HasScreamed"));
-				ClearFocus(EAIFocusPriority::Gameplay);
+				if (!GetWorldTimerManager().IsTimerActive(TargetLostTimerHandle))
+				{
+					GetWorldTimerManager().SetTimer(
+						TargetLostTimerHandle, 
+						this, 
+						&ACCD_939_AIController::ClearTargetActor, 
+						2.0f,
+						false
+					);
+				}
 			}
 		}
+	}
+}
+
+void ACCD_939_AIController::ClearTargetActor()
+{
+	UBlackboardComponent* BB = GetBlackboardComponent();
+	if (BB)
+	{
+		BB->ClearValue(TargetActorKey);
+		BB->ClearValue(TEXT("HasScreamed"));
+		ClearFocus(EAIFocusPriority::Gameplay);
 	}
 }
