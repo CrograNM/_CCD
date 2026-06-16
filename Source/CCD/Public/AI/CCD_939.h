@@ -61,4 +61,6 @@ public:
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SetFreezeVisual(bool bFreeze);
+	
+	FTimerHandle FreezeTimerHandle;
 };

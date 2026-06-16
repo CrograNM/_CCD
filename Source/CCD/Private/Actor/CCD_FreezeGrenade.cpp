@@ -82,7 +82,7 @@ void ACCD_FreezeGrenade::Detonate()
     if (!HasAuthority()) return;
     
     FVector ExplodeLocation = GetActorLocation();
-	
+    
     TArray<FOverlapResult> OverlapResults;
     FCollisionShape SphereShape = FCollisionShape::MakeSphere(FreezeRadius);
     FCollisionQueryParams QueryParams;
@@ -93,7 +93,7 @@ void ACCD_FreezeGrenade::Detonate()
     for (const FOverlapResult& Result : OverlapResults)
     {
         AActor* OverlappedActor = Result.GetActor();
-        if (!OverlappedActor || OverlappedActor->IsA(ACCDCharacter::StaticClass())) continue; // 다른 유저 플레이어면 패스
+        if (!OverlappedActor || OverlappedActor->IsA(ACCDCharacter::StaticClass())) continue;
         
         APawn* TargetPawn = Cast<APawn>(OverlappedActor);
         if (TargetPawn)
@@ -102,8 +102,15 @@ void ACCD_FreezeGrenade::Detonate()
             {
                 if (UBrainComponent* BrainComp = AIC->FindComponentByClass<UBrainComponent>())
                 {
+                    ACCD_096* SCP096 = Cast<ACCD_096>(TargetPawn);
+                    ACCD_173* SCP173 = Cast<ACCD_173>(TargetPawn);
+                    ACCD_939* SCP939 = Cast<ACCD_939>(TargetPawn);
+                	
+                    if (!SCP096 && !SCP173 && !SCP939) continue;
+                	
                     BrainComp->StopLogic(TEXT("Freeze Grenade Radial Hit"));
                     AIC->StopMovement();
+                    
                     USkeletalMeshComponent* TargetMesh = TargetPawn->FindComponentByClass<USkeletalMeshComponent>();
                     if (TargetMesh)
                     {
@@ -111,18 +118,8 @@ void ACCD_FreezeGrenade::Detonate()
                         TargetMesh->SetComponentTickEnabled(false);
                     }
                 	
-                    ACCD_096* SCP096 = Cast<ACCD_096>(TargetPawn);
-                    ACCD_173* SCP173 = Cast<ACCD_173>(TargetPawn);
-                    ACCD_939* SCP939 = Cast<ACCD_939>(TargetPawn);
-
-                    if (SCP096)
-                    {
-                        SCP096->Multicast_SetFreezeVisual(true);
-                    }
-                    if (SCP939)
-                    {
-                        SCP939->Multicast_SetFreezeVisual(true);
-                    }
+                    if (SCP096) SCP096->Multicast_SetFreezeVisual(true);
+                    if (SCP939) SCP939->Multicast_SetFreezeVisual(true);
                     if (SCP173)
                     {
                         SCP173->Multicast_SetFreezeVisual(true);
@@ -137,8 +134,14 @@ void ACCD_FreezeGrenade::Detonate()
                     TWeakObjectPtr<ACCD_173> Weak173 = SCP173;
                     TWeakObjectPtr<ACCD_939> Weak939 = SCP939;
                 	
-                    FTimerHandle UnfreezeTimerHandle;
-                    GetWorldTimerManager().SetTimer(UnfreezeTimerHandle, FTimerDelegate::CreateLambda([WeakBrainComp, WeakAIC, WeakTargetMesh, Weak096, Weak173, Weak939]()
+                    if (SCP096) GetWorldTimerManager().ClearTimer(SCP096->FreezeTimerHandle);
+                    if (SCP173) GetWorldTimerManager().ClearTimer(SCP173->FreezeTimerHandle);
+                    if (SCP939) GetWorldTimerManager().ClearTimer(SCP939->FreezeTimerHandle);
+                	
+                    FTimerHandle& TargetHandle = SCP096 ? SCP096->FreezeTimerHandle : 
+                                                 (SCP173 ? SCP173->FreezeTimerHandle : SCP939->FreezeTimerHandle);
+                	
+                    GetWorldTimerManager().SetTimer(TargetHandle, FTimerDelegate::CreateLambda([WeakBrainComp, WeakAIC, WeakTargetMesh, Weak096, Weak173, Weak939]()
                     {
                         if (WeakBrainComp.IsValid() && WeakAIC.IsValid())
                         {
@@ -158,14 +161,13 @@ void ACCD_FreezeGrenade::Detonate()
                         }
                     }), 30.0f, false);
                     
-                    UE_LOG(LogTemp, Warning, TEXT("[Grenade] Radial Hit! Stopped Brain, Anim, and Frozen Visual for: %s"), *OverlappedActor->GetName());
+                    UE_LOG(LogTemp, Warning, TEXT("[Grenade] Radial Hit! Stopped or Refreshed Brain, Anim for: %s"), *OverlappedActor->GetName());
                 }
             }
         }
     }
     
     Multicast_PlayExplosionEffects(GetActorLocation());
-    
     Destroy();
 }
 
