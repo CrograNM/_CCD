@@ -71,7 +71,7 @@ void ACCD_939::ExecuteAttack()
 			{
 				float Dist = FVector::Dist(GetActorLocation(), TargetActor->GetActorLocation());
 				
-				if (Dist <= 400.0f)
+				if (Dist <= 500.0f)
 				{
 					UGameplayStatics::ApplyDamage(
 						TargetActor, 
@@ -82,6 +82,67 @@ void ACCD_939::ExecuteAttack()
 					);
 					Multicast_PlayAttackSound();
 				}
+			}
+		}
+	}
+}
+
+void ACCD_939::Multicast_PlayStateSound_Implementation(bool bAtLocation)
+{
+	if (StateSound)
+	{
+		if (bAtLocation)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this, 
+				StateSound, 
+				GetActorLocation(), 
+				1.0f,               
+				1.0f                
+			);
+		}
+		else
+		{
+			UGameplayStatics::PlaySound2D(this, StateSound);
+		}
+	}
+}
+
+void ACCD_939::Multicast_SetFreezeVisual_Implementation(bool bFreeze)
+{
+	USkeletalMeshComponent* TargetMesh = GetMesh();
+	if (!TargetMesh) return;
+
+	if (bFreeze)
+	{
+		if (DynamicMaterials.Num() == 0)
+		{
+			int32 MaterialCount = TargetMesh->GetNumMaterials();
+			for (int32 MatIndex = 0; MatIndex < MaterialCount; ++MatIndex)
+			{
+				UMaterialInstanceDynamic* DynamicMat = TargetMesh->CreateAndSetMaterialInstanceDynamic(MatIndex);
+				if (DynamicMat)
+				{
+					DynamicMaterials.Add(DynamicMat);
+				}
+			}
+		}
+
+		for (UMaterialInstanceDynamic* Mat : DynamicMaterials)
+		{
+			if (Mat)
+			{
+				Mat->SetScalarParameterValue(TEXT("FreezeAmount"), 0.2f);
+			}
+		}
+	}
+	else
+	{
+		for (UMaterialInstanceDynamic* Mat : DynamicMaterials)
+		{
+			if (Mat)
+			{
+				Mat->SetScalarParameterValue(TEXT("FreezeAmount"), 0.0f);
 			}
 		}
 	}

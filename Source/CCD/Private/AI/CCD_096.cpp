@@ -53,6 +53,46 @@ void ACCD_096::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
+void ACCD_096::Multicast_SetFreezeVisual_Implementation(bool bFreeze)
+{
+	USkeletalMeshComponent* TargetMesh = GetMesh();
+	if (!TargetMesh) return;
+
+	if (bFreeze)
+	{
+		if (DynamicMaterials.Num() == 0)
+		{
+			int32 MaterialCount = TargetMesh->GetNumMaterials();
+			for (int32 MatIndex = 0; MatIndex < MaterialCount; ++MatIndex)
+			{
+				UMaterialInstanceDynamic* DynamicMat = TargetMesh->CreateAndSetMaterialInstanceDynamic(MatIndex);
+				if (DynamicMat)
+				{
+					DynamicMaterials.Add(DynamicMat);
+				}
+			}
+		}
+
+		for (UMaterialInstanceDynamic* Mat : DynamicMaterials)
+		{
+			if (Mat)
+			{
+				Mat->SetScalarParameterValue(TEXT("FreezeAmount"), 1.0f);
+			}
+		}
+	}
+	else
+	{
+		for (UMaterialInstanceDynamic* Mat : DynamicMaterials)
+		{
+			if (Mat)
+			{
+				Mat->SetScalarParameterValue(TEXT("FreezeAmount"), 0.0f);
+			}
+		}
+	}
+}
+
 void ACCD_096::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

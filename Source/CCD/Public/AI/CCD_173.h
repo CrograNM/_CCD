@@ -58,6 +58,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Settings | Sound")
 	float CriticalThreshold = 500.0f;
 	
+	UPROPERTY()
+	TArray<class UMaterialInstanceDynamic*> DynamicMaterials;
+	
 private:
 	// 한 번만 재생되도록 제어하는 플래그
 	bool bNearSoundPlayed = false;
@@ -92,4 +95,9 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_StopMoveSound();
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_SetFreezeVisual(bool bFreeze);
+	
+	FTimerHandle FreezeTimerHandle;
 };
