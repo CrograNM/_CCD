@@ -93,7 +93,7 @@ void AProgressManager::UpdateProgressCompletion()
 {
 	// 목표치 달성 확인
 	if (MaxProgress <= 0.f) return;
-	if (CurrentProgress >= MaxProgress)
+	if (CurrentProgress/MaxProgress >= 0.98f)
 	{
 		ACCDGameMode* GM = Cast<ACCDGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
 		if (GM)
