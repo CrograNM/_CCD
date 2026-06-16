@@ -3,11 +3,14 @@
 
 #include "AI/CCD_939.h"
 
+#include "AIController.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/CCDCharacter.h"
 
+class UBlackboardComponent;
 // Sets default values
 ACCD_939::ACCD_939()
 {
@@ -57,26 +60,31 @@ void ACCD_939::SetMovementState(bool bIsChasing)
 void ACCD_939::ExecuteAttack()
 {
 	if (!HasAuthority()) return;
-	if (!HeadCollision) return;
-	
-	TArray<AActor*> OverlappingActors;
-	HeadCollision->GetOverlappingActors(OverlappingActors);
 
-	for (AActor* Actor : OverlappingActors)
+	if (AAIController* AIC = Cast<AAIController>(GetController()))
 	{
-		if (Actor && Actor != this && Actor->IsA(ACCDCharacter::StaticClass()))
+		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
 		{
-			UGameplayStatics::ApplyDamage(
-				Actor, 
-				1.0f, 
-				GetController(), 
-				this, 
-				UDamageType::StaticClass()
-			);
+			AActor* TargetActor = Cast<AActor>(BB->GetValueAsObject(TEXT("TargetActor")));
+			
+			if (TargetActor && TargetActor->IsA(ACCDCharacter::StaticClass()))
+			{
+				float Dist = FVector::Dist(GetActorLocation(), TargetActor->GetActorLocation());
+				
+				if (Dist <= 300.0f)
+				{
+					UGameplayStatics::ApplyDamage(
+						TargetActor, 
+						1.0f, 
+						AIC, 
+						this, 
+						UDamageType::StaticClass()
+					);
+				}
+			}
 		}
 	}
 }
-
 void ACCD_939::Multicast_PlayAttackMontage_Implementation(UAnimMontage* MontageToPlay)
 {
 	if (MontageToPlay)
@@ -84,3 +92,4 @@ void ACCD_939::Multicast_PlayAttackMontage_Implementation(UAnimMontage* MontageT
 		PlayAnimMontage(MontageToPlay);
 	}
 }
+

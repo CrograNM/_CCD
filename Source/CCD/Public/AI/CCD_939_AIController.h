@@ -23,6 +23,10 @@ protected:
 	
 	UFUNCTION()
 	void OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
+	
+	FTimerHandle TargetLostTimerHandle;
+	
+	void ClearTargetActor();
 
 	UPROPERTY(VisibleAnywhere, Category = "AI")
 	class UAIPerceptionComponent* AIPerceptionComponent;
