@@ -63,7 +63,7 @@ public:
 	TObjectPtr<USoundBase> StateSound;
 	
 	UFUNCTION(NetMulticast, Unreliable)
-	void Multicast_PlayStateSound(bool bAtLocation);
+	void Multicast_PlayStateSound(USoundBase* SoundToPlay, bool bAtLocation);
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_SetFreezeVisual(bool bFreeze);

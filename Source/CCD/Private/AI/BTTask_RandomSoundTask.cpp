@@ -28,11 +28,10 @@ EBTNodeResult::Type UBTTask_RandomSoundTask::ExecuteTask(UBehaviorTreeComponent&
 		if (SelectedSound)
 		{
 			ACCD_939* SCP939 = Cast<ACCD_939>(ControlledPawn);
-			
+	
 			if (SCP939)
 			{
-				SCP939->StateSound = SelectedSound;
-				SCP939->Multicast_PlayStateSound(bPlayAtActorLocation);
+				SCP939->Multicast_PlayStateSound(SelectedSound, bPlayAtActorLocation);
 			}
 		}
 	}

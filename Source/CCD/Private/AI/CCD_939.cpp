@@ -87,15 +87,15 @@ void ACCD_939::ExecuteAttack()
 	}
 }
 
-void ACCD_939::Multicast_PlayStateSound_Implementation(bool bAtLocation)
+void ACCD_939::Multicast_PlayStateSound_Implementation(USoundBase* SoundToPlay, bool bAtLocation)
 {
-	if (StateSound)
+	if (SoundToPlay)
 	{
 		if (bAtLocation)
 		{
 			UGameplayStatics::PlaySoundAtLocation(
 				this, 
-				StateSound, 
+				SoundToPlay, 
 				GetActorLocation(), 
 				1.0f,               
 				1.0f                
@@ -103,7 +103,7 @@ void ACCD_939::Multicast_PlayStateSound_Implementation(bool bAtLocation)
 		}
 		else
 		{
-			UGameplayStatics::PlaySound2D(this, StateSound);
+			UGameplayStatics::PlaySound2D(this, SoundToPlay);
 		}
 	}
 }
