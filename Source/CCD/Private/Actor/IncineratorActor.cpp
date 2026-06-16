@@ -135,37 +135,42 @@ void AIncineratorActor::Interact_Implementation(AActor* Interactor)
 	UE_LOG(LogTemp, Warning, TEXT("[Interact] Incinerator Door Move Request Received"));
 	
 	bIsDoorOpen = !bIsDoorOpen;
-	if (bIsDoorOpen) SetActorTickEnabled(false);
+	if (bIsDoorOpen) 
+	{
+		SetActorTickEnabled(false);
+	}
 	else 
 	{
 		SetActorTickEnabled(true);
-		
-		APawn* NoiseInstigator = Cast<APawn>(Interactor);
-		
-		FVector NoiseLocation = Interactor ? Interactor->GetActorLocation() : GetActorLocation();
-		
-		UAISense_Hearing::ReportNoiseEvent(this, NoiseLocation, 1.5f, NoiseInstigator);
+	}
+	
+	float Loudness = 1.5f; 
+	
+	APawn* NoiseInstigator = Cast<APawn>(Interactor);
+	
+	FVector NoiseLocation = Interactor ? Interactor->GetActorLocation() : GetActorLocation();
+	
+	UAISense_Hearing::ReportNoiseEvent(this, NoiseLocation, Loudness, NoiseInstigator);
 
 #if WITH_EDITOR
-		if (GetWorld())
-		{
-			float BaseHearingRange = 2500.0f;
-			float SoundRadius = BaseHearingRange * 1.5f;
+	if (GetWorld())
+	{
+		float BaseHearingRange = 2500.0f;
+		float SoundRadius = BaseHearingRange * Loudness;
 
-			DrawDebugSphere(
-				GetWorld(),
-				NoiseLocation,
-				SoundRadius,
-				16,
-				FColor::Orange,
-				false,
-				1.0f,
-				0,
-				2.0f
-			);
-		}
-#endif
+		DrawDebugSphere(
+			GetWorld(),
+			NoiseLocation,
+			SoundRadius,
+			16,
+			FColor::Orange,
+			false,
+			1.0f,
+			0,
+			2.0f
+		);
 	}
+#endif
     
 	OnRep_DoorOpen();
 }

@@ -34,30 +34,8 @@ void ACCD_939_AIController::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 		{
 			BB->SetValueAsVector(LoudLocationKey, Stimulus.StimulusLocation);
 			
-			ACCDCharacter* SensedPlayer = Cast<ACCDCharacter>(Actor);
-			bool bIsPureFootstep = false;
-
-			if (SensedPlayer && !SensedPlayer->IsDead())
-			{
-				float DistBetweenSensedAndPlayer = FVector::Dist(Stimulus.StimulusLocation, SensedPlayer->GetActorLocation());
-				
-				if (DistBetweenSensedAndPlayer <= 100.0f)
-				{
-					bIsPureFootstep = true;
-				}
-			}
-			
-			if (bIsPureFootstep)
-			{
-				BB->SetValueAsObject(TargetActorKey, SensedPlayer);
-				SetFocus(SensedPlayer);
-			}
-			else
-			{
-				BB->SetValueAsBool(TEXT("bIsNoiseDetected"), true);
-			}
+			BB->SetValueAsBool(TEXT("IsInvestigating"), true);
 		}
-
 		else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
 		{
 			ACCDCharacter* SensedPlayer = Cast<ACCDCharacter>(Actor);

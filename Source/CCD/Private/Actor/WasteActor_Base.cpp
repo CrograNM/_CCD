@@ -3,8 +3,10 @@
 
 #include "Component/BurnableComponent.h"
 #include "Component/ProgressComponent.h"
+#include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "Perception/AISense_Hearing.h"
 
 AWasteActor_Base::AWasteActor_Base()
 {
@@ -51,18 +53,49 @@ void AWasteActor_Base::UpdatePhysicsReplicates(bool inReplicates)
 void AWasteActor_Base::OnMeshHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	if (!HitSound) return;
-	// 충격 강도 계산
 	float ImpulseSize = NormalImpulse.Size();
 
-	// 최소 충격량보다 작거나, 쿨타임(예: 0.5초)이 지나지 않았다면 무시
 	if (ImpulseSize < HitSoundThreshold) return;
 	if (GetWorld()->GetTimeSeconds() - LastSoundTime < HitSoundCoolDown) return;
-
-	// 충격 강도에 따라 볼륨 조절 - 0.2 ~ 1.0 사이의 볼륨으로 클램프
+	
 	float TargetVolume = FMath::GetMappedRangeValueClamped(FVector2D(HitSoundThreshold, HitSoundThreshold + 2000.f), FVector2D(0.2f, 0.8f), ImpulseSize);
-
-	// 충돌 지점에서 소리 재생
 	UGameplayStatics::PlaySoundAtLocation(this, HitSound, Hit.ImpactPoint, TargetVolume, 1, 0, HitAttenuation);
 	
+	if (HasAuthority()) 
+	{
+		float Loudness = TargetVolume * 0.5f; 
+
+		AActor* NoiseAgent = GetOwner() ? GetOwner() : Cast<AActor>(GetInstigator());
+		if (!NoiseAgent)
+		{
+			NoiseAgent = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+		}
+
+		if (NoiseAgent)
+		{
+			UAISense_Hearing::ReportNoiseEvent(NoiseAgent, Hit.ImpactPoint, Loudness, Cast<APawn>(NoiseAgent));
+		}
+
+#if WITH_EDITOR
+		if (GetWorld())
+		{
+			float BaseHearingRange = 2500.0f;
+			float SoundRadius = BaseHearingRange * Loudness;
+
+			DrawDebugSphere(
+				GetWorld(),
+				Hit.ImpactPoint,
+				SoundRadius,
+				16,
+				FColor::Yellow,
+				false,
+				0.5f,
+				0,
+				1.5f
+			);
+		}
+#endif
+	}
+
 	LastSoundTime = GetWorld()->GetTimeSeconds();
 }

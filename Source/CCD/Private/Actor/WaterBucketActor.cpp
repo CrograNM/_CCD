@@ -189,7 +189,7 @@ void AWaterBucketActor::SpillWater()
 		
 	UE_LOG(LogTemp, Warning, TEXT("Spill Water!"));
 	
-	float Loudness = 2.0f;
+	float Loudness = 1.0f;
 	
 	AActor* NoiseAgent = GetOwner();
 	if (!NoiseAgent)
