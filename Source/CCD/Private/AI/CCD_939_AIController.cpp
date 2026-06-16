@@ -28,17 +28,39 @@ void ACCD_939_AIController::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 	UBlackboardComponent* BB = GetBlackboardComponent();
 	if (!BB) return;
 	
-	// 감지된 액터가 플레이어인지 캐스팅하여 확인
-	ACCDCharacter* SensedPlayer = Cast<ACCDCharacter>(Actor);
-
 	if (Stimulus.WasSuccessfullySensed())
 	{
 		if (Stimulus.Type == UAISense::GetSenseID<UAISense_Hearing>())
 		{
 			BB->SetValueAsVector(LoudLocationKey, Stimulus.StimulusLocation);
+			
+			ACCDCharacter* SensedPlayer = Cast<ACCDCharacter>(Actor);
+			bool bIsPureFootstep = false;
+
+			if (SensedPlayer && !SensedPlayer->IsDead())
+			{
+				float DistBetweenSensedAndPlayer = FVector::Dist(Stimulus.StimulusLocation, SensedPlayer->GetActorLocation());
+				
+				if (DistBetweenSensedAndPlayer <= 100.0f)
+				{
+					bIsPureFootstep = true;
+				}
+			}
+			
+			if (bIsPureFootstep)
+			{
+				BB->SetValueAsObject(TargetActorKey, SensedPlayer);
+				SetFocus(SensedPlayer);
+			}
+			else
+			{
+				BB->SetValueAsBool(TEXT("bIsNoiseDetected"), true);
+			}
 		}
+
 		else if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())
 		{
+			ACCDCharacter* SensedPlayer = Cast<ACCDCharacter>(Actor);
 			if (SensedPlayer && !SensedPlayer->IsDead())
 			{
 				BB->SetValueAsObject(TargetActorKey, Actor);
@@ -54,9 +76,7 @@ void ACCD_939_AIController::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimu
 			if (CurrentTarget == Actor)
 			{
 				BB->ClearValue(TargetActorKey);
-				
 				BB->ClearValue(TEXT("HasScreamed"));
-				
 				ClearFocus(EAIFocusPriority::Gameplay);
 			}
 		}

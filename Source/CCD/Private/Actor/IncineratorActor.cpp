@@ -131,19 +131,42 @@ void AIncineratorActor::ApplyBurnDamage(float DeltaTime)
 
 void AIncineratorActor::Interact_Implementation(AActor* Interactor)
 {
-	if (!HasAuthority()) return; // 상태 변경은 서버에서만 수행
+	if (!HasAuthority()) return;
 	UE_LOG(LogTemp, Warning, TEXT("[Interact] Incinerator Door Move Request Received"));
 	
-	// 문 상태 토글
 	bIsDoorOpen = !bIsDoorOpen;
-	if (bIsDoorOpen) SetActorTickEnabled(false); // 문이 열리면 대미지 판정 중지
+	if (bIsDoorOpen) SetActorTickEnabled(false);
 	else 
 	{
-		SetActorTickEnabled(true); // 문이 닫히면 대미지 판정 재개
-		UAISense_Hearing::ReportNoiseEvent(this, GetActorLocation(), 1.5f, Interactor);
+		SetActorTickEnabled(true);
+		
+		APawn* NoiseInstigator = Cast<APawn>(Interactor);
+		
+		FVector NoiseLocation = Interactor ? Interactor->GetActorLocation() : GetActorLocation();
+		
+		UAISense_Hearing::ReportNoiseEvent(this, NoiseLocation, 1.5f, NoiseInstigator);
+
+#if WITH_EDITOR
+		if (GetWorld())
+		{
+			float BaseHearingRange = 2500.0f;
+			float SoundRadius = BaseHearingRange * 1.5f;
+
+			DrawDebugSphere(
+				GetWorld(),
+				NoiseLocation,
+				SoundRadius,
+				16,
+				FColor::Orange,
+				false,
+				1.0f,
+				0,
+				2.0f
+			);
+		}
+#endif
 	}
     
-	// 서버에서도 OnRep 함수를 직접 호출하여 자신의 화면을 갱신합니다.
 	OnRep_DoorOpen();
 }
 

@@ -8,6 +8,7 @@
 #include "Component/ProgressComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Perception/AISense_Hearing.h"
 #include "Widget/ScannerWidget.h"
 
 ACCD_EScannerActor::ACCD_EScannerActor()
@@ -154,6 +155,32 @@ void ACCD_EScannerActor::UpdateScannerUI()
 				CurrentDistance
 			);
 		UGameplayStatics::PlaySoundAtLocation(this, ScannerSound, GetActorLocation(), 1.0, PitchRate); 
+		
+		if (HasAuthority())
+		{
+			float Loudness = 0.2f;
+			UAISense_Hearing::ReportNoiseEvent(this, GetActorLocation(), Loudness, Cast<APawn>(GetOwner()));
+
+#if WITH_EDITOR
+			if (GetWorld())
+			{
+				float BaseHearingRange = 2500.0f;
+				float SoundRadius = BaseHearingRange * Loudness;
+				
+				DrawDebugSphere(
+					GetWorld(),
+					GetActorLocation(),
+					SoundRadius,
+					8, 
+					FColor::Green,
+					false,
+					0.2f, 
+					0,
+					1.0f
+				);
+			}
+#endif
+		}
 	}
 	
 	if (!ScannerWidget && ScannerWidgetComp)

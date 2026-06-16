@@ -6,6 +6,7 @@
 #include "Component/ProgressComponent.h"
 #include "Component/WashableComponent.h"
 #include "Components/DecalComponent.h"
+#include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Perception/AISense_Hearing.h"
@@ -188,7 +189,42 @@ void AWaterBucketActor::SpillWater()
 		
 	UE_LOG(LogTemp, Warning, TEXT("Spill Water!"));
 	
-	UAISense_Hearing::ReportNoiseEvent(this, GetActorLocation(), 2.0f, GetInstigator());
+	float Loudness = 2.0f;
+	
+	AActor* NoiseAgent = GetOwner();
+	if (!NoiseAgent)
+	{
+		NoiseAgent = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+	}
+
+	if (NoiseAgent)
+	{
+		UAISense_Hearing::ReportNoiseEvent(NoiseAgent, GetActorLocation(), Loudness, Cast<APawn>(NoiseAgent));
+	}
+	else
+	{
+		UAISense_Hearing::ReportNoiseEvent(this, GetActorLocation(), Loudness, GetInstigator());
+	}
+	
+#if WITH_EDITOR
+	if (GetWorld())
+	{
+		float BaseHearingRange = 2500.0f;
+		float SoundRadius = BaseHearingRange * Loudness;
+
+		DrawDebugSphere(
+			GetWorld(),
+			GetActorLocation(),
+			SoundRadius,
+			24,
+			FColor::Blue,
+			false,
+			1.5f,
+			0,
+			3.0f
+		);
+	}
+#endif
 	
 	WaterMeshComp->SetVisibility(false);
 	WaterMaterial = nullptr;

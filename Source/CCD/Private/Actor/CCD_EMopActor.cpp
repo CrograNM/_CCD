@@ -143,9 +143,56 @@ void ACCD_EMopActor::PerformMopTrace()
 			else if (WashComp->GetWashableType() == ECCD_WashableType::EWT_Excrement) 
 				MopPollution_Excrement += PollutionAdded;
 			
-			UAISense_Hearing::ReportNoiseEvent(this, HitResult.Location, 0.5f, OwnerCharacter);
+			float Loudness = 0.5f;
+			UAISense_Hearing::ReportNoiseEvent(this, HitResult.Location, Loudness, OwnerCharacter);
+			
+#if WITH_EDITOR
+			if (GetWorld())
+			{
+				float BaseHearingRange = 2500.0f;
+				float SoundRadius = BaseHearingRange * Loudness;
+
+				DrawDebugSphere(
+					GetWorld(),
+					HitResult.Location,      
+					SoundRadius,             
+					16,                      
+					FColor::Orange,          
+					false,
+					0.5f,                    
+					0,
+					1.5f                     
+				);
+			}
+#endif
 			
 			UpdateMopMaterial();
+		}
+		
+		else
+		{
+			float Loudness = 0.4f;
+			UAISense_Hearing::ReportNoiseEvent(this, HitResult.Location, Loudness, OwnerCharacter);
+
+#if WITH_EDITOR
+			if (GetWorld())
+			{
+				float BaseHearingRange = 2500.0f;
+				float SoundRadius = BaseHearingRange * Loudness;
+				
+				DrawDebugSphere(
+					GetWorld(),
+					HitResult.Location,
+					SoundRadius,
+					16,
+					FColor::Yellow, 
+					false,
+					0.5f,
+					0,
+					1.5f
+				);
+			}
+#endif
 		}
 		
 	}
@@ -153,7 +200,28 @@ void ACCD_EMopActor::PerformMopTrace()
 		// 대걸레 허공 휘두르기 사운드 재생
 		Multicast_PlayMopSwingSound();
 		
-		UAISense_Hearing::ReportNoiseEvent(this, OwnerCharacter->GetActorLocation(), 0.2f, OwnerCharacter);
+		float Loudness = 0.2f;
+		UAISense_Hearing::ReportNoiseEvent(this, OwnerCharacter->GetActorLocation(), Loudness, OwnerCharacter);
+
+#if WITH_EDITOR
+		if (GetWorld() && OwnerCharacter)
+		{
+			float BaseHearingRange = 2500.0f;
+			float SoundRadius = BaseHearingRange * Loudness;
+
+			DrawDebugSphere(
+				GetWorld(),
+				OwnerCharacter->GetActorLocation(),
+				SoundRadius,
+				16,
+				FColor::Cyan,                       
+				false,
+				0.3f,                               
+				0,
+				1.0f
+			);
+		}
+#endif
 	}
 }
 

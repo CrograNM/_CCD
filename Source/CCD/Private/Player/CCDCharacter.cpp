@@ -972,10 +972,32 @@ void ACCDCharacter::Landed(const FHitResult& Hit)
 		UGameplayStatics::PlaySoundAtLocation(this, SoundToPlay, LandingLocation);
 	}
 	
+	float Loudness = 0.6f;
+	
 	if (NoiseEmitter)
 	{
-		NoiseEmitter->MakeNoise(this, 1.0f, LandingLocation);
+		NoiseEmitter->MakeNoise(this, Loudness, LandingLocation); 
 	}
+
+#if WITH_EDITOR
+	if (IsLocallyControlled() && GetWorld())
+	{
+		float BaseHearingRange = 2500.0f;
+		float SoundRadius = BaseHearingRange * Loudness;
+
+		DrawDebugSphere(
+			GetWorld(),
+			LandingLocation,
+			SoundRadius,
+			16,
+			FColor::Magenta,
+			false,
+			0.8f,
+			0,
+			2.5f
+		);
+	}
+#endif
 }
 
 void ACCDCharacter::MakeFootstepNoise(float LoudnessMultiplier)
@@ -988,7 +1010,7 @@ void ACCDCharacter::MakeFootstepNoise(float LoudnessMultiplier)
 	// 달리기 소음
 	if (StatComp && StatComp->GetIsRunning())
 	{
-		FinalLoudness = 1.0f;
+		FinalLoudness = 0.6f;
 	}
 	/*
 	else if (GetCharacterMovement() && GetCharacterMovement()->IsCrouching())
@@ -1000,7 +1022,29 @@ void ACCDCharacter::MakeFootstepNoise(float LoudnessMultiplier)
 	if (FinalLoudness > 0.0f)
 	{
 		NoiseEmitter->MakeNoise(this, FinalLoudness, GetActorLocation());
+		
+#if WITH_EDITOR
+		if (IsLocallyControlled() && GetWorld())
+		{
+			float BaseHearingRange = 2500.0f;
+			float SoundRadius = BaseHearingRange * FinalLoudness;
+			
+			DrawDebugSphere(
+				GetWorld(),
+				GetActorLocation(),
+				SoundRadius,
+				16,
+				FColor::Red,
+				false,
+				1.0f, 
+				0,
+				2.0f  
+			);
+		}
+#endif
 	}
+	
+	
 }
 
 float ACCDCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
