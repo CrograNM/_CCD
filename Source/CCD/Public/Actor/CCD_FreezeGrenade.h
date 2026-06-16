@@ -30,6 +30,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Design | Effect")
 	TObjectPtr<UNiagaraSystem> ExplosionVFX;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Design | Grenade")
+	float FreezeRadius = 500.0f;
+	
 	UFUNCTION()
 	void OnGrenadeHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, 
 		UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
@@ -37,7 +40,7 @@ protected:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_PlayExplosionEffects(FVector Location);
 	
-	void Detonate(AActor* TargetActor);
+	void Detonate();
 
 private:
 	bool bIsLaunched = false;
