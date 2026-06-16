@@ -71,7 +71,7 @@ void ACCD_939::ExecuteAttack()
 			{
 				float Dist = FVector::Dist(GetActorLocation(), TargetActor->GetActorLocation());
 				
-				if (Dist <= 300.0f)
+				if (Dist <= 400.0f)
 				{
 					UGameplayStatics::ApplyDamage(
 						TargetActor, 
