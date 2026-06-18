@@ -4,8 +4,8 @@
 ACCDPlayerCameraManager::ACCDPlayerCameraManager()
 {
 	// Pitch 제한 설정 (도 단위)
-	ViewPitchMin = -60.0f; // 아래로 
-	ViewPitchMax = 45.0f;  // 위로
+	ViewPitchMin = -80.0f; // 아래로 
+	ViewPitchMax = 90.0f;  // 위로
 	
 	// 초기화
 	CurrentSaturation = 1.0f;
