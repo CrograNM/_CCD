@@ -57,6 +57,9 @@ void ACCD_096::Multicast_SetFreezeVisual_Implementation(bool bFreeze)
 {
 	USkeletalMeshComponent* TargetMesh = GetMesh();
 	if (!TargetMesh) return;
+	
+	TargetMesh->bNoSkeletonUpdate = bFreeze;
+	TargetMesh->SetComponentTickEnabled(!bFreeze);
 
 	if (bFreeze)
 	{
