@@ -8,9 +8,11 @@
 #include "NiagaraFunctionLibrary.h"
 #include "AI/CCD_173.h"
 #include "AI/CCD_939.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/OverlapResult.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/CCDCharacter.h"
 
@@ -89,7 +91,7 @@ void ACCD_FreezeGrenade::Detonate()
     QueryParams.AddIgnoredActor(this);
     if (GetOwner()) QueryParams.AddIgnoredActor(GetOwner());
     GetWorld()->OverlapMultiByChannel(OverlapResults, ExplodeLocation, FQuat::Identity, ECC_Pawn, SphereShape, QueryParams);
-	
+    
     for (const FOverlapResult& Result : OverlapResults)
     {
         AActor* OverlappedActor = Result.GetActor();
@@ -105,63 +107,103 @@ void ACCD_FreezeGrenade::Detonate()
                     ACCD_096* SCP096 = Cast<ACCD_096>(TargetPawn);
                     ACCD_173* SCP173 = Cast<ACCD_173>(TargetPawn);
                     ACCD_939* SCP939 = Cast<ACCD_939>(TargetPawn);
-                	
+                    
                     if (!SCP096 && !SCP173 && !SCP939) continue;
                 	
                     BrainComp->StopLogic(TEXT("Freeze Grenade Radial Hit"));
                     AIC->StopMovement();
-                    
-                    USkeletalMeshComponent* TargetMesh = TargetPawn->FindComponentByClass<USkeletalMeshComponent>();
-                    if (TargetMesh)
-                    {
-                        TargetMesh->bNoSkeletonUpdate = true;
-                        TargetMesh->SetComponentTickEnabled(false);
-                    }
                 	
-                    if (SCP096) SCP096->Multicast_SetFreezeVisual(true);
+                    if (UCharacterMovementComponent* MoveComp = TargetPawn->FindComponentByClass<UCharacterMovementComponent>())
+                    {
+                       MoveComp->Velocity = FVector::ZeroVector;
+                       MoveComp->StopActiveMovement();
+                       MoveComp->MaxWalkSpeed = 0.0f; 
+                    }
+                    
+                    if (SCP096)
+                    {
+                        SCP096->StopScreamSound();
+                        SCP096->Multicast_SetFreezeVisual(true);
+                    }
                     if (SCP939) SCP939->Multicast_SetFreezeVisual(true);
                     if (SCP173)
                     {
                         SCP173->Multicast_SetFreezeVisual(true);
                         SCP173->StopMoveSound();
                     }
-                	
+                    
                     TWeakObjectPtr<UBrainComponent> WeakBrainComp = BrainComp;
                     TWeakObjectPtr<AAIController> WeakAIC = AIC;
-                    TWeakObjectPtr<USkeletalMeshComponent> WeakTargetMesh = TargetMesh;
                     
                     TWeakObjectPtr<ACCD_096> Weak096 = SCP096;
                     TWeakObjectPtr<ACCD_173> Weak173 = SCP173;
                     TWeakObjectPtr<ACCD_939> Weak939 = SCP939;
-                	
+                    
                     if (SCP096) GetWorldTimerManager().ClearTimer(SCP096->FreezeTimerHandle);
                     if (SCP173) GetWorldTimerManager().ClearTimer(SCP173->FreezeTimerHandle);
                     if (SCP939) GetWorldTimerManager().ClearTimer(SCP939->FreezeTimerHandle);
-                	
+                    
                     FTimerHandle& TargetHandle = SCP096 ? SCP096->FreezeTimerHandle : 
                                                  (SCP173 ? SCP173->FreezeTimerHandle : SCP939->FreezeTimerHandle);
-                	
-                    GetWorldTimerManager().SetTimer(TargetHandle, FTimerDelegate::CreateLambda([WeakBrainComp, WeakAIC, WeakTargetMesh, Weak096, Weak173, Weak939]()
+                    
+                    GetWorldTimerManager().SetTimer(TargetHandle, FTimerDelegate::CreateLambda([WeakBrainComp, WeakAIC, Weak096, Weak173, Weak939]()
                     {
+                        if (Weak096.IsValid())
+                        {
+                           ACCD_096* SCP096Actor = Weak096.Get();
+                           if (SCP096Actor->HasAuthority())
+                           {
+                              SCP096Actor->GetWorldTimerManager().ClearTimer(SCP096Actor->FreezeTimerHandle);
+
+                              SCP096Actor->ResetTargets();
+                              SCP096Actor->SetState(E096State::Idle);
+                                
+                              if (WeakAIC.IsValid())
+                              {
+                                 if (UBlackboardComponent* BB = WeakAIC->GetBlackboardComponent())
+                                 {
+                                    BB->SetValueAsObject(TEXT("TargetActor"), nullptr);
+                                 }
+                              }
+
+                              if (UCharacterMovementComponent* MoveComp = SCP096Actor->FindComponentByClass<UCharacterMovementComponent>())
+                              {
+                                  MoveComp->MaxWalkSpeed = 600.0f;
+                              }
+                           }
+                        }
+
+                        if (Weak939.IsValid())
+                        {
+                            ACCD_939* SCP939Actor = Weak939.Get();
+                            if (UCharacterMovementComponent* MoveComp = SCP939Actor->FindComponentByClass<UCharacterMovementComponent>())
+                            {
+                                MoveComp->MaxWalkSpeed = 300.0f; 
+                            }
+                        }
+
+                        if (Weak173.IsValid())
+                        {
+                            ACCD_173* SCP173Actor = Weak173.Get();
+                            if (UCharacterMovementComponent* MoveComp = SCP173Actor->FindComponentByClass<UCharacterMovementComponent>())
+                            {
+                                MoveComp->MaxWalkSpeed = 0.0f; 
+                            }
+                        }
+                    	
                         if (WeakBrainComp.IsValid() && WeakAIC.IsValid())
                         {
                             WeakBrainComp->RestartLogic();
-                            
-                            if (WeakTargetMesh.IsValid())
-                            {
-                                WeakTargetMesh->bNoSkeletonUpdate = false;
-                                WeakTargetMesh->SetComponentTickEnabled(true);
-                            }
-
+            
                             if (Weak096.IsValid()) Weak096->Multicast_SetFreezeVisual(false);
                             if (Weak939.IsValid()) Weak939->Multicast_SetFreezeVisual(false);
                             if (Weak173.IsValid()) Weak173->Multicast_SetFreezeVisual(false);
-                            
-                            UE_LOG(LogTemp, Warning, TEXT("[Grenade] Radial-hit SCP AI, Anim, and Ice Visual Restored successfully."));
+            
+                            UE_LOG(LogTemp, Warning, TEXT("[Grenade] Radial-hit SCP AI and Visual Restored successfully."));
                         }
                     }), 30.0f, false);
                     
-                    UE_LOG(LogTemp, Warning, TEXT("[Grenade] Radial Hit! Stopped or Refreshed Brain, Anim for: %s"), *OverlappedActor->GetName());
+                    UE_LOG(LogTemp, Warning, TEXT("[Grenade] Radial Hit! Stopped Brain and Freeze Visual for: %s"), *OverlappedActor->GetName());
                 }
             }
         }

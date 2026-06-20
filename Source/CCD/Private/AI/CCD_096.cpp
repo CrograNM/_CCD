@@ -147,6 +147,12 @@ AActor* ACCD_096::GetNextTarget()
 void ACCD_096::SetState(E096State NewState)
 {
 	if (!HasAuthority()) return;
+	
+	if (GetWorldTimerManager().IsTimerActive(FreezeTimerHandle))
+	{
+		return;
+	}
+	
 	CurrentState = NewState;
 	OnRep_CurrentState();
 
@@ -273,4 +279,10 @@ void ACCD_096::Multicast_PlayKillSound_Implementation()
         
 		UE_LOG(LogTemp, Log, TEXT("096 Kill Sound Played as One-Shot"));
 	}
+}
+
+void ACCD_096::ResetTargets()
+{
+	if (!HasAuthority()) return;
+	TargetList.Empty();
 }

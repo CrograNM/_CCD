@@ -100,4 +100,5 @@ public:
 	void Multicast_SetFreezeVisual(bool bFreeze);
 	
 	FTimerHandle FreezeTimerHandle;
+	void ResetTargets();
 };
