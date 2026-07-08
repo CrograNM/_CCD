@@ -310,27 +310,45 @@ void ACCDPlayerController::Server_SetMapClear_Implementation(const FString& MapN
 			// TArray Replication 속성으로 인해 클라이언트들의 UI 가 자동으로 갱신됩니다.
 		}
 		
-		// 3. 월드의 모든 액터를 순회하며 블루프린트에 작성된 새로고침 이벤트 호출
-		// 이름이 "OnMapClearChanged"인 블루프린트 커스텀 이벤트나 함수가 있다면 강제로 실행시킵니다.
-		FName FunctionName = TEXT("OnMapClearChanged");
-       
-		for (TActorIterator<AActor> It(GetWorld()); It; ++It)
-		{
-			AActor* TargetActor = *It;
-			if (IsValid(TargetActor))
-			{
-				// 액터가 해당 이름의 블루프린트 함수/이벤트를 가지고 있는지 검사
-				UFunction* RefreshFunc = TargetActor->FindFunction(FunctionName);
-				if (RefreshFunc)
-				{
-					// 매개변수 없이 블루프린트 이벤트를 원격 가동시킵니다.
-					TargetActor->ProcessEvent(RefreshFunc, nullptr);
-				}
-			}
-		}
+		// 서버 로직 완료 후, 연결된 모든 클라이언트들에게 새로고침을 명령(방송)합니다.
+		Multicast_RefreshMapClear(CleanMapName, bCleared);
 		
 		UE_LOG(LogTemp, Warning, TEXT("[Cheat] Successfully forced map clear status. Map: %s, Cleared: %s"), *CleanMapName, bCleared ? TEXT("True") : TEXT("False"));
 	}
+}
+
+void ACCDPlayerController::Multicast_RefreshMapClear_Implementation(const FString& MapName, bool bCleared)
+{
+	// 속성 복제 패킷이 지연되어 도착하기 전이므로, 
+	// 멀티캐스트가 먼저 도달한 클라이언트 컴퓨터의 로컬 GameState 데이터를 '강제 선행 반영'
+	if (ACCDGameState* GS = GetWorld()->GetGameState<ACCDGameState>())
+	{
+		if (bCleared)
+		{
+			GS->ReplicatedClearedMapPaths.AddUnique(MapName);
+		}
+		else
+		{
+			GS->ReplicatedClearedMapPaths.Remove(MapName);
+		}
+	}
+
+	FName FunctionName = TEXT("OnMapClearChanged");
+       
+	for (TActorIterator<AActor> It(GetWorld()); It; ++It)
+	{
+		AActor* TargetActor = *It;
+		if (IsValid(TargetActor))
+		{
+			UFunction* RefreshFunc = TargetActor->FindFunction(FunctionName);
+			if (RefreshFunc)
+			{
+				TargetActor->ProcessEvent(RefreshFunc, nullptr);
+			}
+		}
+	}
+	
+	UE_LOG(LogTemp, Log, TEXT("[Network] Local World Actors Refreshed via Multicast."));
 }
 
 void ACCDPlayerController::SpectateNextPlayer(bool bForward)

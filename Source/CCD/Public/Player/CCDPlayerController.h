@@ -67,6 +67,9 @@ public:
 	UFUNCTION(Server, Reliable)
 	void Server_SetMapClear(const FString& MapName, bool bCleared);
 	
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_RefreshMapClear(const FString& MapName, bool bCleared);
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
