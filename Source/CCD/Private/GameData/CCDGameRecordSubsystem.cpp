@@ -95,6 +95,32 @@ void UCCDGameRecordSubsystem::RecordMapClear(FString MapPath)
 	}
 }
 
+void UCCDGameRecordSubsystem::SetMapClearStatusCustom(FString MapPath, bool bCleared)
+{
+	if (CurrentSlotIndex == -1) return;
+
+	MapPath = UWorld::RemovePIEPrefix(MapPath);
+	
+	// 임의로 전달받은 참/거짓 플래그에 맞게 맵 상태를 강제 변환
+	if (bCleared)
+	{
+		CurrentSessionData.ClearedMaps.FindOrAdd(MapPath) = true;
+	}
+	else
+	{
+		// 초기화 명령인 경우 목록에서 안전하게 제거
+		CurrentSessionData.ClearedMaps.Remove(MapPath);
+	}
+	
+	CurrentSessionData.LastSavedTime = FDateTime::Now();
+	
+	if (CachedSaveGameObject)
+	{
+		CachedSaveGameObject->SessionSlots.Add(CurrentSlotIndex, CurrentSessionData);
+		SaveGameToDisk();
+	}
+}
+
 bool UCCDGameRecordSubsystem::AreAllMapsCleared(const TArray<FString>& RequiredMaps) const
 {
 	//	for (const FString& Map : RequiredMaps)

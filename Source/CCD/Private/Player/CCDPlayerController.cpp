@@ -26,6 +26,8 @@
 #include "Widget/EyeCooldownWidget.h"
 #include "Widget/NoiseWidget.h"
 #include "Widget/StaminaWidget.h"
+#include "GameData/CCDGameRecordSubsystem.h"
+#include "GameData/CCDGameState.h"
 
 ACCDPlayerController::ACCDPlayerController()
 {
@@ -220,6 +222,7 @@ void ACCDPlayerController::Server_CleanAll_Implementation()
 	
 	UE_LOG(LogTemp, Error, TEXT("Server Command: CleanAll executed by Admin."));
 }
+
 void ACCDPlayerController::CCD_SetLifeCount(int32 NewLives)
 {
 	Server_SetLifeCount(NewLives);
@@ -238,7 +241,6 @@ void ACCDPlayerController::CCD_FreezeAI()
 {
 	ServerFreezeAI(true);
 }
-
 void ACCDPlayerController::CCD_UnfreezeAI()
 {
 	ServerFreezeAI(false);
@@ -264,10 +266,71 @@ void ACCDPlayerController::ServerFreezeAI_Implementation(bool bFreeze)
 		}
 	}
 }
-
 bool ACCDPlayerController::ServerFreezeAI_Validate(bool bFreeze)
 {
 	return true;
+}
+
+void ACCDPlayerController::CCD_SetMapClear(FString MapName, bool bCleared)
+{
+	Server_SetMapClear(MapName, bCleared);
+}
+void ACCDPlayerController::Server_SetMapClear_Implementation(const FString& MapName, bool bCleared)
+{
+	if (!HasAuthority()) return;
+
+	FString RealMapName;
+	if (MapName == TEXT("gym"))  RealMapName = TEXT("/Game/Maps/gym");
+	else if (MapName == TEXT("e"))   RealMapName = TEXT("/Game/Maps/E");
+	else if (MapName == TEXT("tip")) RealMapName = TEXT("/Game/Maps/tip");
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Cheat] Unknown map name '%s'. Please use 'gym', 'e', or 'tip'."), *MapName);
+		return;
+	}
+	
+	if (UCCDGameRecordSubsystem* RecordSystem = GetGameInstance()->GetSubsystem<UCCDGameRecordSubsystem>())
+	{
+		FString CleanMapName = UWorld::RemovePIEPrefix(RealMapName);
+		
+		// 1. 디스크 세이브 파일 정보 변경 강제 적용
+		RecordSystem->SetMapClearStatusCustom(CleanMapName, bCleared);
+
+		// 2. 다른 멀티플레이어 참가자 클라이언트들에게 실시간 동기화하기 위해 GameState 정보 갱신
+		if (ACCDGameState* GS = GetWorld()->GetGameState<ACCDGameState>())
+		{
+			if (bCleared)
+			{
+				GS->ReplicatedClearedMapPaths.AddUnique(CleanMapName);
+			}
+			else
+			{
+				GS->ReplicatedClearedMapPaths.Remove(CleanMapName);
+			}
+			// TArray Replication 속성으로 인해 클라이언트들의 UI 가 자동으로 갱신됩니다.
+		}
+		
+		// 3. 월드의 모든 액터를 순회하며 블루프린트에 작성된 새로고침 이벤트 호출
+		// 이름이 "OnMapClearChanged"인 블루프린트 커스텀 이벤트나 함수가 있다면 강제로 실행시킵니다.
+		FName FunctionName = TEXT("OnMapClearChanged");
+       
+		for (TActorIterator<AActor> It(GetWorld()); It; ++It)
+		{
+			AActor* TargetActor = *It;
+			if (IsValid(TargetActor))
+			{
+				// 액터가 해당 이름의 블루프린트 함수/이벤트를 가지고 있는지 검사
+				UFunction* RefreshFunc = TargetActor->FindFunction(FunctionName);
+				if (RefreshFunc)
+				{
+					// 매개변수 없이 블루프린트 이벤트를 원격 가동시킵니다.
+					TargetActor->ProcessEvent(RefreshFunc, nullptr);
+				}
+			}
+		}
+		
+		UE_LOG(LogTemp, Warning, TEXT("[Cheat] Successfully forced map clear status. Map: %s, Cleared: %s"), *CleanMapName, bCleared ? TEXT("True") : TEXT("False"));
+	}
 }
 
 void ACCDPlayerController::SpectateNextPlayer(bool bForward)

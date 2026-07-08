@@ -54,12 +54,18 @@ public:
 	UFUNCTION(Exec)
 	void CCD_UnfreezeAI();
 	
+	UFUNCTION(Exec)
+	void CCD_SetMapClear(FString MapName, bool bCleared);
+	
 	/** 서버에서 실제 청소 로직을 수행할 RPC */
 	UFUNCTION(Server, Reliable)
 	void Server_CleanAll();
 	
 	UFUNCTION(Server, Reliable)
 	void Server_SetLifeCount(int32 NewLives);
+	
+	UFUNCTION(Server, Reliable)
+	void Server_SetMapClear(const FString& MapName, bool bCleared);
 	
 protected:
 	virtual void BeginPlay() override;

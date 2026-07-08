@@ -30,6 +30,8 @@ public:
 	/** 현재 맵 클리어 기록 및 자동 저장 */
 	void RecordMapClear(FString MapPath);
 	
+	void SetMapClearStatusCustom(FString MapPath, bool bCleared);
+	
 	/** 엔딩 조건 확인 */
 	bool AreAllMapsCleared(const TArray<FString>& RequiredMaps) const;
 
