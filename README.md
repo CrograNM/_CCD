@@ -28,7 +28,7 @@
 <!-- TODO: 실제 스크린샷/GIF로 교체 -->
 | **Chaos Destruction** | **협동 플레이** |
 |:---:|:---:|
-| ![청소 이펙트 데모](문서/Images/CCD-chaos-vfx.gif) | ![협동 플레이 데모](문서/Images/CCD-coop.gif) |
+| ![청소 이펙트 데모](문서/Images/CCD-chaos.gif) | ![협동 플레이 데모](문서/Images/CCD-coop.gif) |
 | **SCP** | **엔딩** |
 | ![엔딩 데모](문서/Images/CCD-scp.gif) | ![SCP 데모](문서/Images/CCD-ending.gif) |
 
